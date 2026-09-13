@@ -1,0 +1,201 @@
+# Base de données — sanix-factory-erp
+
+Projet Supabase : `mglosevjadbvwurdrlsz` · région eu-west-3 (Paris) · PostgreSQL 17
+URL API : `https://mglosevjadbvwurdrlsz.supabase.co`
+Clé publiable : `sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d`
+
+> La clé publiable est conçue pour le client. Elle ne donne aucun droit :
+> tout accès passe par RLS. La clé `service_role` ne doit **jamais** atteindre le navigateur.
+
+---
+
+## 1. État
+
+| Élément | Valeur |
+|---|---|
+| Tables | 46 |
+| Politiques RLS | 103 |
+| Tables sans RLS | **0** |
+| Comptes SYSCOHADA | 270 (tous imputables) |
+| Rôles | 13 |
+| Permissions | 37 |
+
+---
+
+## 2. Migrations
+
+| # | Nom | Contenu |
+|---|---|---|
+| 01 | `socle_multi_societe_auth_rbac` | Sociétés, profils, rôles, permissions, audit, fonctions RLS |
+| 02 | `referentiel_roles_permissions` | 13 rôles · 37 permissions · 96 attributions |
+| 03a | `referentiel_syscohada_table` | Table du référentiel normatif OHADA |
+| 03b | `seed_plan_syscohada_revise` | 266 comptes AUDCIF |
+| 03c | `comptabilite_partie_double_fec` | Exercices, journaux, écritures, FEC |
+| 04 | `tiers_articles_stocks` | Tiers, contacts, articles, dépôts, lots, mouvements, CMUP |
+| 05 | `crm_ventes_achats_reglements` | Leads, devis→facture, achats, règlements, lettrage |
+| 06 | `rh_paie_cnps_its_syscohada` | Employés, paramètres légaux CI, bulletins, congés, pointages |
+| 07 | `production_gmao_qualite` | OF, sessions, TRS, équipements, OT, NC, actions correctives |
+| 08 | `complements_referentiel_et_index_fk` | Comptes manquants + 38 index sur clés étrangères |
+| 09 | `durcissement_droits_et_extensions` | Révocation `anon`, extensions hors `public` |
+
+---
+
+## 3. Sécurité
+
+### Cloisonnement
+Chaque table métier porte `entreprise_id`. Les politiques s'appuient sur
+`app.entreprises_visibles()`, qui remonte l'arbre société → filiales. Un utilisateur
+ne voit jamais au-delà de son périmètre, quel que soit le code client.
+
+### Fonctions d'accès
+`SECURITY DEFINER` + `search_path = ''` — évitent la récursion RLS classique
+(une policy sur `profiles` qui interroge `profiles`).
+
+| Fonction | Rôle |
+|---|---|
+| `app.entreprise_id()` | Société de l'utilisateur courant |
+| `app.entreprises_visibles()` | Société + filiales (récursif) |
+| `app.dans_perimetre(uuid)` | Test de cloisonnement |
+| `app.has_role(text)` | Rôle porté |
+| `app.has_perm(text)` | Permission effective (admin = tout) |
+| `app.is_admin()` | Raccourci |
+
+### Confidentialité renforcée
+- **Bulletins de paie** : lisibles par leur titulaire ou par `paie.lire` uniquement.
+- **Leads** : un commercial ne voit que son portefeuille ; les encadrants voient tout.
+- **Journal d'audit** : écriture réservée aux triggers `SECURITY DEFINER`, aucune
+  politique `insert` — un client ne peut ni forger ni effacer une trace.
+- **Mouvements de stock** : ni `update` ni `delete`. Une correction passe par un
+  mouvement inverse, l'historique reste intact.
+
+### Avertissements restants
+Deux fonctions RPC sont signalées `SECURITY DEFINER` exécutables par les
+utilisateurs connectés : `initialiser_plan_comptable` et `comptabiliser_bulletin`.
+C'est **voulu** — elles doivent écrire dans `ecritures` en contournant RLS, et
+chacune vérifie les droits dès sa première ligne (`app.is_admin()`,
+`app.has_perm('paie.valider')`, `app.dans_perimetre()`). `anon` en est révoqué.
+
+---
+
+## 4. Conformité SYSCOHADA
+
+### Garanties par contrainte, pas par convention
+
+| Règle | Mécanisme |
+|---|---|
+| Partie double | Trigger différé : débit = crédit à la validation |
+| Minimum deux lignes | Même trigger |
+| Un seul sens par ligne | `check ((debit > 0) <> (credit > 0))` |
+| Imputation sur compte imputable | Trigger sur `compte` — refus si absent, inactif ou collectif |
+| Date dans l'exercice | Trigger sur `ecritures` |
+| Exercice clôturé verrouillé | Trigger sur `ecritures` |
+| Intangibilité du Livre-Journal | Écriture validée non modifiable — extourne obligatoire |
+| Numérotation continue | Séquence par journal et exercice (exigence FEC) |
+| Exercices sans chevauchement | Contrainte `exclude using gist` |
+| Durée d'exercice ≤ 18 mois | `check` |
+
+### Vues
+- `v_balance` — balance par compte et exercice
+- `v_fec` — Fichier des Écritures Comptables, format DGI Côte d'Ivoire
+- `v_balance_agee_clients` — tranches non échu / 1-30 / 31-60 / 61-90 / +90
+- `v_stock_actuel` — quantités et valorisation CMUP
+- `v_trs` — taux de disponibilité et de qualité par ligne de production
+
+### Corrections normatives portées en base
+L'ancien plan du fichier HTML était le **PCG français**. Le référentiel chargé est
+le **Plan Comptable OHADA révisé (AUDCIF)**.
+
+| Ancien | Libellé annoncé | Réalité SYSCOHADA | Retenu |
+|---|---|---|---|
+| 4456 | TVA collectée | TVA transférée par d'autres entreprises | **4431** |
+| 4457 | TVA déductible | non normalisé | **4452** |
+| 641 | Rémunérations du personnel | Impôts et taxes directs | **6611** |
+| 645 | Charges sociales patronales | — | **6641** |
+| 661 | Intérêts des emprunts | Rémunérations personnel national | **671** |
+| 421 | Personnel à payer | Personnel, **avances** et acomptes | **422** |
+| 422 | Avances au personnel | Personnel, **rémunérations dues** | **421** |
+| 701 | Ventes de produits finis | Ventes de **marchandises** | **702** |
+| 71 | Variation de stocks | **Subventions d'exploitation** | **736** |
+| 695 | Impôt BIC | — | **891** |
+| 65, 31, 32, 36, 17, 91… | comptes à 2 chiffres | non imputables → FEC rejeté | comptes à 3+ chiffres |
+
+Mobile Money est imputé sur **551 Monnaie électronique**, compte introduit par le
+SYSCOHADA révisé — et non sur 572, qui désigne une caisse de succursale.
+
+### Paie Côte d'Ivoire
+`comptabiliser_bulletin()` produit l'écriture complète :
+
+```
+D 6611 Salaires                    D 6641 CNPS retraite patronale
+D 6612 Primes                      D 6642 CNPS accidents du travail
+D 6631 Indemnité transport         D 6643 CNPS prestations familiales
+D 6632 Indemnité logement          D 6648 CMU employeur
+D 6617 Avantages en nature         D 6413/6414 FDFP
+                    C 422  Net à payer
+                    C 4311 CNPS part salariale
+                    C 4312 CNPS part patronale
+                    C 4471 ITS retenu à la source
+                    C 4472 Contribution nationale
+                    C 433  CMU à reverser
+                    C 442  FDFP à reverser
+                    C 421  Retenue sur avances
+```
+
+Les taux (CNPS 6,3 % / 7,7 % / 5,25 % / 3 %, FDFP 0,4 % + 1,2 %, plafond 3 375 000,
+SMIG, abattement ITS) vivent dans `parametres_paie`, **versionnés par date d'effet** :
+un changement de loi ne réécrit pas l'historique.
+
+---
+
+## 5. Règles métier automatiques
+
+| Déclencheur | Effet |
+|---|---|
+| Insertion d'une sortie de stock | Refus si stock insuffisant |
+| Insertion d'une entrée valorisée | Recalcul du CMUP |
+| Modification d'une ligne de vente/achat | Retotalisation HT / TVA / TTC de l'en-tête |
+| Facture client | Refus si le plafond de crédit est dépassé |
+| Affectation d'un règlement | Refus si dépassement du montant réglé |
+| Affectation enregistrée | Mise à jour du solde et du statut du document |
+| Inscription d'un utilisateur | Création automatique du profil |
+| Écriture comptable | Trace intégrale dans `audit_log` |
+
+---
+
+## 6. Amorçage
+
+```sql
+-- 1. Créer la société
+insert into public.entreprises (code, raison_sociale, forme_juridique, ville,
+                                rccm, compte_contribuable, taux_tva_defaut)
+values ('SANIX','Sanix Factory','SARL','Abidjan','CI-ABJ-2024-B-12345','1234567A', 18);
+
+-- 2. Créer le premier utilisateur via Supabase Auth (Dashboard ou signUp),
+--    en passant entreprise_id dans raw_user_meta_data.
+
+-- 3. Lui attribuer le rôle admin
+insert into public.user_roles (user_id, role_code, entreprise_id)
+select p.id, 'admin', p.entreprise_id from public.profiles p where p.email = 'admin@…';
+
+-- 4. Charger le plan comptable et les journaux (connecté en admin)
+select public.initialiser_plan_comptable('<entreprise_id>');
+
+-- 5. Ouvrir l'exercice
+insert into public.exercices (entreprise_id, libelle, date_debut, date_fin)
+values ('<entreprise_id>','Exercice 2026','2026-01-01','2026-12-31');
+
+-- 6. Charger les paramètres de paie en vigueur
+insert into public.parametres_paie (entreprise_id, date_effet) values ('<entreprise_id>','2026-01-01');
+```
+
+---
+
+## 7. Reste à faire
+
+1. Brancher le frontend sur Supabase Auth — supprimer `USERS`, `SESSION` et le
+   contrôle d'accès JavaScript du fichier HTML (faille S1 de l'audit).
+2. Migrer les données `localStorage` existantes vers les tables.
+3. Edge Function proxy pour l'IA — la clé Anthropic ne doit jamais atteindre le client.
+4. Exercices antérieurs : reprise des à-nouveaux via le journal `AN`.
+5. Table de correspondance ancien compte → nouveau compte pour retraiter
+   l'historique comptable déjà saisi sous le mapping erroné.

@@ -23230,7 +23230,7 @@ window._calcHTfromTTC=function(){
 window._updateCompteAuto=function(){
   var cat=document.getElementById('ftr-cat')?.value||'autre';
   var type=document.getElementById('ftr-type')?.value||'encaissement';
-  var mapping=typeof CAT_COMPTES!=='undefined'?CAT_COMPTES[cat]||CAT_COMPTES.autre:{debit:'65',credit:'701'};
+  var mapping=typeof CAT_COMPTES!=='undefined'?CAT_COMPTES[cat]||CAT_COMPTES.autre:{debit:'658',credit:'702'};
   var compte=type==='encaissement'?mapping.credit:mapping.debit;
   var compteEl=document.getElementById('ftr-compte');
   var libEl=document.getElementById('ftr-compte-lib');
@@ -27352,8 +27352,8 @@ window.saveCompte=function(){
         // Écriture SYSCOHADA : débit 411 / crédit 701
         ecritures:[
           {compte:'411',libelle:'Clients — '+contact.name,sens:'debit',montant:-ttcAvoir},
-          {compte:'701',libelle:'Ventes — avoir lot '+lot.numero,sens:'credit',montant:-htAvoir},
-          {compte:'4435',libelle:'TVA collectée à reverser',sens:'credit',montant:-(ttcAvoir-htAvoir)}
+          {compte:'702',libelle:'Ventes — avoir lot '+lot.numero,sens:'credit',montant:-htAvoir},
+          {compte:'4431',libelle:'TVA collectée à reverser',sens:'credit',montant:-(ttcAvoir-htAvoir)}
         ]
       };
       // Ajouter à DB.factures
@@ -41664,165 +41664,308 @@ window.exportPDF=function(type){
    Compte de résultat · Bilan · TVA · FEC · Rapprochement
 ══════════════════════════════════════════════════════════════ */
 
-/* ── Plan comptable SYSCOHADA complet (PCG-CI) ── */
+/* ── Plan comptable SYSCOHADA révisé (AUDCIF 2017) — applicable OHADA/Côte d'Ivoire ──
+   Tous les comptes listés sont IMPUTABLES (3 chiffres minimum), condition de
+   recevabilité du FEC par la DGI. Les comptes principaux à 2 chiffres ne sont
+   pas repris : ils servent uniquement au regroupement dans les états. */
 var PLAN_COMPTABLE={
-  /* Classe 1 — Capitaux */
-  '101':  {lib:'Capital social',                   classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '102':  {lib:'Apports en nature',                classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '104':  {lib:'Primes liées au capital',          classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '105':  {lib:'Écarts de réévaluation',           classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '106':  {lib:'Réserves',                         classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '110':  {lib:'Report à nouveau',                 classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '120':  {lib:'Résultat net — Bénéfice',          classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '130':  {lib:'Résultat net de l\'exercice',      classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '141':  {lib:'Subventions d\'investissement',    classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '161':  {lib:'Emprunts bancaires',               classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '162':  {lib:'Dettes financières diverses',      classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '163':  {lib:'Avances reçues sur immo.',         classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '17':   {lib:'Dettes de location-acquisition',  classe:1, type:'bilan', sens:'C', sysco:'1'},
-  '181':  {lib:'Comptes de liaison — sièges',      classe:1, type:'bilan', sens:'C', sysco:'1'},
-  /* Classe 2 — Immobilisations */
-  '201':  {lib:'Frais de développement',           classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '205':  {lib:'Concessions, brevets, logiciels',  classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '211':  {lib:'Terrains',                         classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '212':  {lib:'Agencements, aménagements',        classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '221':  {lib:'Bâtiments sur sol propre',         classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '228':  {lib:'Autres constructions',             classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '231':  {lib:'Matériel & équipements prod.',     classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '232':  {lib:'Mobilier, matériel de bureau',     classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '233':  {lib:'Matériel informatique',            classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '241':  {lib:'Matériel de transport',            classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '244':  {lib:'Matériel informatique & bureau',   classe:2, type:'bilan', sens:'D', sysco:'2'},
-  '281':  {lib:'Amort. immob. incorporelles',      classe:2, type:'bilan', sens:'C', sysco:'2'},
-  '284':  {lib:'Amort. matériel & équipements',    classe:2, type:'bilan', sens:'C', sysco:'2'},
-  /* Classe 3 — Stocks */
-  '31':   {lib:'Marchandises',                     classe:3, type:'bilan', sens:'D', sysco:'3'},
-  '32':   {lib:'Matières premières',               classe:3, type:'bilan', sens:'D', sysco:'3'},
-  '33':   {lib:'Autres approvisionnements',        classe:3, type:'bilan', sens:'D', sysco:'3'},
-  '34':   {lib:'Produits en cours',                classe:3, type:'bilan', sens:'D', sysco:'3'},
-  '35':   {lib:'Services en cours',                classe:3, type:'bilan', sens:'D', sysco:'3'},
-  '36':   {lib:'Produits finis',                   classe:3, type:'bilan', sens:'D', sysco:'3'},
-  '37':   {lib:'Emballages commerciaux',           classe:3, type:'bilan', sens:'D', sysco:'3'},
-  '391':  {lib:'Dépréciation marchandises',        classe:3, type:'bilan', sens:'C', sysco:'3'},
-  /* Classe 4 — Tiers */
-  '401':  {lib:'Fournisseurs',                     classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '4011': {lib:'Fournisseurs — dettes en cours',   classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '4012': {lib:'Fournisseurs — effets à payer',    classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '408':  {lib:'Fournisseurs — factures non reçues',classe:4,type:'bilan', sens:'C', sysco:'4'},
-  '409':  {lib:'Fournisseurs — avances versées',   classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '411':  {lib:'Clients',                          classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '4111': {lib:'Clients — créances en cours',      classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '4118': {lib:'Clients douteux',                  classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '419':  {lib:'Clients — avances reçues',         classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '421':  {lib:'Personnel — Rémunérations',        classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '422':  {lib:'Personnel — Avances et acomptes',  classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '431':  {lib:'CNPS — Sécurité sociale',          classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '441':  {lib:'État — Impôts et taxes (DGI)',     classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '442':  {lib:'État — ITS sur salaires',          classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '4425': {lib:'État — Impôt BIC',                 classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '4456': {lib:'TVA collectée',                    classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '4457': {lib:'TVA déductible / récupérable',     classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '4458': {lib:'TVA à régulariser',                classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '447':  {lib:'État — Impôts et taxes à payer',   classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '461':  {lib:'Créances diverses',                classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '462':  {lib:'Dettes diverses',                  classe:4, type:'bilan', sens:'C', sysco:'4'},
-  '471':  {lib:'Compte d\'attente débiteur',       classe:4, type:'bilan', sens:'D', sysco:'4'},
-  '472':  {lib:'Compte d\'attente créditeur',      classe:4, type:'bilan', sens:'C', sysco:'4'},
-  /* Classe 5 — Trésorerie */
-  '511':  {lib:'Valeurs à l\'encaissement',        classe:5, type:'bilan', sens:'D', sysco:'5'},
-  '512':  {lib:'Banque (compte principal)',         classe:5, type:'bilan', sens:'D', sysco:'5'},
-  '514':  {lib:'Chèques postaux',                  classe:5, type:'bilan', sens:'D', sysco:'5'},
-  '521':  {lib:'Banque — Compte courant',          classe:5, type:'bilan', sens:'D', sysco:'5'},
-  '531':  {lib:'Banque — Comptes d\'épargne',      classe:5, type:'bilan', sens:'D', sysco:'5'},
-  '541':  {lib:'Crédits de décaissement',          classe:5, type:'bilan', sens:'C', sysco:'5'},
-  '571':  {lib:'Caisse principale',                classe:5, type:'bilan', sens:'D', sysco:'5'},
-  '572':  {lib:'Mobile money (Orange/MTN/Wave)',    classe:5, type:'bilan', sens:'D', sysco:'5'},
-  '573':  {lib:'Régies d\'avances',                classe:5, type:'bilan', sens:'D', sysco:'5'},
-  /* Classe 6 — Charges */
-  '601':  {lib:'Achats de marchandises',           classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '6011': {lib:'Achats matières premières',        classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '6012': {lib:'Achats emballages',                classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '602':  {lib:'Achats matières consommables',     classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '604':  {lib:'Achats d\'emballages',             classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '605':  {lib:'Achats non stockés',               classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '608':  {lib:'Rabais/remises obtenus (-)' ,      classe:6, type:'resultat', sens:'C', sysco:'6'},
-  '611':  {lib:'Transport sur achats',             classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '614':  {lib:'Location et charges locatives',    classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '615':  {lib:'Entretien & réparations',          classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '616':  {lib:'Primes d\'assurance',              classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '617':  {lib:'Études, recherches & doc.',        classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '618':  {lib:'Divers — charges de gestion',      classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '619':  {lib:'Rabais & remises obtenus sur serv.',classe:6,type:'resultat', sens:'C', sysco:'6'},
-  '621':  {lib:'Loyers & charges locatives',       classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '622':  {lib:'Maintenance & réparations',        classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '623':  {lib:'Publicité, marketing & comm.',     classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '624':  {lib:'Transport & déplacements',         classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '625':  {lib:'Téléphone & internet',             classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '626':  {lib:'Services bancaires & similaires',  classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '627':  {lib:'Missions & réceptions',            classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '628':  {lib:'Cotisations professionnelles',     classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '629':  {lib:'Autres frais généraux',            classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '631':  {lib:'Impôts et taxes sur rémunérations',classe:6,type:'resultat', sens:'D', sysco:'6'},
-  '632':  {lib:'Impôts et taxes (patente, etc.)',  classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '635':  {lib:'Autres impôts et taxes',           classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '641':  {lib:'Rémunérations du personnel',       classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '648':  {lib:'Indemnités & avantages divers pers.',classe:6,type:'resultat', sens:'D', sysco:'6'},
-  '642':  {lib:'Personnel extérieur / intérim',    classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '644':  {lib:'Rémunérations gérant & assimilés', classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '645':  {lib:'Charges sociales patronales (CNPS)',classe:6,type:'resultat', sens:'D', sysco:'6'},
-  '646':  {lib:'Cotisations soc. du dirigeant',    classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '647':  {lib:'Allocations & prestations diverses',classe:6,type:'resultat', sens:'D', sysco:'6'},
-  '651':  {lib:'Pertes sur créances irrécouvrables',classe:6,type:'resultat', sens:'D', sysco:'6'},
-  '658':  {lib:'Charges diverses de gestion',      classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '661':  {lib:'Intérêts des emprunts',            classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '671':  {lib:'Pertes exceptionnelles',           classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '681':  {lib:'Dotations amortissements immo.',   classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '691':  {lib:'Participation des travailleurs',   classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '695':  {lib:'Impôt BIC (IS)',                   classe:6, type:'resultat', sens:'D', sysco:'6'},
-  '65':   {lib:'Autres charges',                   classe:6, type:'resultat', sens:'D', sysco:'6'},
-  /* Classe 7 — Produits */
-  '701':  {lib:'Ventes de produits finis',         classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '702':  {lib:'Ventes de marchandises',           classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '703':  {lib:'Ventes de travaux',                classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '704':  {lib:'Prestations de services',          classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '705':  {lib:'Études, recherches & travaux',     classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '706':  {lib:'Rabais, remises & ristournes',     classe:7, type:'resultat', sens:'D', sysco:'7'},
-  '707':  {lib:'Ventes emballages récupérables',   classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '708':  {lib:'Produits des activités annexes',   classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '71':   {lib:'Variation de stocks',              classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '72':   {lib:'Production immobilisée',           classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '75':   {lib:'Autres produits d\'exploitation',  classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '77':   {lib:'Revenus financiers',               classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '781':  {lib:'Reprises amortissements',          classe:7, type:'resultat', sens:'C', sysco:'7'},
-  '791':  {lib:'Transferts de charges',            classe:7, type:'resultat', sens:'C', sysco:'7'},
-  /* Classe 8 — Comptes spéciaux */
-  '801':  {lib:'Engagements donnés (caution)',     classe:8, type:'hors_bilan', sens:'D', sysco:'8'},
-  '802':  {lib:'Engagements reçus',               classe:8, type:'hors_bilan', sens:'C', sysco:'8'},
-  /* Classe 9 — Analytique / Coûts */
-  '901':  {lib:'Coûts par nature',                 classe:9, type:'analytique', sens:'D', sysco:'9'},
-  '903':  {lib:'Coûts par destination',            classe:9, type:'analytique', sens:'D', sysco:'9'},
-  '91':   {lib:'Frais généraux analytiques',       classe:9, type:'analytique', sens:'D', sysco:'9'},
-  '93':   {lib:'Centres de coût — production',     classe:9, type:'analytique', sens:'D', sysco:'9'},
-  '95':   {lib:'Centres de coût — commercial',     classe:9, type:'analytique', sens:'D', sysco:'9'},
+  /* ═══ Classe 1 — Ressources durables ═══ */
+  '101':  {lib:'Capital social',                          classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '104':  {lib:'Compte de l\'exploitant',                 classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '105':  {lib:'Primes liées aux capitaux propres',       classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '106':  {lib:'Écarts de réévaluation',                  classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '111':  {lib:'Réserve légale',                          classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '112':  {lib:'Réserves statutaires',                    classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '118':  {lib:'Autres réserves',                         classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '121':  {lib:'Report à nouveau créditeur',              classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '129':  {lib:'Report à nouveau débiteur',               classe:1, type:'bilan', sens:'D', sysco:'1'},
+  '130':  {lib:'Résultat en instance d\'affectation',     classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '131':  {lib:'Résultat net — Bénéfice',                 classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '139':  {lib:'Résultat net — Perte',                    classe:1, type:'bilan', sens:'D', sysco:'1'},
+  '141':  {lib:'Subventions d\'équipement',               classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '151':  {lib:'Amortissements dérogatoires',             classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '161':  {lib:'Emprunts obligataires',                   classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '162':  {lib:'Emprunts auprès des établissements de crédit', classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '164':  {lib:'Avances reçues et comptes courants bloqués', classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '165':  {lib:'Dépôts et cautionnements reçus',          classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '166':  {lib:'Intérêts courus sur emprunts',            classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '168':  {lib:'Autres emprunts et dettes',               classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '172':  {lib:'Dettes de location acquisition — immobilier', classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '173':  {lib:'Dettes de location acquisition — mobilier',   classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '181':  {lib:'Comptes de liaison — sièges et succursales',  classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '191':  {lib:'Provisions pour litiges',                 classe:1, type:'bilan', sens:'C', sysco:'1'},
+  '197':  {lib:'Provisions pour charges à répartir',      classe:1, type:'bilan', sens:'C', sysco:'1'},
+  /* ═══ Classe 2 — Actif immobilisé ═══ */
+  '211':  {lib:'Frais de développement et de prospection', classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '212':  {lib:'Brevets, licences, concessions',          classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '213':  {lib:'Logiciels et sites internet',             classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '214':  {lib:'Marques',                                 classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '215':  {lib:'Fonds commercial',                        classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '216':  {lib:'Droit au bail',                           classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '222':  {lib:'Terrains nus',                            classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '223':  {lib:'Terrains bâtis',                          classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '231':  {lib:'Bâtiments industriels sur sol propre',    classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '232':  {lib:'Bâtiments industriels sur sol d\'autrui', classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '233':  {lib:'Ouvrages d\'infrastructure',              classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '234':  {lib:'Installations techniques',                classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '235':  {lib:'Aménagements de bureaux',                 classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '238':  {lib:'Autres installations et agencements',     classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '241':  {lib:'Matériel et outillage industriel',        classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '243':  {lib:'Matériel d\'emballage récupérable',       classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '2441': {lib:'Matériel de bureau',                      classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '2442': {lib:'Matériel informatique',                   classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '2444': {lib:'Mobilier de bureau',                      classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '245':  {lib:'Matériel de transport',                   classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '248':  {lib:'Autres matériels',                        classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '251':  {lib:'Avances sur immobilisations incorporelles', classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '252':  {lib:'Avances sur immobilisations corporelles', classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '261':  {lib:'Titres de participation',                 classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '275':  {lib:'Dépôts et cautionnements versés',         classe:2, type:'bilan', sens:'D', sysco:'2'},
+  '281':  {lib:'Amortissements immobilisations incorporelles', classe:2, type:'bilan', sens:'C', sysco:'2'},
+  '283':  {lib:'Amortissements bâtiments et installations',    classe:2, type:'bilan', sens:'C', sysco:'2'},
+  '284':  {lib:'Amortissements matériel et mobilier',      classe:2, type:'bilan', sens:'C', sysco:'2'},
+  '291':  {lib:'Dépréciations des immobilisations incorporelles', classe:2, type:'bilan', sens:'C', sysco:'2'},
+  /* ═══ Classe 3 — Stocks ═══ */
+  '311':  {lib:'Marchandises A',                          classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '321':  {lib:'Matières premières',                      classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '322':  {lib:'Fournitures liées (matières)',            classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '331':  {lib:'Matières consommables',                   classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '332':  {lib:'Fournitures d\'atelier et d\'usine',      classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '335':  {lib:'Emballages (stock)',                      classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '341':  {lib:'Produits en cours',                       classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '351':  {lib:'Services en cours — études',              classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '361':  {lib:'Produits finis',                          classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '371':  {lib:'Produits intermédiaires',                 classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '372':  {lib:'Produits résiduels (rebuts, déchets)',    classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '381':  {lib:'Marchandises en cours de route',          classe:3, type:'bilan', sens:'D', sysco:'3'},
+  '391':  {lib:'Dépréciations des stocks de marchandises', classe:3, type:'bilan', sens:'C', sysco:'3'},
+  '392':  {lib:'Dépréciations des matières premières',    classe:3, type:'bilan', sens:'C', sysco:'3'},
+  '396':  {lib:'Dépréciations des produits finis',        classe:3, type:'bilan', sens:'C', sysco:'3'},
+  /* ═══ Classe 4 — Tiers ═══ */
+  '401':  {lib:'Fournisseurs, dettes en compte',          classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '402':  {lib:'Fournisseurs, effets à payer',            classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '408':  {lib:'Fournisseurs, factures non parvenues',    classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4091': {lib:'Fournisseurs, avances et acomptes versés', classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '411':  {lib:'Clients',                                 classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '412':  {lib:'Clients, effets à recevoir',              classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '416':  {lib:'Créances clients litigieuses ou douteuses', classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '418':  {lib:'Clients, produits à recevoir (fact. à établir)', classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '4191': {lib:'Clients, avances et acomptes reçus',      classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '421':  {lib:'Personnel, avances et acomptes',          classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '422':  {lib:'Personnel, rémunérations dues',           classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '423':  {lib:'Personnel, oppositions et saisies-arrêts', classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '424':  {lib:'Personnel, œuvres sociales internes',     classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '426':  {lib:'Personnel, participation aux bénéfices',  classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '428':  {lib:'Personnel, charges à payer (congés payés)', classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '431':  {lib:'Sécurité sociale (CNPS)',                 classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4311': {lib:'CNPS — part salariale à reverser',        classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4312': {lib:'CNPS — part patronale à reverser',        classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '432':  {lib:'Caisses de retraite complémentaire',      classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '433':  {lib:'Autres organismes sociaux (mutuelle)',    classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '438':  {lib:'Organismes sociaux, charges à payer',     classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '441':  {lib:'État, impôt sur les bénéfices (BIC)',     classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '442':  {lib:'État, autres impôts et taxes',            classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4431': {lib:'État, TVA facturée sur ventes',           classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4432': {lib:'État, TVA facturée sur prestations de services', classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4433': {lib:'État, TVA facturée sur travaux',          classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4435': {lib:'État, TVA sur factures à établir',        classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4441': {lib:'État, TVA due',                           classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4449': {lib:'État, crédit de TVA à reporter',          classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '4451': {lib:'État, TVA récupérable sur immobilisations', classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '4452': {lib:'État, TVA récupérable sur achats',        classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '4453': {lib:'État, TVA récupérable sur transport',     classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '4454': {lib:'État, TVA récupérable sur services extérieurs', classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '4455': {lib:'État, TVA récupérable sur factures non parvenues', classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '446':  {lib:'État, autres taxes sur le chiffre d\'affaires', classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4471': {lib:'État, ITS retenu à la source',            classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4472': {lib:'État, contribution nationale retenue',    classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4473': {lib:'État, autres retenues à la source (BNC)', classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '448':  {lib:'État, charges à payer et produits à recevoir', classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '4492': {lib:'État, acomptes versés sur impôts',        classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '4495': {lib:'État, subventions à recevoir',            classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '462':  {lib:'Associés, comptes courants',              classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '465':  {lib:'Associés, dividendes à payer',            classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '471':  {lib:'Compte d\'attente',                       classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '476':  {lib:'Charges constatées d\'avance',            classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '477':  {lib:'Produits constatés d\'avance',            classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '481':  {lib:'Fournisseurs d\'investissements',         classe:4, type:'bilan', sens:'C', sysco:'4'},
+  '485':  {lib:'Créances sur cessions d\'immobilisations', classe:4, type:'bilan', sens:'D', sysco:'4'},
+  '491':  {lib:'Dépréciations des comptes clients',       classe:4, type:'bilan', sens:'C', sysco:'4'},
+  /* ═══ Classe 5 — Trésorerie ═══ */
+  '501':  {lib:'Titres de placement',                     classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '511':  {lib:'Effets à encaisser',                      classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '512':  {lib:'Effets à l\'escompte',                    classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '513':  {lib:'Chèques à encaisser',                     classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '515':  {lib:'Cartes de crédit à encaisser',            classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '521':  {lib:'Banques locales',                         classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '522':  {lib:'Banques autres États de la région',       classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '524':  {lib:'Banques hors zone monétaire',             classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '531':  {lib:'Chèques postaux',                         classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '532':  {lib:'Trésor public',                           classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '538':  {lib:'Autres organismes financiers',            classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '551':  {lib:'Monnaie électronique — Mobile Money',     classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '552':  {lib:'Monnaie électronique — cartes prépayées', classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '561':  {lib:'Crédits de trésorerie (découvert)',       classe:5, type:'bilan', sens:'C', sysco:'5'},
+  '565':  {lib:'Escompte de crédits ordinaires',          classe:5, type:'bilan', sens:'C', sysco:'5'},
+  '571':  {lib:'Caisse siège social',                     classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '572':  {lib:'Caisse succursale A',                     classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '573':  {lib:'Caisse succursale B',                     classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '581':  {lib:'Régies d\'avances et accréditifs',        classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '585':  {lib:'Virements de fonds (transferts internes)', classe:5, type:'bilan', sens:'D', sysco:'5'},
+  '591':  {lib:'Dépréciations des titres de placement',   classe:5, type:'bilan', sens:'C', sysco:'5'},
+  /* ═══ Classe 6 — Charges des activités ordinaires ═══ */
+  '601':  {lib:'Achats de marchandises',                  classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '602':  {lib:'Achats de matières premières et fournitures liées', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6031': {lib:'Variation des stocks de marchandises',    classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6032': {lib:'Variation des stocks de matières premières', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '604':  {lib:'Achats stockés de matières et fournitures consommables', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6051': {lib:'Achats d\'eau',                           classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6052': {lib:'Achats d\'électricité',                   classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6053': {lib:'Achats d\'autres énergies (carburant, gaz)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6054': {lib:'Fournitures d\'entretien non stockables', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6055': {lib:'Fournitures de bureau non stockables',    classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6057': {lib:'Achats d\'études et prestations de services', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '608':  {lib:'Achats d\'emballages',                    classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '609':  {lib:'Rabais, remises et ristournes obtenus',   classe:6, type:'resultat', sens:'C', sysco:'6'},
+  '611':  {lib:'Transports sur achats',                   classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '612':  {lib:'Transports sur ventes',                   classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '614':  {lib:'Transports du personnel',                 classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '616':  {lib:'Transports de plis',                      classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '618':  {lib:'Autres frais de transport (déplacements)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '621':  {lib:'Sous-traitance générale',                 classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6221': {lib:'Locations de terrains',                   classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6222': {lib:'Locations de bâtiments (loyers)',         classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6223': {lib:'Locations de matériels et outillages',    classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6225': {lib:'Locations de matériel de transport',      classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6228': {lib:'Charges locatives diverses',              classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '623':  {lib:'Redevances de location acquisition',      classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '624':  {lib:'Entretien, réparations et maintenance',   classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '625':  {lib:'Primes d\'assurance',                     classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '626':  {lib:'Études, recherches et documentation',     classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '627':  {lib:'Publicité, publications, relations publiques', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '628':  {lib:'Frais de télécommunications',             classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '631':  {lib:'Frais bancaires',                         classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '632':  {lib:'Rémunérations d\'intermédiaires et de conseils', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '633':  {lib:'Frais de formation du personnel',         classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '634':  {lib:'Redevances brevets, licences, logiciels', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '635':  {lib:'Cotisations (organisations professionnelles)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '637':  {lib:'Rémunérations de personnel extérieur (intérim)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6381': {lib:'Frais de recrutement du personnel',       classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6384': {lib:'Réceptions',                              classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6385': {lib:'Missions',                                classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6388': {lib:'Autres charges externes',                 classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6411': {lib:'Impôts fonciers et taxes annexes',        classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6412': {lib:'Patente, licences et taxes annexes',      classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6413': {lib:'Taxe d\'apprentissage (FDFP)',            classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6414': {lib:'Formation professionnelle continue (FDFP)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6415': {lib:'Taxes sur salaires (part employeur)',     classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '645':  {lib:'Impôts et taxes indirects',               classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '646':  {lib:'Droits d\'enregistrement',                classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '647':  {lib:'Pénalités et amendes fiscales',           classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '648':  {lib:'Autres impôts et taxes',                  classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '651':  {lib:'Pertes sur créances clients',             classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '654':  {lib:'Valeurs comptables des cessions courantes d\'immobilisations', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '658':  {lib:'Charges diverses',                        classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '659':  {lib:'Charges pour dépréciations et provisions d\'exploitation', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6611': {lib:'Appointements, salaires et commissions',  classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6612': {lib:'Primes et gratifications',                classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6613': {lib:'Congés payés',                            classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6614': {lib:'Indemnités de préavis et de licenciement', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6617': {lib:'Avantages en nature',                     classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '662':  {lib:'Rémunérations du personnel non national', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6631': {lib:'Indemnité de transport forfaitaire',      classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6632': {lib:'Indemnité de logement forfaitaire',       classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6638': {lib:'Autres indemnités forfaitaires',          classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6641': {lib:'Charges sociales CNPS — retraite (part patronale)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6642': {lib:'Charges sociales CNPS — accidents du travail', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6643': {lib:'Charges sociales CNPS — prestations familiales', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '6648': {lib:'Autres charges sociales (mutuelle, retraite compl.)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '666':  {lib:'Rémunération et charges sociales de l\'exploitant', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '668':  {lib:'Autres charges de personnel (médecine du travail)', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '671':  {lib:'Intérêts des emprunts',                   classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '672':  {lib:'Intérêts dans loyers de location acquisition', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '673':  {lib:'Escomptes accordés',                      classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '674':  {lib:'Autres intérêts (découverts bancaires)',  classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '676':  {lib:'Pertes de change',                        classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '681':  {lib:'Dotations aux amortissements d\'exploitation', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '687':  {lib:'Dotations aux amortissements à caractère financier', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '691':  {lib:'Dotations aux provisions et dépréciations d\'exploitation', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  '697':  {lib:'Dotations aux provisions et dépréciations financières', classe:6, type:'resultat', sens:'D', sysco:'6'},
+  /* ═══ Classe 7 — Produits des activités ordinaires ═══ */
+  '701':  {lib:'Ventes de marchandises',                  classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '702':  {lib:'Ventes de produits finis',                classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '703':  {lib:'Ventes de produits intermédiaires',       classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '704':  {lib:'Ventes de produits résiduels',            classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '705':  {lib:'Travaux facturés',                        classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '706':  {lib:'Services vendus (prestations)',           classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '707':  {lib:'Produits accessoires (emballages, locations)', classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '709':  {lib:'Rabais, remises et ristournes accordés',  classe:7, type:'resultat', sens:'D', sysco:'7'},
+  '711':  {lib:'Subventions d\'exploitation reçues',      classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '721':  {lib:'Production immobilisée — immo. incorporelles', classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '722':  {lib:'Production immobilisée — immo. corporelles', classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '734':  {lib:'Variation des stocks de produits en cours', classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '736':  {lib:'Variation des stocks de produits finis',  classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '737':  {lib:'Variation des stocks de produits intermédiaires et résiduels', classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '751':  {lib:'Profits sur créances clients',            classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '754':  {lib:'Produits des cessions courantes d\'immobilisations', classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '758':  {lib:'Produits divers',                         classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '759':  {lib:'Reprises de charges pour dépréciations d\'exploitation', classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '771':  {lib:'Intérêts de prêts',                       classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '772':  {lib:'Revenus de participations',               classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '773':  {lib:'Escomptes obtenus',                       classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '776':  {lib:'Gains de change',                         classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '781':  {lib:'Transferts de charges d\'exploitation',   classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '791':  {lib:'Reprises de provisions d\'exploitation',  classe:7, type:'resultat', sens:'C', sysco:'7'},
+  '798':  {lib:'Reprises d\'amortissements',              classe:7, type:'resultat', sens:'C', sysco:'7'},
+  /* ═══ Classe 8 — Autres charges et produits (HAO) ═══ */
+  '811':  {lib:'Valeurs comptables des cessions d\'immobilisations incorporelles', classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '812':  {lib:'Valeurs comptables des cessions d\'immobilisations corporelles', classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '821':  {lib:'Produits des cessions d\'immobilisations incorporelles', classe:8, type:'resultat', sens:'C', sysco:'8'},
+  '822':  {lib:'Produits des cessions d\'immobilisations corporelles', classe:8, type:'resultat', sens:'C', sysco:'8'},
+  '831':  {lib:'Charges HAO constatées',                  classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '834':  {lib:'Pertes sur créances HAO',                 classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '835':  {lib:'Dons et libéralités accordés',            classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '841':  {lib:'Produits HAO constatés',                  classe:8, type:'resultat', sens:'C', sysco:'8'},
+  '845':  {lib:'Dons et libéralités obtenus',             classe:8, type:'resultat', sens:'C', sysco:'8'},
+  '848':  {lib:'Transferts de charges HAO',               classe:8, type:'resultat', sens:'C', sysco:'8'},
+  '851':  {lib:'Dotations aux provisions HAO',            classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '861':  {lib:'Reprises de provisions HAO',              classe:8, type:'resultat', sens:'C', sysco:'8'},
+  '871':  {lib:'Participation légale des travailleurs aux bénéfices', classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '881':  {lib:'Subventions d\'équilibre reçues',         classe:8, type:'resultat', sens:'C', sysco:'8'},
+  '891':  {lib:'Impôts sur les bénéfices de l\'exercice (BIC)', classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '892':  {lib:'Rappel d\'impôts sur résultats antérieurs', classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '895':  {lib:'Impôt minimum forfaitaire (IMF)',         classe:8, type:'resultat', sens:'D', sysco:'8'},
+  '899':  {lib:'Dégrèvements et annulations d\'impôts',   classe:8, type:'resultat', sens:'C', sysco:'8'},
+  /* ═══ Classe 9 — Engagements hors bilan & analytique ═══ */
+  '901':  {lib:'Engagements obtenus de tiers',            classe:9, type:'hors_bilan', sens:'D', sysco:'9'},
+  '902':  {lib:'Engagements accordés à des tiers (cautions)', classe:9, type:'hors_bilan', sens:'C', sysco:'9'},
+  '911':  {lib:'Contrepartie des engagements',            classe:9, type:'hors_bilan', sens:'C', sysco:'9'},
+  '921':  {lib:'Coûts par nature (analytique)',           classe:9, type:'analytique', sens:'D', sysco:'9'},
+  '931':  {lib:'Coûts de production — atelier',           classe:9, type:'analytique', sens:'D', sysco:'9'},
+  '941':  {lib:'Coûts de revient',                        classe:9, type:'analytique', sens:'D', sysco:'9'},
+  '951':  {lib:'Écarts sur coûts préétablis',             classe:9, type:'analytique', sens:'D', sysco:'9'},
+  '971':  {lib:'Résultats analytiques — commercial',      classe:9, type:'analytique', sens:'C', sysco:'9'},
 };
 
-/* ── Mapping catégories transaction → comptes PCG ── */
+/* ── Mapping catégories transaction → comptes SYSCOHADA révisé ──
+   tva_credit = compte de TVA facturée (encaissements)
+   tva_debit  = compte de TVA récupérable (décaissements) */
 var CAT_COMPTES={
-  vente:        {debit:'521',credit:'701', tva_debit:'4456', taux_tva:18},
-  service:      {debit:'521',credit:'704', tva_debit:'4456', taux_tva:18},
-  avance:       {debit:'521',credit:'411'},
-  achat:        {debit:'601',credit:'401', tva_credit:'4457',taux_tva:18},
-  salaire:      {debit:'641',credit:'421'},
-  charge_soc:   {debit:'645',credit:'431'},
-  transport:    {debit:'624',credit:'521'},
-  loyer:        {debit:'621',credit:'521'},
-  marketing:    {debit:'623',credit:'521'},
-  maintenance:  {debit:'622',credit:'521'},
-  telephone:    {debit:'625',credit:'521'},
-  frais_banque: {debit:'631',credit:'521'},
-  impot:        {debit:'441',credit:'521'},
-  caisse_pos:   {debit:'571',credit:'701', tva_debit:'4456', taux_tva:18}, // Vente au comptoir
-  autre:        {debit:'65', credit:'521'},
+  vente:        {debit:'521',credit:'702', tva_credit:'4431', taux_tva:18},
+  service:      {debit:'521',credit:'706', tva_credit:'4432', taux_tva:18},
+  avance:       {debit:'521',credit:'4191'},
+  achat:        {debit:'601',credit:'401', tva_debit:'4452', taux_tva:18},
+  salaire:      {debit:'6611',credit:'422'},
+  charge_soc:   {debit:'6641',credit:'4312'},
+  transport:    {debit:'618', credit:'521', tva_debit:'4453', taux_tva:18},
+  loyer:        {debit:'6222',credit:'521', tva_debit:'4454', taux_tva:18},
+  marketing:    {debit:'627', credit:'521', tva_debit:'4454', taux_tva:18},
+  maintenance:  {debit:'624', credit:'521', tva_debit:'4454', taux_tva:18},
+  telephone:    {debit:'628', credit:'521', tva_debit:'4454', taux_tva:18},
+  frais_banque: {debit:'631', credit:'521'},
+  impot:        {debit:'442', credit:'521'},
+  caisse_pos:   {debit:'571',credit:'702', tva_credit:'4431', taux_tva:18}, // Vente au comptoir
+  autre:        {debit:'658', credit:'521'},
 };
 
 /* ── Générer les écritures comptables depuis une transaction ── */
@@ -41831,7 +41974,10 @@ function _genEcritures(tx){
   var isEnc=tx.type==='encaissement';
   var ht=tx.tauxTVA?Math.round(tx.montant/(1+tx.tauxTVA/100)):tx.montant;
   var tvaAmt=tx.tauxTVA?Math.round(tx.montant-ht):0;
-  var compteMode=tx.mode==='virement'?'521':tx.mode==='mobile'?'572':'571';
+  // 521 Banques locales · 551 Monnaie électronique (Mobile Money) · 571 Caisse
+  var compteMode=tx.mode==='virement'?'521':tx.mode==='mobile'?'551':'571';
+  var cptTvaC=mapping.tva_credit||'4431';  // TVA facturée
+  var cptTvaD=mapping.tva_debit ||'4452';  // TVA récupérable
 
   var ecritures=[];
 
@@ -41841,7 +41987,7 @@ function _genEcritures(tx){
     // Crédit produit HT
     if(tvaAmt>0){
       ecritures.push({compte:mapping.credit,lib:PLAN_COMPTABLE[mapping.credit]?.lib||'Produit',debit:0,credit:ht});
-      ecritures.push({compte:'4456',lib:'TVA collectée ('+tx.tauxTVA+'%)',debit:0,credit:tvaAmt});
+      ecritures.push({compte:cptTvaC,lib:PLAN_COMPTABLE[cptTvaC]?.lib||'TVA facturée',debit:0,credit:tvaAmt});
     } else {
       ecritures.push({compte:mapping.credit,lib:PLAN_COMPTABLE[mapping.credit]?.lib||'Produit',debit:0,credit:tx.montant});
     }
@@ -41849,7 +41995,7 @@ function _genEcritures(tx){
     // Débit charge HT
     if(tvaAmt>0){
       ecritures.push({compte:mapping.debit,lib:PLAN_COMPTABLE[mapping.debit]?.lib||'Charge',debit:ht,credit:0});
-      ecritures.push({compte:'4457',lib:'TVA déductible ('+tx.tauxTVA+'%)',debit:tvaAmt,credit:0});
+      ecritures.push({compte:cptTvaD,lib:PLAN_COMPTABLE[cptTvaD]?.lib||'TVA récupérable',debit:tvaAmt,credit:0});
     } else {
       ecritures.push({compte:mapping.debit,lib:PLAN_COMPTABLE[mapping.debit]?.lib||'Charge',debit:tx.montant,credit:0});
     }
@@ -43133,7 +43279,7 @@ window.renderBilan=function(){
   var resultat=((txs.filter(function(t){return t.type==='encaissement';}).reduce(function(s,t){return s+t.montant;},0))
     -(txs.filter(function(t){return t.type==='decaissement';}).reduce(function(s,t){return s+t.montant;},0)));
   var dettes=_soldeCompte(['401','421','431','441']);
-  var tvaDue=Math.max(0,_soldeCompte(['4456'])-_soldeCompte(['4457']));
+  var tvaDue=Math.max(0,_soldeCompte(['4431','4432','4433'])-_soldeCompte(['4451','4452','4453','4454']));
   var totalPassif=capital+resultat+dettes+tvaDue;
 
   function _bilanRow(lbl,val,bold,indent,col){
@@ -84927,9 +85073,9 @@ if (!DB.bulletins)  DB.bulletins = [];
       date    : facture.date || _today(),
       source  : 'facture_emise',
       lignes  : [
-        { compte:'4111', lib:'Client ' + nomCl,        debit: ttc, credit: 0   },
-        { compte:'701',  lib:'Ventes — ' + nomCl,      debit: 0,   credit: ht  },
-        { compte:'4456', lib:'TVA collectée 18%',       debit: 0,   credit: tva }
+        { compte:'411', lib:'Client ' + nomCl,        debit: ttc, credit: 0   },
+        { compte:'702',  lib:'Ventes — ' + nomCl,      debit: 0,   credit: ht  },
+        { compte:'4431', lib:'TVA collectée 18%',       debit: 0,   credit: tva }
       ]
     });
   };
@@ -84958,7 +85104,7 @@ if (!DB.bulletins)  DB.bulletins = [];
         source  : 'facture_payee',
         lignes  : [
           { compte:'521',  lib:'Banque — encaissement',   debit: f.total||0, credit: 0          },
-          { compte:'4111', lib:'Solde client ' + nomCl,   debit: 0,          credit: f.total||0 }
+          { compte:'411', lib:'Solde client ' + nomCl,   debit: 0,          credit: f.total||0 }
         ]
       });
     }
@@ -85007,9 +85153,9 @@ if (!DB.bulletins)  DB.bulletins = [];
       date    : avoir.date || _today(),
       source  : 'avoir_emis',
       lignes  : [
-        { compte:'701',  lib:'Annulation vente — ' + nomCl, debit: ht,  credit: 0   },
-        { compte:'4456', lib:'TVA collectée — avoir',        debit: tva, credit: 0   },
-        { compte:'4111', lib:'Client ' + nomCl + ' — avoir', debit: 0,   credit: ttc }
+        { compte:'702',  lib:'Annulation vente — ' + nomCl, debit: ht,  credit: 0   },
+        { compte:'4431', lib:'TVA collectée — avoir',        debit: tva, credit: 0   },
+        { compte:'411', lib:'Client ' + nomCl + ' — avoir', debit: 0,   credit: ttc }
       ]
     });
   };
@@ -85044,8 +85190,8 @@ if (!DB.bulletins)  DB.bulletins = [];
         date    : achat.dateReception || _today(),
         source  : 'achat_recu',
         lignes  : [
-          { compte:'6011', lib:'Achat MP — ' + nomFourn,  debit: ht,    credit: 0     },
-          { compte:'4457', lib:'TVA déductible ' + tauTVA + '%', debit: tva, credit: 0 },
+          { compte:'602' , lib:'Achat MP — ' + nomFourn,  debit: ht,    credit: 0     },
+          { compte:'4452', lib:'TVA déductible ' + tauTVA + '%', debit: tva, credit: 0 },
           { compte:'401',  lib:'Fournisseur ' + nomFourn,  debit: 0,     credit: total }
         ]
       });
@@ -85161,8 +85307,8 @@ window.syncPaiementFourn = function(achatId, montant, mode){
           date    : _today(),
           source  : 'of_cloture',
           lignes  : [
-            { compte:'36', lib:'Produits finis — ' + nomArt,     debit: valeurPF, credit: 0          },
-            { compte:'71', lib:'Variation stocks produits finis', debit: 0,        credit: valeurPF   }
+            { compte:'361', lib:'Produits finis — ' + nomArt,     debit: valeurPF, credit: 0          },
+            { compte:'736', lib:'Variation stocks produits finis', debit: 0,        credit: valeurPF   }
           ]
         });
       }
@@ -85214,12 +85360,12 @@ window.syncBulletinCompta = function(bulletin){
     date    : bulletin.datePaie || _today(),
     source  : 'paie',
     lignes  : [
-      { compte:'641',  lib:'Rémunération ' + nomEmp,   debit: brut,    credit: 0        },
-      { compte:'645',  lib:'Charges sociales patron.',  debit: cnpsPat, credit: 0        },
-      { compte:'421',  lib:'Personnel à payer ' + nomEmp, debit: 0,    credit: net      },
-      { compte:'431',  lib:'CNPS salarié — ' + nomEmp, debit: 0,       credit: cnpsSal  },
-      { compte:'442',  lib:'ITS dû — ' + nomEmp,       debit: 0,       credit: its      },
-      { compte:'431',  lib:'CNPS patronal',             debit: 0,       credit: cnpsPat  }
+      { compte:'6611',  lib:'Rémunération ' + nomEmp,   debit: brut,    credit: 0        },
+      { compte:'6641',  lib:'Charges sociales patron.',  debit: cnpsPat, credit: 0        },
+      { compte:'422',  lib:'Personnel à payer ' + nomEmp, debit: 0,    credit: net      },
+      { compte:'4311',  lib:'CNPS salarié — ' + nomEmp, debit: 0,       credit: cnpsSal  },
+      { compte:'4471',  lib:'ITS dû — ' + nomEmp,       debit: 0,       credit: its      },
+      { compte:'4312',  lib:'CNPS patronal',             debit: 0,       credit: cnpsPat  }
     ]
   });
 
@@ -85231,7 +85377,7 @@ window.syncBulletinCompta = function(bulletin){
       date    : bulletin.datePaie || _today(),
       source  : 'paie_paiement',
       lignes  : [
-        { compte:'421', lib:'Solde personnel ' + nomEmp, debit: net, credit: 0   },
+        { compte:'422', lib:'Solde personnel ' + nomEmp, debit: net, credit: 0   },
         { compte:'521', lib:'Banque — paiement salaire', debit: 0,   credit: net }
       ]
     });
@@ -85287,8 +85433,8 @@ window.syncBulletinCompta = function(bulletin){
         source  : 'pos',
         lignes  : [
           { compte: cpt,   lib: 'Caisse/Banque POS',   debit: ttc, credit: 0   },
-          { compte: '701', lib: 'Ventes produits finis', debit: 0,  credit: ht  },
-          { compte:'4456', lib: 'TVA collectée 18%',    debit: 0,   credit: tva }
+          { compte: '702', lib: 'Ventes produits finis', debit: 0,  credit: ht  },
+          { compte:'4431', lib: 'TVA collectée 18%',    debit: 0,   credit: tva }
         ]
       });
     }, 200);
@@ -86550,14 +86696,14 @@ window.calcEcart = function(input){
       var lignesCompta = [];
       if (valeurDeficit > 0) {
         lignesCompta.push(
-          { compte:'6031', lib:'Malis inventaire — déficits constatés',  debit: valeurDeficit, credit: 0              },
-          { compte:'32',   lib:'Stocks — ajustement inventaire',          debit: 0,             credit: valeurDeficit  }
+          { compte:'6032', lib:'Malis inventaire — déficits constatés',  debit: valeurDeficit, credit: 0              },
+          { compte:'321',   lib:'Stocks — ajustement inventaire',          debit: 0,             credit: valeurDeficit  }
         );
       }
       if (valeurSurplus > 0) {
         lignesCompta.push(
-          { compte:'32',   lib:'Stocks — surplus inventaire',             debit: valeurSurplus, credit: 0              },
-          { compte:'7134', lib:'Bonis inventaire — surplus constatés',    debit: 0,             credit: valeurSurplus  }
+          { compte:'321',   lib:'Stocks — surplus inventaire',             debit: valeurSurplus, credit: 0              },
+          { compte:'6032', lib:'Bonis inventaire — surplus constatés',    debit: 0,             credit: valeurSurplus  }
         );
       }
       _journaliser({
@@ -86932,14 +87078,14 @@ if (!DB.immobilisations) DB.immobilisations = [];
 
 /* Constantes */
 var IMMO_TYPES = {
-  materiel_prod  : { lbl:'Matériel de production', compte:'231', duree:7,  methode:'lineaire' },
-  materiel_info  : { lbl:'Matériel informatique',  compte:'233', duree:3,  methode:'lineaire' },
-  mobilier       : { lbl:'Mobilier de bureau',      compte:'232', duree:10, methode:'lineaire' },
-  vehicule       : { lbl:'Matériel de transport',   compte:'241', duree:5,  methode:'lineaire' },
-  batiment       : { lbl:'Bâtiment',                compte:'221', duree:20, methode:'lineaire' },
-  logiciel       : { lbl:'Logiciel / Licence',      compte:'205', duree:3,  methode:'lineaire' },
-  agencement     : { lbl:'Agencements / Travaux',   compte:'212', duree:10, methode:'lineaire' },
-  autre          : { lbl:'Autre immobilisation',    compte:'201', duree:5,  methode:'lineaire' },
+  materiel_prod  : { lbl:'Matériel de production', compte:'241', duree:7,  methode:'lineaire' },
+  materiel_info  : { lbl:'Matériel informatique',  compte:'2442', duree:3,  methode:'lineaire' },
+  mobilier       : { lbl:'Mobilier de bureau',      compte:'2444', duree:10, methode:'lineaire' },
+  vehicule       : { lbl:'Matériel de transport',   compte:'245', duree:5,  methode:'lineaire' },
+  batiment       : { lbl:'Bâtiment',                compte:'231', duree:20, methode:'lineaire' },
+  logiciel       : { lbl:'Logiciel / Licence',      compte:'213', duree:3,  methode:'lineaire' },
+  agencement     : { lbl:'Agencements / Travaux',   compte:'235', duree:10, methode:'lineaire' },
+  autre          : { lbl:'Autre immobilisation',    compte:'248', duree:5,  methode:'lineaire' },
 };
 window.IMMO_TYPES = IMMO_TYPES; /* exposition globale */
 
@@ -88281,8 +88427,8 @@ window.cederImmo = function(id){
     var cumul = Math.round(v/d)*ans;
     if (cumul > 0) lignes.push({ compte: cpteAmort, lib:'Amort. cumulé '+im.nom, debit: cumul, credit: 0 });
     /* Plus ou moins-value */
-    if (plv > 0) lignes.push({ compte:'775', lib:'Plus-value cession '+im.nom,  debit: 0, credit: plv });
-    if (plv < 0) lignes.push({ compte:'675', lib:'Moins-value cession '+im.nom, debit: Math.abs(plv), credit: 0 });
+    if (plv > 0) lignes.push({ compte:'822', lib:'Plus-value cession '+im.nom,  debit: 0, credit: plv });
+    if (plv < 0) lignes.push({ compte:'812', lib:'Moins-value cession '+im.nom, debit: Math.abs(plv), credit: 0 });
     _journaliser({ ref:'CESSION-'+im.id.slice(-6), libelle:'Cession '+im.nom, date: _today(), source:'cession_immo', lignes });
   }
 
@@ -89134,11 +89280,11 @@ window.getChecklistCloture = function(annee){
         date    : ex.annee+'-12-31',
         source  : 'cloture',
         lignes  : resultat > 0 ? [
-          { compte:'120', lib:'Résultat net bénéfice '+ex.annee, debit: resultat, credit: 0       },
-          { compte:'106', lib:'Report à nouveau '+ex.annee,      debit: 0,       credit: resultat },
+          { compte:'131', lib:'Résultat net bénéfice '+ex.annee, debit: resultat, credit: 0       },
+          { compte:'121', lib:'Report à nouveau '+ex.annee,      debit: 0,       credit: resultat },
         ] : [
-          { compte:'106', lib:'Report à nouveau '+ex.annee,      debit: Math.abs(resultat), credit: 0              },
-          { compte:'130', lib:'Résultat net exercice '+ex.annee, debit: 0,                  credit: Math.abs(resultat) },
+          { compte:'129', lib:'Report à nouveau '+ex.annee,      debit: Math.abs(resultat), credit: 0              },
+          { compte:'139', lib:'Résultat net exercice '+ex.annee, debit: 0,                  credit: Math.abs(resultat) },
         ]
       });
     }
@@ -89930,14 +90076,14 @@ window.calcAmortissement = function(immo){
 /* ── FORMULAIRE IMMOBILISATION — version autonome complète (remplace toutes versions précédentes) ── */
 ;(function(){
   var _TYPES = {
-    materiel_prod : { lbl:'Matériel de production', compte:'231', duree:7  },
-    materiel_info : { lbl:'Matériel informatique',  compte:'233', duree:3  },
-    mobilier      : { lbl:'Mobilier de bureau',      compte:'232', duree:10 },
-    vehicule      : { lbl:'Matériel de transport',   compte:'241', duree:5  },
-    batiment      : { lbl:'Bâtiment',                compte:'221', duree:20 },
-    logiciel      : { lbl:'Logiciel / Licence',      compte:'205', duree:3  },
-    agencement    : { lbl:'Agencements / Travaux',   compte:'212', duree:10 },
-    autre         : { lbl:'Autre immobilisation',    compte:'201', duree:5  }
+    materiel_prod : { lbl:'Matériel de production', compte:'241', duree:7  },
+    materiel_info : { lbl:'Matériel informatique',  compte:'2442', duree:3  },
+    mobilier      : { lbl:'Mobilier de bureau',      compte:'2444', duree:10 },
+    vehicule      : { lbl:'Matériel de transport',   compte:'245', duree:5  },
+    batiment      : { lbl:'Bâtiment',                compte:'231', duree:20 },
+    logiciel      : { lbl:'Logiciel / Licence',      compte:'213', duree:3  },
+    agencement    : { lbl:'Agencements / Travaux',   compte:'235', duree:10 },
+    autre         : { lbl:'Autre immobilisation',    compte:'248', duree:5  }
   };
   function _td(){ return new Date().toISOString().slice(0,10); }
   function _fF(n){ return new Intl.NumberFormat('fr-FR').format(Math.round(n||0))+' F'; }
@@ -90079,7 +90225,7 @@ window.calcAmortissement = function(immo){
     var date   = (document.getElementById('immo-f-date')  ||{}).value || _td();
     var fourn  = (document.getElementById('immo-f-fourn') ||{}).value || '';
     var ref    = (document.getElementById('immo-f-ref')   ||{}).value || '';
-    var compte = (_TYPES[tp]||{compte:'201'}).compte;
+    var compte = (_TYPES[tp]||{compte:'248'}).compte;
 
     if(!DB.immobilisations) DB.immobilisations = [];
 
@@ -90174,7 +90320,7 @@ window.calcAmortissement = function(immo){
       var plan = window.calcAmortissement(im);
       var l    = plan.find(function(x){ return x.annee===an; });
       if (!l || l.dotation<=0) return;
-      var tp       = (window.IMMO_TYPES||{})[im.type] || { compte:'231' };
+      var tp       = (window.IMMO_TYPES||{})[im.type] || { compte:'241' };
       var cpteAmort= '28'+tp.compte.slice(1);
       lignes.push({ compte:'681', lib:'DAP — '+im.nom+' ('+(im.methode||'lin')+')', debit:l.dotation, credit:0 });
       lignes.push({ compte:cpteAmort, lib:'Amort. '+im.nom, debit:0, credit:l.dotation });
@@ -110542,12 +110688,12 @@ setTimeout(function(){
       date    : q.date ? q.date.slice(0,10) : new Date().toISOString().slice(0,10),
       source  : 'paie_quinzaine',
       lignes  : [
-        { compte:'641',  lib:'Rémunération journalière ' + nomTrav,  debit: q.brutBase||0, credit: 0 },
-        { compte:'645',  lib:'Charges sociales patron. (quinzaine)',  debit: (q.cnpsPat||0)+(q.cnpsAT||0)+(q.cnpsPF||0), credit: 0 },
-        { compte:'421',  lib:'Personnel à payer — ' + nomTrav,       debit: 0, credit: q.net },
-        { compte:'431',  lib:'CNPS salarié — ' + nomTrav,            debit: 0, credit: q.cnpsSal||0 },
-        { compte:'442',  lib:'ITS — ' + nomTrav,                     debit: 0, credit: q.itsNet||0 },
-        { compte:'431',  lib:'CNPS patronal — quinzaine',             debit: 0, credit: (q.cnpsPat||0)+(q.cnpsAT||0)+(q.cnpsPF||0) }
+        { compte:'6611',  lib:'Rémunération journalière ' + nomTrav,  debit: q.brutBase||0, credit: 0 },
+        { compte:'6641',  lib:'Charges sociales patron. (quinzaine)',  debit: (q.cnpsPat||0)+(q.cnpsAT||0)+(q.cnpsPF||0), credit: 0 },
+        { compte:'422',  lib:'Personnel à payer — ' + nomTrav,       debit: 0, credit: q.net },
+        { compte:'4311',  lib:'CNPS salarié — ' + nomTrav,            debit: 0, credit: q.cnpsSal||0 },
+        { compte:'4471',  lib:'ITS — ' + nomTrav,                     debit: 0, credit: q.itsNet||0 },
+        { compte:'4312',  lib:'CNPS patronal — quinzaine',             debit: 0, credit: (q.cnpsPat||0)+(q.cnpsAT||0)+(q.cnpsPF||0) }
       ]
     });
 
@@ -111361,30 +111507,30 @@ window.syncSTCCompta = function(e, motif, dateDepart) {
 
   // 641 — Rémunération imposable (salaire prorata + transport)
   if(s.brutTotal > 0) {
-    lignes1.push({ compte:'641', lib:'Salaire prorata départ ' + nomEmp, debit: s.brutTotal, credit: 0 });
+    lignes1.push({ compte:'6611', lib:'Salaire prorata départ ' + nomEmp, debit: s.brutTotal, credit: 0 });
   }
 
   // 648 — Indemnités exonérées (congés + préavis + légale)
   if(s.totalExonere > 0) {
     if(s.indemConges > 0)
-      lignes1.push({ compte:'648', lib:'ICP congés ' + s.joursConges + 'j — ' + nomEmp, debit: s.indemConges, credit: 0 });
+      lignes1.push({ compte:'6613', lib:'ICP congés ' + s.joursConges + 'j — ' + nomEmp, debit: s.indemConges, credit: 0 });
     if(s.indemPreavis > 0)
-      lignes1.push({ compte:'648', lib:'Ind. compensatrice préavis ' + s.preavisJours + 'j — ' + nomEmp, debit: s.indemPreavis, credit: 0 });
+      lignes1.push({ compte:'6614', lib:'Ind. compensatrice préavis ' + s.preavisJours + 'j — ' + nomEmp, debit: s.indemPreavis, credit: 0 });
     if(s.indemLegale > 0)
-      lignes1.push({ compte:'648', lib:'Ind. légale ' + motifLbl + ' (' + s.ancAns + ' ans) — ' + nomEmp, debit: s.indemLegale, credit: 0 });
+      lignes1.push({ compte:'6614', lib:'Ind. légale ' + motifLbl + ' (' + s.ancAns + ' ans) — ' + nomEmp, debit: s.indemLegale, credit: 0 });
   }
 
   // 645 — Charges sociales patronales
   if(s.totalChargesPat > 0) {
-    lignes1.push({ compte:'645', lib:'Charges patronales STC — ' + nomEmp, debit: s.totalChargesPat, credit: 0 });
+    lignes1.push({ compte:'6641', lib:'Charges patronales STC — ' + nomEmp, debit: s.totalChargesPat, credit: 0 });
   }
 
   // 421 — Personnel rémunérations dues (net à payer)
-  lignes1.push({ compte:'421', lib:'Personnel à payer STC — ' + nomEmp, debit: 0, credit: s.netSTC });
+  lignes1.push({ compte:'422', lib:'Personnel à payer STC — ' + nomEmp, debit: 0, credit: s.netSTC });
 
   // 422 — Reprise avances si existantes
   if(s.avances > 0) {
-    lignes1.push({ compte:'422', lib:'Reprise avances — ' + nomEmp, debit: 0, credit: s.avances });
+    lignes1.push({ compte:'421', lib:'Reprise avances — ' + nomEmp, debit: 0, credit: s.avances });
   }
 
   // 431 — CNPS salarié + patronal
@@ -111395,7 +111541,7 @@ window.syncSTCCompta = function(e, motif, dateDepart) {
 
   // 442 — ITS + CMU
   if(s.itsNet > 0) {
-    lignes1.push({ compte:'442', lib:'ITS + CMU STC — ' + nomEmp, debit: 0, credit: s.itsNet });
+    lignes1.push({ compte:'4471', lib:'ITS + CMU STC — ' + nomEmp, debit: 0, credit: s.itsNet });
   }
 
   // FDFP — en 631 (impôts sur rémunérations)
@@ -111422,7 +111568,7 @@ window.syncSTCCompta = function(e, motif, dateDepart) {
       date    : dateRef,
       source  : 'stc_paiement',
       lignes  : [
-        { compte:'421', lib:'Solde personnel — ' + nomEmp, debit: s.netSTC, credit: 0 },
+        { compte:'422', lib:'Solde personnel — ' + nomEmp, debit: s.netSTC, credit: 0 },
         { compte:'521', lib:'Banque — paiement STC ' + nomEmp, debit: 0, credit: s.netSTC }
       ]
     });
@@ -111445,8 +111591,8 @@ window.syncSTCCompta = function(e, motif, dateDepart) {
       date    : dateRef,
       source  : 'stc_avances',
       lignes  : [
-        { compte:'421', lib:'Compensation avances — ' + nomEmp, debit: s.avances, credit: 0 },
-        { compte:'422', lib:'Avances soldées — ' + nomEmp, debit: 0, credit: s.avances }
+        { compte:'422', lib:'Compensation avances — ' + nomEmp, debit: s.avances, credit: 0 },
+        { compte:'421', lib:'Avances soldées — ' + nomEmp, debit: 0, credit: s.avances }
       ]
     });
   }
@@ -114315,7 +114461,7 @@ setTimeout(function() {
         if (typeof window._journaliser === 'function') {
           var val = parseFloat(data.valeur) || 0;
           var TY  = window.IMMO_TYPES || {};
-          var tp  = TY[data.type] || TY.autre || { compte: '231' };
+          var tp  = TY[data.type] || TY.autre || { compte: '241' };
 
           if (extraFields.methodeFinancement === 'emprunt') {
             /* Corriger : créditer 162 (emprunt) au lieu de 401 */
@@ -114393,7 +114539,10 @@ setTimeout(function() {
       if (typeof window._journaliser === 'function') {
         if (coutTotal >= seuil && immoLiee) {
           /* CAPITALISATION : composant majeur → immobilisation */
-          var cpteAmort = '28' + ((window.IMMO_TYPES || {})[immoLiee.type] || { compte: '231' }).compte.slice(1);
+          var cpteAmort = '284'; // 284 Amortissements du matériel et du mobilier (SYSCOHADA)
+          var _cpImmo = ((window.IMMO_TYPES || {})[immoLiee.type] || { compte: '241' }).compte;
+          if (_cpImmo.startsWith('21')) cpteAmort = '281';
+          else if (_cpImmo.startsWith('22') || _cpImmo.startsWith('23')) cpteAmort = '283';
           window._journaliser({
             ref     : 'OT-CAP-' + otId.slice(-6),
             libelle : 'Capitalisation OT — ' + desc,
@@ -114417,7 +114566,7 @@ setTimeout(function() {
             date    : _td(),
             source  : 'gmao_ot',
             lignes  : [
-              { compte: '615', lib: 'Entretien & réparations — ' + desc, debit: coutTotal, credit: 0 },
+              { compte: '624', lib: 'Entretien & réparations — ' + desc, debit: coutTotal, credit: 0 },
               { compte: '401', lib: 'Fournisseur / MO entretien',         debit: 0,         credit: coutTotal }
             ]
           });
@@ -114796,7 +114945,7 @@ setTimeout(function() {
       var valeur = parseFloat(gv(2)) || 0; if (!valeur) throw new Error('Valeur manquante');
       var typeImmo = gv(1) || 'materiel_prod';
       var TY = window.IMMO_TYPES || {};
-      var tp = TY[typeImmo] || TY.autre || { compte: '231', duree: 5, lbl: 'Matériel' };
+      var tp = TY[typeImmo] || TY.autre || { compte: '241', duree: 5, lbl: 'Matériel' };
       var duree = parseInt(gv(4)) || tp.duree || 5;
 
       var existing = (DB.immobilisations || []).find(function (x) {
@@ -120084,8 +120233,8 @@ function _brcCompta(brc){
     libelle:'Réception '+brc.ref+' — '+nomFourn+' · BL '+brc.numBL,
     date:brc.date,source:'brc_valide',
     lignes:[
-      {compte:'6011',lib:'Achat MP — '+nomFourn,debit:totalHT,credit:0},
-      {compte:'4457',lib:'TVA déductible '+tauTVA+'%',debit:tva,credit:0},
+      {compte:'602',lib:'Achat MP — '+nomFourn,debit:totalHT,credit:0},
+      {compte:'4452',lib:'TVA déductible '+tauTVA+'%',debit:tva,credit:0},
       {compte:'401',lib:'Fournisseur '+nomFourn,debit:0,credit:ttc}
     ]
   };
@@ -123646,24 +123795,24 @@ function _comptabiliser(b){
   var totalPatronal=cnpsPat+cnpsAT+cnpsPF+fdfpPat;
 
   // Écriture 1 : Constatation salaire
-  var lig1=[{ compte:'6411', lib:'Salaires — '+nom, debit:brut, credit:0 }];
-  if(transport>0) lig1.push({ compte:'6414', lib:'Transport — '+nom, debit:transport, credit:0 });
-  if(primes>0)    lig1.push({ compte:'6415', lib:'Primes — '+nom,    debit:primes,    credit:0 });
-  lig1.push({ compte:'421',  lib:'Net à payer — '+nom,        debit:0, credit:net      });
+  var lig1=[{ compte:'6611', lib:'Salaires — '+nom, debit:brut, credit:0 }];
+  if(transport>0) lig1.push({ compte:'6631', lib:'Transport — '+nom, debit:transport, credit:0 });
+  if(primes>0)    lig1.push({ compte:'6612', lib:'Primes — '+nom,    debit:primes,    credit:0 });
+  lig1.push({ compte:'422',  lib:'Net à payer — '+nom,        debit:0, credit:net      });
   lig1.push({ compte:'4311', lib:'CNPS salarié — '+nom,       debit:0, credit:cnpsSal  });
-  if(its>0) lig1.push({ compte:'4421', lib:'ITS — '+nom,      debit:0, credit:its      });
-  if(cn>0)  lig1.push({ compte:'4422', lib:'CN — '+nom,       debit:0, credit:cn       });
-  if(cmu>0) lig1.push({ compte:'442',  lib:'CMU — '+nom,      debit:0, credit:cmu      });
-  if(avances>0) lig1.push({ compte:'422', lib:'Avances — '+nom, debit:0, credit:avances });
+  if(its>0) lig1.push({ compte:'4471', lib:'ITS — '+nom,      debit:0, credit:its      });
+  if(cn>0)  lig1.push({ compte:'4472', lib:'CN — '+nom,       debit:0, credit:cn       });
+  if(cmu>0) lig1.push({ compte:'433',  lib:'CMU — '+nom,      debit:0, credit:cmu      });
+  if(avances>0) lig1.push({ compte:'421', lib:'Avances — '+nom, debit:0, credit:avances });
   _journaliser({ ref:prefix+'-CONST', libelle:'Constatation salaire '+b.mois+' — '+nom, date:b.datePaie||_today(), lignes:lig1 });
 
   // Écriture 2 : Charges patronales
   if(totalPatronal>0){
     var lig2=[];
-    if(cnpsPat>0) lig2.push({ compte:'6451', lib:'CNPS retraite pat. — '+nom, debit:cnpsPat, credit:0 });
-    if(cnpsAT>0)  lig2.push({ compte:'6452', lib:'AT — '+nom,                 debit:cnpsAT,  credit:0 });
-    if(cnpsPF>0)  lig2.push({ compte:'6453', lib:'Prestations fam. — '+nom,   debit:cnpsPF,  credit:0 });
-    if(fdfpPat>0) lig2.push({ compte:'6454', lib:'FDFP pat. — '+nom,          debit:fdfpPat, credit:0 });
+    if(cnpsPat>0) lig2.push({ compte:'6641', lib:'CNPS retraite pat. — '+nom, debit:cnpsPat, credit:0 });
+    if(cnpsAT>0)  lig2.push({ compte:'6642', lib:'AT — '+nom,                 debit:cnpsAT,  credit:0 });
+    if(cnpsPF>0)  lig2.push({ compte:'6643', lib:'Prestations fam. — '+nom,   debit:cnpsPF,  credit:0 });
+    if(fdfpPat>0) lig2.push({ compte:'6414', lib:'FDFP pat. — '+nom,          debit:fdfpPat, credit:0 });
     lig2.push({ compte:'4312', lib:'CNPS patronal à reverser', debit:0, credit:totalPatronal });
     _journaliser({ ref:prefix+'-CPAT', libelle:'Charges sociales patronales '+b.mois+' — '+nom, date:b.datePaie||_today(), lignes:lig2 });
   }
@@ -123672,7 +123821,7 @@ function _comptabiliser(b){
   var netPay=net-avances;
   if(netPay>0){
     _journaliser({ ref:prefix+'-PAY', libelle:'Paiement salaire net — '+nom, date:b.datePaie||_today(),
-      lignes:[{ compte:'421', lib:'Solde net — '+nom, debit:netPay, credit:0 },{ compte:'521', lib:'Banque — paiement paie', debit:0, credit:netPay }]
+      lignes:[{ compte:'422', lib:'Solde net — '+nom, debit:netPay, credit:0 },{ compte:'521', lib:'Banque — paiement paie', debit:0, credit:netPay }]
     });
     if(window.DB&&DB.transactions){
       DB.transactions.unshift({ id:_uid(), type:'decaissement', cat:'salaire', desc:'Salaire '+nom, ref:prefix, montant:netPay, date:_today(), mode:'virement', source:'paie_auto' });
@@ -123682,7 +123831,7 @@ function _comptabiliser(b){
   // Écriture 4 : Reprise avances D422/C521
   if(avances>0){
     _journaliser({ ref:prefix+'-AVA', libelle:'Imputation avances — '+nom, date:b.datePaie||_today(),
-      lignes:[{ compte:'422', lib:'Avances soldées — '+nom, debit:avances, credit:0 },{ compte:'521', lib:'Banque — déduction avance', debit:0, credit:avances }]
+      lignes:[{ compte:'421', lib:'Avances soldées — '+nom, debit:avances, credit:0 },{ compte:'521', lib:'Banque — déduction avance', debit:0, credit:avances }]
     });
   }
 
@@ -124085,23 +124234,23 @@ function _qComptabiliser(q){
   var pLabel  = periodeCode==='Q1'?'1ère quinzaine 1–15':'2ème quinzaine 16–fin';
 
   // ── ÉCRITURE 1 : Constatation charge de personnel ─────────
-  var lig1 = [{ compte:'6411', lib:'Salaires journaliers '+pLabel+' — '+nom, debit:brutBase, credit:0 }];
-  if(brutHSup>0) lig1.push({ compte:'6411', lib:'H. supp. quinzaine — '+nom,  debit:brutHSup, credit:0 });
-  if(prime>0)    lig1.push({ compte:'6415', lib:'Prime quinzaine — '+nom,     debit:prime,    credit:0 });
-  if(transp>0)   lig1.push({ compte:'6414', lib:'Transport quinzaine — '+nom, debit:transp,   credit:0 });
-  lig1.push({ compte:'421',  lib:'Net à payer — '+nom,          debit:0, credit:net      });
+  var lig1 = [{ compte:'6611', lib:'Salaires journaliers '+pLabel+' — '+nom, debit:brutBase, credit:0 }];
+  if(brutHSup>0) lig1.push({ compte:'6611', lib:'H. supp. quinzaine — '+nom,  debit:brutHSup, credit:0 });
+  if(prime>0)    lig1.push({ compte:'6612', lib:'Prime quinzaine — '+nom,     debit:prime,    credit:0 });
+  if(transp>0)   lig1.push({ compte:'6631', lib:'Transport quinzaine — '+nom, debit:transp,   credit:0 });
+  lig1.push({ compte:'422',  lib:'Net à payer — '+nom,          debit:0, credit:net      });
   if(cnpsSal>0) lig1.push({ compte:'4311', lib:'CNPS salarié quinzaine — '+nom, debit:0, credit:cnpsSal });
-  if(itsNet>0)  lig1.push({ compte:'4421', lib:'ITS+CMU quinzaine — '+nom,      debit:0, credit:itsNet  });
+  if(itsNet>0)  lig1.push({ compte:'4471', lib:'ITS+CMU quinzaine — '+nom,      debit:0, credit:itsNet  });
   if(fdfpSal>0) lig1.push({ compte:'442',  lib:'FDFP salarié — '+nom,          debit:0, credit:fdfpSal  });
-  if(avance>0)  lig1.push({ compte:'422',  lib:'Avances — '+nom,               debit:0, credit:avance   });
+  if(avance>0)  lig1.push({ compte:'421',  lib:'Avances — '+nom,               debit:0, credit:avance   });
   _qJournaliser({ ref:prefix+'-CONST', libelle:'Constatation quinzaine '+q.mois+' '+pLabel+' — '+nom, date:_qToday(), lignes:lig1 });
 
   // ── ÉCRITURE 2 : Charges patronales ───────────────────────
   if(totalPat>0){
     var lig2=[];
-    if(cnpsPat>0) lig2.push({ compte:'6451', lib:'CNPS retraite pat. quinzaine — '+nom, debit:cnpsPat, credit:0 });
-    if(cnpsAT>0)  lig2.push({ compte:'6452', lib:'AT quinzaine — '+nom,                 debit:cnpsAT,  credit:0 });
-    if(cnpsPF>0)  lig2.push({ compte:'6453', lib:'Prestations fam. quinzaine — '+nom,   debit:cnpsPF,  credit:0 });
+    if(cnpsPat>0) lig2.push({ compte:'6641', lib:'CNPS retraite pat. quinzaine — '+nom, debit:cnpsPat, credit:0 });
+    if(cnpsAT>0)  lig2.push({ compte:'6642', lib:'AT quinzaine — '+nom,                 debit:cnpsAT,  credit:0 });
+    if(cnpsPF>0)  lig2.push({ compte:'6643', lib:'Prestations fam. quinzaine — '+nom,   debit:cnpsPF,  credit:0 });
     lig2.push({ compte:'4312', lib:'CNPS patronal quinzaine à reverser', debit:0, credit:totalPat });
     _qJournaliser({ ref:prefix+'-CPAT', libelle:'Charges patronales quinzaine '+q.mois+' '+pLabel+' — '+nom, date:_qToday(), lignes:lig2 });
   }
@@ -124110,7 +124259,7 @@ function _qComptabiliser(q){
   var netPay = net - avance;
   if(netPay>0){
     _qJournaliser({ ref:prefix+'-PAY', libelle:'Paiement quinzaine net — '+nom, date:_qToday(),
-      lignes:[{ compte:'421', lib:'Solde net quinzaine — '+nom, debit:netPay, credit:0 },{ compte:'521', lib:'Banque/Caisse — paiement quinzaine', debit:0, credit:netPay }]
+      lignes:[{ compte:'422', lib:'Solde net quinzaine — '+nom, debit:netPay, credit:0 },{ compte:'521', lib:'Banque/Caisse — paiement quinzaine', debit:0, credit:netPay }]
     });
     if(window.DB&&DB.transactions){
       DB.transactions.unshift({ id:_qUid(), type:'decaissement', cat:'salaire', desc:'Quinzaine '+pLabel+' — '+nom, ref:prefix, montant:netPay, date:_qToday(), mode:'especes', source:'paie_quinzaine_auto' });
@@ -124120,7 +124269,7 @@ function _qComptabiliser(q){
   // ── ÉCRITURE 4 : Reprise avances D422/C521 ────────────────
   if(avance>0){
     _qJournaliser({ ref:prefix+'-AVA', libelle:'Imputation avances quinzaine — '+nom, date:_qToday(),
-      lignes:[{ compte:'422', lib:'Avances soldées quinzaine — '+nom, debit:avance, credit:0 },{ compte:'521', lib:'Banque — déduction avance', debit:0, credit:avance }]
+      lignes:[{ compte:'421', lib:'Avances soldées quinzaine — '+nom, debit:avance, credit:0 },{ compte:'521', lib:'Banque — déduction avance', debit:0, credit:avance }]
     });
   }
 
