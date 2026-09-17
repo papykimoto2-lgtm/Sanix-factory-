@@ -273,8 +273,82 @@ sfFileAttente()    // nombre d'écritures en attente
 administrateur connecté. L'opération est idempotente : la relancer ne crée pas
 de doublon.
 
-## 9. Reste à faire
+## 9. Caisse et analytique — mise à niveau sur Menco-immo
 
+Le module caisse de Menco-immo est plus abouti que celui d'OpusFab. Ses
+mécanismes ont été portés — **le code, pas les données** : les deux logiciels
+restent séparés.
+
+### Caisses
+
+| Table | Rôle |
+|---|---|
+| `caisses` | Plusieurs caisses, chacune rattachée à un compte de trésorerie (571, 572, 551…), avec plafond d'encaisse et envoi automatique du journal |
+| `caisse_habilitations` | Caissiers autorisés, avec leur **plafond de décaissement sans validation** |
+| `caisse_sessions` | Ouverture / clôture, fond théorique tenu à jour, fond réel compté, **écart calculé** |
+| `caisse_mouvements` | Entrées et sorties, circuit de validation, ventilation, transferts |
+| `regles_ventilation` | Type de mouvement → compte SYSCOHADA proposé, avec TVA |
+
+### Ce qui est garanti par contrainte
+
+| Règle | Mécanisme |
+|---|---|
+| Une seule session ouverte par caisse | index unique partiel |
+| Écart de caisse justifié | `check` : clôture refusée sans note si l'écart est non nul |
+| Validation au-delà du plafond du caissier | trigger sur insertion |
+| Numérotation continue et **chaînée** | `numero` + `numero_precedent`, non réécrivables |
+| Mouvement ventilé figé | montant, sens, date et motif verrouillés |
+| Transfert impossible à découvert | contrôle du solde avant écriture |
+| Un mouvement ne se supprime pas | aucune politique `delete` — on passe l'inverse |
+
+### Ventilation comptable
+
+`ventiler_mouvement_caisse()` transforme un mouvement en écriture équilibrée :
+contrepartie selon la règle, **TVA extraite du TTC**, compte de caisse, imputation
+analytique. Un encaissement de 1 180 000 F en vente produit :
+
+```
+D 571 Caisse                1 180 000
+    C 702 Ventes produits finis   1 000 000
+    C 4431 TVA facturée             180 000
+```
+
+### Analytique
+
+`sections_analytiques` : centres de coût, centres de profit, projets, programmes,
+divisions, véhicules, chantiers — en arbre, avec budget annuel. Rattachée à chaque
+ligne d'écriture par `section_id`, contrainte au référentiel plutôt qu'en texte libre.
+
+### Lettrage
+
+`lettrer()` refuse un rapprochement déséquilibré ou portant sur deux comptes
+différents. `delettrer()` exige `compta.valider`. La vue `v_lignes_a_lettrer`
+liste les lignes ouvertes des comptes lettrables.
+
+### Facture Normalisée Électronique
+
+`documents_vente` porte `fne_statut`, `fne_numero`, `fne_code_validation` et
+`fne_transmise_le` — la télédéclaration DGI. La transmission elle-même reste à
+brancher sur l'API de la DGI.
+
+### Défauts trouvés par les tests
+
+Deux, corrigés avant livraison :
+
+1. `lettrer()` appelait `min()` sur un `uuid` — fonction inexistante en
+   PostgreSQL. La fonction échouait à chaque appel.
+2. Un mouvement **ventilé mais non encore validé** restait modifiable : le
+   montant du mouvement et celui de l'écriture pouvaient diverger sans trace.
+
+11 tests passent : session unique, numérotation chaînée, plafond de validation,
+ventilation avec TVA, double ventilation refusée, solde de session, transfert,
+découvert refusé, écart justifié, lettrage, verrous.
+
+## 10. Reste à faire
+
+0. **Activer la protection des mots de passe compromis** : Dashboard →
+   Authentication → Password Security → *Leaked password protection*. Supabase
+   vérifie alors les mots de passe contre HaveIBeenPwned. Désactivé par défaut.
 1. **Créer le premier compte** : ouvrir l'application, saisir e-mail et mot de passe,
    cliquer « Première connexion — créer mon compte ». Ce compte devient administrateur.
 2. **Fermer l'inscription publique** ensuite : Dashboard → Authentication →
@@ -288,7 +362,7 @@ de doublon.
 7. Table de correspondance ancien compte → nouveau compte pour retraiter
    l'historique comptable saisi sous le mapping erroné.
 
-## 10. État de livraison
+## 11. État de livraison
 
 La base est **vide de toute donnée client**. Seuls subsistent les référentiels,
 qui ne sont pas des données client :
