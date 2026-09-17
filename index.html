@@ -10,6 +10,35 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="theme-color" content="#191A2E"/>
 <link rel="manifest" id="pwa-manifest-link"/>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   REPRISE DES CLÉS DE STOCKAGE
+   Les clés portaient l'ancien nom du produit. Les renommer sans rien
+   reprendre aurait vidé la configuration des postes déjà en service :
+   on recopie une fois, puis on efface l'ancienne.
+   Posé en tête de document, avant que le moindre module ne lise.
+═══════════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+var FAIT = 'opusfab_cles_reprises_v1';
+try {
+  if (localStorage.getItem(FAIT)) return;
+  var anciens = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k && (k.indexOf('sanixfactory_') === 0 || k.indexOf('sanixcrm_') === 0)) anciens.push(k);
+  }
+  anciens.forEach(function(k){
+    var neuf = k.replace(/^sanixfactory_|^sanixcrm_/, 'opusfab_');
+    /* Une clé déjà écrite sous le nouveau nom l'emporte : on ne l'écrase pas. */
+    if (localStorage.getItem(neuf) === null) localStorage.setItem(neuf, localStorage.getItem(k));
+    localStorage.removeItem(k);
+  });
+  localStorage.setItem(FAIT, String(anciens.length));
+  if (anciens.length) console.log('[OpusFab] ' + anciens.length + ' clé(s) de stockage reprises.');
+} catch(e){}
+})();
+</script>
 <title>SANIX OpusFab ERP 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
@@ -2303,7 +2332,7 @@ window.closeModal = function(id){
       if (j1.ok && j1.data) {
         window._sqliteDB = j1.data;
         // Mettre aussi dans localStorage comme backup (comportement original)
-        try { localStorage.setItem('sanixfactory_db', JSON.stringify(j1.data)); } catch(e) {}
+        try { localStorage.setItem('opusfab_db', JSON.stringify(j1.data)); } catch(e) {}
       }
     } catch(e) {
       console.warn('[SANIX OpusFab] Serveur non disponible, mode localStorage uniquement.', e.message);
@@ -2314,7 +2343,7 @@ window.closeModal = function(id){
       const r2 = await fetch('/api/config');
       const j2 = await r2.json();
       if (j2.ok && j2.data) {
-        try { localStorage.setItem('sanixfactory_config', JSON.stringify(j2.data)); } catch(e) {}
+        try { localStorage.setItem('opusfab_config', JSON.stringify(j2.data)); } catch(e) {}
       }
     } catch(e) {}
 
@@ -2323,7 +2352,7 @@ window.closeModal = function(id){
       const r3 = await fetch('/api/notifs');
       const j3 = await r3.json();
       if (j3.ok && j3.data && j3.data.length > 0) {
-        try { localStorage.setItem('sanixfactory_notifs', JSON.stringify(j3.data)); } catch(e) {}
+        try { localStorage.setItem('opusfab_notifs', JSON.stringify(j3.data)); } catch(e) {}
       }
     } catch(e) {}
   }
@@ -2335,13 +2364,13 @@ window.closeModal = function(id){
     _saveTimers[cle] = setTimeout(async function() {
       try {
         var endpoint, body;
-        if (cle === 'sanixfactory_db') {
+        if (cle === 'opusfab_db') {
           endpoint = '/api/db';
           body = JSON.parse(valeur);
-        } else if (cle === 'sanixfactory_config') {
+        } else if (cle === 'opusfab_config') {
           endpoint = '/api/config';
           body = JSON.parse(valeur);
-        } else if (cle === 'sanixfactory_notifs') {
+        } else if (cle === 'opusfab_notifs') {
           endpoint = '/api/notifs';
           body = JSON.parse(valeur);
         } else {
@@ -2365,7 +2394,7 @@ window.closeModal = function(id){
   window.localStorage.setItem = function(cle, valeur) {
     _origSetItem(cle, valeur); // Toujours sauvegarder en localStorage aussi
     // Si c'est une de nos clés importantes → sauvegarder en SQLite aussi
-    if (['sanixfactory_db', 'sanixfactory_config', 'sanixfactory_notifs'].includes(cle)) {
+    if (['opusfab_db', 'opusfab_config', 'opusfab_notifs'].includes(cle)) {
       sauvegarderSurServeur(cle, valeur);
     }
   };
@@ -3032,7 +3061,7 @@ window.onerror = function(msg, src, line, col, err) {
       <!-- ══ 1. ENTÊTE — Filtre période + statut ══ -->
       <div class="dash-header">
         <div>
-          <div class="dash-header-title">🏭 SANIX FACTORY 4.0 — Tableau de bord</div>
+          <div class="dash-header-title">Tableau de bord</div>
           <div class="dash-header-sub" id="dashPeriodLabel">Aujourd'hui</div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -6613,7 +6642,7 @@ window.onerror = function(msg, src, line, col, err) {
                 </div>
                 <div class="frow">
                   <label class="fl">URL Webhook (POST JSON)</label>
-                  <input class="fi" id="webhook-url" type="url" placeholder="https://mon-erp.ci/api/webhook/sanixfactory" style="font-size:11px;"/>
+                  <input class="fi" id="webhook-url" type="url" placeholder="https://mon-erp.ci/api/webhook/opusfab" style="font-size:11px;"/>
                 </div>
                 <div style="display:flex;gap:6px;margin-top:8px;">
                   <button class="btn btn-ghost btn-sm" onclick="testerWebhook()" style="font-size:11px;flex:1;border-color:#0891b2;color:#0891b2;"><i class="fa fa-vial"></i> Tester</button>
@@ -11688,7 +11717,7 @@ app.post('/webhook/whatsapp', (req, res) => {
                 </div>
                 <div style="flex:1;min-width:200px;">
                   <div style="font-size:15px;font-weight:700;color:#7c3aed;margin-bottom:3px;">SANIX OpusFab Licence Manager</div>
-                  <div style="font-size:12px;color:var(--t2);line-height:1.6;">La génération de clés se fait désormais via l'application indépendante <strong>sanixcrm-licence-manager.html</strong>. Ouvrez ce fichier dans votre navigateur pour générer, vérifier et gérer les licences clients.</div>
+                  <div style="font-size:12px;color:var(--t2);line-height:1.6;">La génération de clés se fait désormais via l'application indépendante <strong>le gestionnaire de licences</strong>. Ouvrez ce fichier dans votre navigateur pour générer, vérifier et gérer les licences clients.</div>
                 </div>
               </div>
               <div style="margin-top:14px;padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--bd);">
@@ -16667,7 +16696,7 @@ window.sauvegarderUtilisateur=function(){
   DB.users_custom=Object.values(USERS).filter(function(u){
     return _demoLogins.indexOf(u.login)<0 && _demoLogins.indexOf(u.id)<0;
   });
-  try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
+  try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
   fermerFormUtilisateur();
   renderUsersList();
   if(typeof initLoginHint==='function') initLoginHint();
@@ -16711,7 +16740,7 @@ window.supprimerUtilisateur=function(login){
   DB.users_custom=Object.values(USERS).filter(function(u){
     return _demoLogins.indexOf(u.login)<0 && _demoLogins.indexOf(u.id)<0;
   });
-  try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
+  try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
   renderUsersList();
   if(typeof initLoginHint==='function') initLoginHint();
   showToast('🗑️ Utilisateur supprimé',nom,'ok');
@@ -16732,7 +16761,7 @@ window.resetAllUsers=function(){
       if(rec.userId&&rec.userId!=='admin') rec.userId='admin';
     });
   });
-  try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
+  try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
   renderUsersList();
   if(typeof initLoginHint==='function') initLoginHint();
   showToast('🔄 Utilisateurs réinitialisés','Seul le compte Admin est conservé. Créez vos propres utilisateurs.','ok');
@@ -18068,7 +18097,7 @@ window.showWelcomeModal = function(){
   var dash = circumference * (score/100);
 
   // ── Modules récents (depuis localStorage)
-  var recentKey = 'sanixcrm_recent_modules';
+  var recentKey = 'opusfab_recent_modules';
   var recentMods = [];
   try { recentMods = JSON.parse(localStorage.getItem(recentKey)||'[]').slice(0,6); } catch(e){}
 
@@ -18210,7 +18239,7 @@ window._wlcNav = function(page, name){
   if(window.setBnav) setBnav(page);
   // Tracker dans récents
   try{
-    var rk='sanixcrm_recent_modules';
+    var rk='opusfab_recent_modules';
     var r=JSON.parse(localStorage.getItem(rk)||'[]');
     r=r.filter(function(x){return x.page!==page;});
     r.unshift({page:page,name:name});
@@ -18788,21 +18817,21 @@ var DB = {
 
   /* Purge unique des jeux de démonstration des versions antérieures */
   try{
-    var brut = localStorage.getItem('sanixfactory_db');
+    var brut = localStorage.getItem('opusfab_db');
     if (brut) {
       var ancien = JSON.parse(brut);
       if (ancien && (ancien._foani_seeded || ancien._ivopack_seeded) && !ancien[MARQUEUR]) {
-        localStorage.removeItem('sanixfactory_db');
-        localStorage.removeItem('sanixfactory_config');
+        localStorage.removeItem('opusfab_db');
+        localStorage.removeItem('opusfab_config');
         console.log('%c[SANIX OpusFab] Données de démonstration purgées', 'color:#F59E0B;font-weight:700;');
       }
     }
   }catch(e){}
 
   /* Fiche société : vide, à compléter au premier démarrage */
-  if (!localStorage.getItem('sanixfactory_config')) {
+  if (!localStorage.getItem('opusfab_config')) {
     try{
-      localStorage.setItem('sanixfactory_config', JSON.stringify({
+      localStorage.setItem('opusfab_config', JSON.stringify({
         nom:'', slogan:'', adresse:'', ville:'', phone:'', email:'', web:'',
         rccm:'', dfe:'', regime:'Normal', tva:18, devise:'F CFA', monnaie:'XOF',
         dirigeant:'', capital:'', logo:'',
@@ -18823,7 +18852,7 @@ var DB = {
     'projets_fin','pf_facts','eval_fourn'];
 
   try{
-    var enregistre = localStorage.getItem('sanixfactory_db');
+    var enregistre = localStorage.getItem('opusfab_db');
     if (enregistre) {
       var d = JSON.parse(enregistre);
       if (d && typeof d === 'object') {
@@ -19547,7 +19576,7 @@ window.imprimerEtiquette = function(){
   const ref = gv('fart-ref') || '';
   const prix = gv('fart-prix') || '0';
   if(!code){ showToast('Saisissez un code-barres d\'abord','','err'); return; }
-  const cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const w = window.open('','_blank','width=400,height=300');
   if(!w) return;
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/>
@@ -22952,7 +22981,7 @@ window._updateCompteAuto=function(){
 
 // ── Chargement config entreprise dans formulaire FINE ──
 function loadFINEConfig(){
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   fv('ffine-emetNom', cfg.entreprise||'Mon Entreprise SARL');
   fv('ffine-cc',      cfg.cc||'');
   fv('ffine-dfe',     cfg.dfe||'');
@@ -23105,9 +23134,9 @@ window.saveFINE=function(){
   }
 
   // Sauvegarder config entreprise pour les prochaines fois
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   cfg.entreprise=emetNom; cfg.cc=cc; cfg.dfe=gv('ffine-dfe'); cfg.regime=gv('ffine-regime');
-  localStorage.setItem('sanixfactory_config', JSON.stringify(cfg));
+  localStorage.setItem('opusfab_config', JSON.stringify(cfg));
 
   closePanel(); renderFactures();
 };
@@ -23186,7 +23215,7 @@ function renderFactures(){
 window.imprimerFINE=function(id){
   const f=(DB.factures||[]).find(x=>x.id===id); if(!f) return;
   const cl=(DB.contacts||[]).find(c=>c.id===f.cid)||{name:'—',addr:'',phone:'',email:''};
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const lignesHTML=(f.lignes||[]).map((l,i)=>`
     <tr style="border-bottom:1px solid #eee;">
       <td style="padding:8px;">${i+1}</td>
@@ -23302,7 +23331,7 @@ window.genFactureFromCmd=function(){
   if(!cmdsDone.length){showToast('Aucune commande livrée','Livrez d\'abord une commande','info');return;}
   // Prendre la dernière commande livrée
   const cmd=cmdsDone[0];
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const cl=(DB.contacts||[]).find(c=>c.id===cmd.cid)||{name:'—'};
   const ht=cmdMontant(cmd);
   const tva=ht*0.18;
@@ -23978,7 +24007,7 @@ window.enregistrerLivraisonPartielle=function(ofId){
 window.genBLI=function(ofId, numBLI, qte, date, resp, dest, notes){
   const _of=(DB.ofs||[]).find(o=>o.id===ofId); if(!_of) return;
   const art=(DB.articles||[]).find(a=>a.id===_of.articleId)||{name:'—',unit:'u.',ref:''};
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const entreprise=cfg.nom||"Mon Entreprise SARL";
   const destinations={'magasin_pf':'Magasin Produits Finis','zone_expedition':'Zone Expédition','autre':'Autre'};
   const w=window.open('','_blank','width=700,height=600');
@@ -24850,8 +24879,8 @@ window.exportCSV=function(type){
    PARAMÉTRAGE ENTREPRISE — Stockage localStorage
 ══════════════════════════════════════════════════════ */
 
-function getCfg(){ return JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }
-function setCfg(data){ localStorage.setItem('sanixfactory_config',JSON.stringify({...getCfg(),...data})); }
+function getCfg(){ return JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }
+function setCfg(data){ localStorage.setItem('opusfab_config',JSON.stringify({...getCfg(),...data})); }
 
 // ── Charger la config dans tous les formulaires ──
 window.loadConfig=function(){
@@ -24938,7 +24967,7 @@ window.handleLogoUpload=function(input){
 
 window.removeLogoImage=function(){
   var c=getCfg(); delete c.logoImage;
-  localStorage.setItem('sanixfactory_config',JSON.stringify(c));
+  localStorage.setItem('opusfab_config',JSON.stringify(c));
   updateLogoPreview();
   var fn=$('param-logo-filename'); if(fn) fn.textContent='Cliquer pour choisir un fichier…';
   var fi=$('param-logo-file'); if(fi) fi.value='';
@@ -25069,7 +25098,7 @@ window.saveCompte=function(){
   var today = function(){ return new Date().toISOString().split('T')[0]; };
   var dpStr = function(d){ if(!d) return '—'; var p=d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; };
   var uid   = function(){ return 'smq'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); };
-  var saveDB= function(){ try{localStorage.setItem('sanixfactory_db',JSON.stringify(DB));}catch(e){} };
+  var saveDB= function(){ try{localStorage.setItem('opusfab_db',JSON.stringify(DB));}catch(e){} };
 
   // ── Données démo seed ──
   function seedSMQ(){
@@ -25831,7 +25860,7 @@ window.saveCompte=function(){
   var td=function(){return new Date().toISOString().split('T')[0];};
   var dp=function(d){if(!d)return '—';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];};
   var uid=function(){return 'she'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);};
-  var save=function(){try{localStorage.setItem('sanixfactory_db',JSON.stringify(DB));}catch(e){}};
+  var save=function(){try{localStorage.setItem('opusfab_db',JSON.stringify(DB));}catch(e){}};
   var TABS=['dashboard','hazards','risks','incidents','capa','legal','env','sst','kpi'];
 
   // ── Seed démo ──
@@ -27735,30 +27764,30 @@ window.viderDemoData=function(){
   DB._demo_cleared=true;
 
   // ── 4. Persister la DB vide mais valide ───────────────────────
-  try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
-  try{ localStorage.removeItem('sanixfactory_db_ts'); }catch(e){}
-  try{ localStorage.removeItem('sanixfactory_notifs'); }catch(e){}
+  try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
+  try{ localStorage.removeItem('opusfab_db_ts'); }catch(e){}
+  try{ localStorage.removeItem('opusfab_notifs'); }catch(e){}
 
   // ── 2. Persister DB principale ────────────────────────────────
-  try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
-  try{ localStorage.removeItem('sanixfactory_db_ts'); }catch(e){}
-  try{ localStorage.removeItem('sanixfactory_notifs'); }catch(e){}
+  try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
+  try{ localStorage.removeItem('opusfab_db_ts'); }catch(e){}
+  try{ localStorage.removeItem('opusfab_notifs'); }catch(e){}
 
   // ── 5. Purger TOUS les espaces localStorage séparés ──────────
   var _lsKeysToClear = [
     // RH — Entretiens & Carrière
-    'sanixcrm_ec_entretiens','sanixcrm_ec_objectifs','sanixcrm_ec_mouvements',
-    'sanixcrm_ec_mobilite','sanixcrm_ec_succession',
+    'opusfab_ec_entretiens','opusfab_ec_objectifs','opusfab_ec_mouvements',
+    'opusfab_ec_mobilite','opusfab_ec_succession',
     // RH — Santé / Médecine du travail
-    'sanixcrm_sm_visites','sanixcrm_sm_aptitudes','sanixcrm_sm_epi_ref',
-    'sanixcrm_sm_dotations','sanixcrm_sm_maladies',
+    'opusfab_sm_visites','opusfab_sm_aptitudes','opusfab_sm_epi_ref',
+    'opusfab_sm_dotations','opusfab_sm_maladies',
     // RH — CDRH
     'cdrh_contrats','cdrh_avenants','cdrh_lettres','cdrh_attestations','cdrh_modeles',
     // RH — Formations & Compétences
-    'sanixcrm_formations','sanixcrm_sessions_form',
-    'sanixcrm_inscriptions_form','sanixcrm_competences_ref','sanixcrm_comp_evals',
+    'opusfab_formations','opusfab_sessions_form',
+    'opusfab_inscriptions_form','opusfab_competences_ref','opusfab_comp_evals',
     // RH — Primes & Paie
-    'sanixcrm_paliers_primes','sanixcrm_quinzainiers',
+    'opusfab_paliers_primes','opusfab_quinzainiers',
     // GMAO
     'gmao_equipements','gmao_plans','gmao_ots',
     'gmao_pieces','gmao_pieces_mvt','gmao_budget_lignes',
@@ -27766,8 +27795,8 @@ window.viderDemoData=function(){
     // Offline sync queue (SF v4.1)
     'sf_sync_queue_v2','sf_access_token','sf_refresh_token',
     // Divers
-    'sanixcrm_notes','sanixcrm_ia_history','sanixcrm_ia_params',
-    'sanixcrm_chrono_sync','sanixcrm_recent_modules',
+    'opusfab_notes','opusfab_ia_history','opusfab_ia_params',
+    'opusfab_chrono_sync','opusfab_recent_modules',
     'pf2_checklist_v1','beng_data',
     // Livraison
     'hub_livreurs','hub_tournees','hub_signatures',
@@ -27784,7 +27813,7 @@ window.viderDemoData=function(){
 
   // ── 6. Réinitialiser la configuration entreprise ──────────────
   // Supprimer la config démo pour que le client saisisse la sienne
-  try{ localStorage.removeItem('sanixfactory_config'); }catch(e){}
+  try{ localStorage.removeItem('opusfab_config'); }catch(e){}
   // Réinitialiser en mémoire avec des valeurs vides
   if(typeof setCfg === 'function') {
     setCfg({
@@ -27798,7 +27827,7 @@ window.viderDemoData=function(){
     });
   } else {
     try{
-      localStorage.setItem('sanixfactory_config', JSON.stringify({
+      localStorage.setItem('opusfab_config', JSON.stringify({
         nom:'', slogan:'', adresse:'', ville:'',
         phone:'', email:'', web:'',
         rccm:'', dfe:'', regime:'Normal',
@@ -27851,7 +27880,7 @@ window.exportAllData=function(){
   const blob=new Blob([data],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url;a.download='sanixcrm_backup_'+today()+'.json';a.click();
+  a.href=url;a.download='opusfab_backup_'+today()+'.json';a.click();
   URL.revokeObjectURL(url);
   showToast('✅ Sauvegarde exportée !','Fichier JSON complet','ok');
 };
@@ -28619,7 +28648,7 @@ window.rhImprimerBadge=function(empId){
   var dims={cr80:{w:'85.6mm',h:'54mm',font:'10px'},a5:{w:'148mm',h:'210mm',font:'14px'},a6:{w:'105mm',h:'148mm',font:'12px'}};
   var d=dims[size]||dims.cr80;
   var depColor={'production':'#F47920','commercial':'#3AAA35','logistique':'#1E5FAD','administration':'#7c3aed','maintenance':'#ef4444','qualite':'#0891b2','informatique':'#059669'}[emp.dept]||'#1E5FAD';
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var entreprise=cfg.entreprise||cfg.nom||"Mon Entreprise";
   var w=window.open('','_blank','width=500,height=400');
   if(!w) return;
@@ -28760,7 +28789,7 @@ window.genAttestationTravail_id = function(empId){
   var e=(DB.employes||[]).find(function(x){return x.id===empId;});
   if(!e){showToast('Employé introuvable','','err');return;}
   // Charger l'employé dans le panel puis générer
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var entreprise=cfg.nom||"Mon Entreprise";
   var w=window.open('','_blank','width=700,height=500');
   var dateDepart=e.dateDepart||new Date().toISOString().slice(0,10);
@@ -29873,7 +29902,7 @@ window.genLivrePaie=function(){
   const moisLabel=moisDate.toLocaleDateString('fr-FR',{month:'long',year:'numeric'}).toUpperCase();
   const emps=(DB.employes||[]).filter(e=>e.statut!=='depart');
   if(!emps.length){ showToast('Aucun employé actif','','err'); return; }
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const entreprise=cfg.nom||"Mon Entreprise SARL";
   const paies=emps.map(e=>({e,p:_calcPaieEmploye(e,mois)}));
   const totalBrut=paies.reduce((s,x)=>s+x.p.brutTotal,0);
@@ -30028,7 +30057,7 @@ window.genBulletinPaie=function(empId){
   const tauxH=brut/(26*HEURE_NORMALE);
   const montantSup=Math.round(sup*tauxH*HEURE_SUPP_TAUX);
   const netTotal=net+montantSup;
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const entreprise=cfg.nom||"Mon Entreprise SARL";
   const w=window.open('','_blank','width=700,height=900');
   w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bulletin de paie</title>
@@ -31687,7 +31716,7 @@ window.exportCSV=function(type){
     const csv=BOM+[headers,...rows].map(r=>r.map(v=>{const s=String(v??'').replace(/"/g,'""');return s.includes(';')||s.includes('"')?`"${s}"`:s;}).join(';')).join('\n');
     const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
     const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='sanixcrm_RH_'+today()+'.csv';a.click();URL.revokeObjectURL(url);
+    const a=document.createElement('a');a.href=url;a.download='opusfab_RH_'+today()+'.csv';a.click();URL.revokeObjectURL(url);
     showToast('✅ Export RH réussi !','','ok');
     return;
   }
@@ -31864,7 +31893,7 @@ window.saveFactureSimple = function() {
    © SANIX Africa — Usage interne confidentiel
 ══════════════════════════════════════════════════════ */
 
-var _LIC_SALT    = 'SANIX-AFRICA-SANIXFACTORY-2025-KCD';
+var _LIC_SALT    = 'SANIX-AFRICA-OPUSFAB-2026-KCD';
 var _LIC_VERSION = 'v1';
 
 /* ── Définition des modules ──
@@ -33238,7 +33267,7 @@ function _getEmpDepart() {
   return (DB.employes||[]).find(x=>x.id===_departEmpId);
 }
 function _getCfgEntreprise() {
-  try{ return JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){ return {}; }
+  try{ return JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){ return {}; }
 }
 
 window.genAttestationTravail = function() {
@@ -34836,7 +34865,7 @@ window.exportJSON = function() {
       app:'SANIX OpusFab by SANIX Africa',
       modules:['contacts','commercial','stock','production','achats','finance','rh','qualite','gmao']
     },
-    config: JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'),
+    config: JSON.parse(localStorage.getItem('opusfab_config')||'{}'),
     /* ── Commercial ── */
     contacts:DB.contacts||[], leads:DB.leads||[], opps:DB.opps||[],
     acts:DB.acts||[], cmds:DB.cmds||[], devis:DB.devis||[],
@@ -34945,7 +34974,7 @@ window.importJSON = function() {
   if(data._gmao_plans)         _gSet2('gmao_plans',         data._gmao_plans);
   if(data._gmao_interventions) _gSet2('gmao_interventions', data._gmao_interventions);
   // Restaurer config
-  if(data.config) localStorage.setItem('sanixfactory_config', JSON.stringify(data.config));
+  if(data.config) localStorage.setItem('opusfab_config', JSON.stringify(data.config));
   document.getElementById('import-preview').style.display='none';
   document.getElementById('import-btn').style.display='none';
   document.getElementById('import-json-file').value='';
@@ -37067,7 +37096,7 @@ window.genBonTransfert=function(tr){
   var art=(DB.articles||[]).find(function(a){return a.id===tr.artId;})||{name:'—',unit:'u.',ref:''};
   var src=(DB.depots||[]).find(function(d){return d.id===tr.srcDepotId;})||{nom:'?',code:'?',localisation:''};
   var dst=(DB.depots||[]).find(function(d){return d.id===tr.dstDepotId;})||{nom:'?',code:'?',localisation:''};
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var MOTIFS={approvisionnement:'Approvisionnement interne',expedition:'Expédition client',reajustement:'Réajustement de stock',retour:'Retour en dépôt',autre:'Autre'};
   var w=window.open('','_blank','width=750,height=600');
   w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>BT '+tr.numero+'</title>'
@@ -41264,7 +41293,7 @@ function _applyRolePerms(role){
 ══════════════════════════════════════════════════════════════ */
 window.exportPDF=function(type){
   var w=window.open('','_blank','width=800,height=700');
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var entreprise=cfg.nom||"Mon Entreprise SARL";
   var today_=new Date().toLocaleDateString('fr-FR');
   var css='<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a1a;padding:20px 30px;}.header{display:flex;justify-content:space-between;border-bottom:3px solid #1E5FAD;padding-bottom:12px;margin-bottom:20px;}.company{font-size:18px;font-weight:700;color:#1E5FAD;}.title{font-size:20px;font-weight:700;text-align:center;margin:16px 0;text-transform:uppercase;letter-spacing:2px;}.section{margin:16px 0;}.sh{font-size:13px;font-weight:700;border-left:4px solid #1E5FAD;padding-left:8px;margin-bottom:10px;}.kgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}.kbox{padding:12px;border:1px solid #e2e8f0;border-radius:8px;text-align:center;}.kn{font-size:18px;font-weight:700;color:#1E5FAD;}.kl{font-size:11.5px;color:#64748b;margin-top:3px;}table{width:100%;border-collapse:collapse;}.th{background:#1E5FAD;color:#fff;padding:8px;font-size:11px;}.td{padding:7px;border-bottom:1px solid #e2e8f0;font-size:11px;}.footer{margin-top:30px;text-align:center;font-size:11.5px;color:#64748b;border-top:1px solid #e2e8f0;padding-top:10px;}@media print{button{display:none!important;}}</style>';
@@ -43111,7 +43140,7 @@ window.importReleveBancaire=function(){
 window.exportFEC=function(){
   // Fichier des Écritures Comptables (norme DGI)
   var txs=[...( DB.transactions||[])].sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var siren=cfg.rccm||'00000000';
   var rows=['JournalCode|JournalLib|EcritureNum|EcritureDate|CompteNum|CompteLib|Debit|Credit|EcritureLet|DateLet|ValidDate|Montantdevise|Idevise'];
   var numEcr=1;
@@ -43382,7 +43411,7 @@ function _renderInteropLog(){
 
 // ── Export SAGE ──
 window.exportSage = function(mode){
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var rows=[];
   if(mode==='journal'){
     // Format Sage journal : NumPiece;Date;NumCompte;Libellé;Débit;Crédit;NumJournal
@@ -43439,7 +43468,7 @@ window.exportCiel = function(){
 
 // ── Export JSON / API ──
 window.exportJSON_API = function(type){
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var data={};
   var meta={source:'SANIX OpusFab',exported:new Date().toISOString(),entreprise:cfg.nom||'SANIX OpusFab',version:'1.0'};
   if(type==='transactions') data={meta:meta,transactions:DB.transactions||[]};
@@ -43471,7 +43500,7 @@ window.exportJSON_API = function(type){
 // ── Export OFX ──
 window.exportOFX = function(){
   var txs=DB.transactions||[];
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var now=new Date().toISOString().replace(/[-:T.]/g,'').substring(0,14);
   var lines=['OFXHEADER:100','DATA:OFXSGML','VERSION:102','SECURITY:NONE','ENCODING:USASCII','CHARSET:1252','COMPRESSION:NONE','OLDFILEUID:NONE','NEWFILEUID:NONE','',
     '<OFX>','<SIGNONMSGSRSV1>','<SONRS>','<STATUS>','<CODE>0</CODE>','<SEVERITY>INFO</SEVERITY>','</STATUS>',
@@ -43502,7 +43531,7 @@ window.exportOFX = function(){
 // ── Export MT940 (SWIFT) ──
 window.exportMT940 = function(){
   var txs=[...(DB.transactions||[])].sort(function(a,b){return (a.date||'').localeCompare(b.date||'');});
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var solde=txs.reduce(function(s,t){return s+(t.type==='encaissement'?t.montant:-t.montant);},0);
   var dateStr=today().replace(/-/g,'').substring(2);
   var lines=[
@@ -43622,16 +43651,16 @@ window.importerFichier = function(input){
 // ── Webhook ──
 window.sauvegarderWebhook = function(){
   var url=document.getElementById('webhook-url')?.value||'';
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   cfg.webhookUrl=url;
-  localStorage.setItem('sanixfactory_config',JSON.stringify(cfg));
+  localStorage.setItem('opusfab_config',JSON.stringify(cfg));
   showToast('✅ Webhook enregistré',url?url.substring(0,40)+'…':'(désactivé)','ok');
 };
 
 window.testerWebhook = function(){
   var url=document.getElementById('webhook-url')?.value||'';
   if(!url){showToast('Saisissez une URL webhook','','err');return;}
-  var payload={event:'test',source:'SANIX OpusFab',date:new Date().toISOString(),data:{message:'Test webhook SANIX OpusFab',entreprise:JSON.parse(localStorage.getItem('sanixfactory_config')||'{}').nom||'SANIX OpusFab'}};
+  var payload={event:'test',source:'SANIX OpusFab',date:new Date().toISOString(),data:{message:'Test webhook SANIX OpusFab',entreprise:JSON.parse(localStorage.getItem('opusfab_config')||'{}').nom||'SANIX OpusFab'}};
   showToast('📡 Envoi webhook…','Vérifiez votre serveur','info');
   // En HTML standalone, fetch peut être bloqué par CORS — on simule
   try{
@@ -43643,7 +43672,7 @@ window.testerWebhook = function(){
 
 // ── Documentation API ──
 window.afficherDocAPI = function(){
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var w=window.open('','_blank','width=750,height=600');
   w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SANIX OpusFab API Docs</title>'
     +'<style>body{font-family:monospace;background:#0f172a;color:#e2e8f0;margin:0;padding:24px;}h1{color:#3AAA35;font-size:18px;}h2{color:#1E5FAD;font-size:13px;margin-top:20px;}.ep{background:#1e293b;border-radius:8px;padding:12px;margin:8px 0;border-left:3px solid #3AAA35;}.method{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:4px;margin-right:8px;}.get{background:#059669;color:#fff;}.post{background:#1E5FAD;color:#fff;}.url{color:#F47920;}.desc{color:#94A3B8;font-size:11px;margin-top:4px;}.code{background:#0f172a;border:1px solid #334155;border-radius:6px;padding:10px;margin-top:8px;font-size:11.5px;color:#94a3b8;white-space:pre;overflow-x:auto;}</style>'
@@ -43689,7 +43718,7 @@ window.exportBalanceCSV=function(){
 window.exportTVADeclaration=function(){
   var periode=document.getElementById('tva-periode')?.value||'mois';
   var txs=_filterPeriode(DB.transactions||[], periode);
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var tvaC=0,baseC=0,tvaD=0,baseD=0;
   txs.forEach(function(t){
     var taux=t.tauxTVA||18;
@@ -43929,6 +43958,7 @@ window.renderSoldeChart=function(){
     /* Purge des caches de l'ancien worker, qui pouvaient contenir des
        donnees d'un utilisateur precedent. */
     if (window.caches && caches.keys) caches.keys().then(function(noms){
+      /* Nom historique : ce sont les caches de l'ancien worker, a purger. */
       noms.filter(function(n){ return n.indexOf('sanixcrm') === 0; })
           .forEach(function(n){ caches.delete(n); });
     });
@@ -43956,7 +43986,7 @@ window.renderSoldeChart=function(){
 window.ouvrirDashDirection=function(){
   var now=new Date();
   var moisStr=now.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
 
   // Calculs
   var txs=DB.transactions||[];
@@ -44215,7 +44245,7 @@ window.imprimerAvoir=function(avId){
   var av=(DB.avoirs||[]).find(function(a){return a.id===avId;}); if(!av) return;
   var f=(DB.factures||[]).find(function(x){return x.id===av.factId;})||{ref:'—',lignes:[]};
   var cl=(DB.contacts||[]).find(function(c){return c.id===av.cid;})||{name:'?',addr:''};
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var MOTIFS={retour:'Retour marchandise',erreur:'Erreur de facturation',remise:'Remise commerciale',litige:'Litige client',autre:'Autre'};
   var w=window.open('','_blank','width=750,height=600');
   w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Avoir '+av.reference+'</title>'
@@ -44273,7 +44303,7 @@ window.exportXLSX=function(type){
   }
 
   var wb=XLSX.utils.book_new();
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var dateStr=new Date().toLocaleDateString('fr-FR');
 
   if(type==='transactions'||type==='tresorerie'){
@@ -44873,7 +44903,7 @@ window.genBCF=function(fournId){
 
   // Si plusieurs commandes en attente → choisir la dernière
   var achat=achats[0];
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var w=window.open('','_blank','width=750,height=650');
   var total=achat.total||(achat.lignes||[]).reduce(function(s,l){return s+l.qte*(l.pu||0);},0);
   var tvaAmt=Math.round(total*(f.tva||18)/100);
@@ -45758,7 +45788,7 @@ window.posEncaisser=function(){
   showToast('✅ '+ref,fmil(ttc)+' F encaissé · '+POS.mode,'ok');
 };
 
-function posImprimerTicket(v){var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');var ent=cfg.entreprise||cfg.nom||"Mon Entreprise";var rendu=v.mode==='especes'?Math.max(0,v.remis-v.ttc):0;var w=window.open('','_blank','width=300,height=550');if(!w)return;w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>*{margin:0;padding:0;}body{font-family:"Courier New",monospace;font-size:11px;width:58mm;padding:4mm;}.c{text-align:center;}.b{font-weight:bold;}.sep{border-top:1px dashed #000;margin:4px 0;}.sep2{border-top:2px solid #000;margin:4px 0;}.row{display:flex;justify-content:space-between;margin:2px 0;}</style></head><body><div class="c b" style="font-size:13px;margin-bottom:3px;">'+ent+'</div><div class="c" style="font-size:11px;">TICKET DE CAISSE</div><div class="c" style="font-size:11px;">'+v.date+' · '+v.heure+' · '+v.caissiere+'</div><div class="c b" style="font-size:11.5px;">Réf: '+v.ref+'</div><div class="sep2"></div>'+v.lignes.map(function(l){return'<div><div class="b">'+l.nom+'</div><div class="row" style="font-size:11.5px;"><span>'+l.qte+' × '+fmil(l.pu)+' F</span><span class="b">'+fmil(Math.round(l.qte*l.pu*(1-(l.remise||0)/100)))+' F</span></div></div>';}).join('')+(v.remiseGlob?'<div class="row" style="font-size:11.5px;"><span>Remise</span><span>-'+v.remiseGlob+'%</span></div>':'')+'<div class="sep2"></div><div class="row b" style="font-size:14px;"><span>TOTAL TTC</span><span>'+fmil(v.ttc)+' F</span></div><div class="sep"></div><div class="row" style="font-size:11.5px;"><span>Mode</span><span>'+v.mode.toUpperCase()+'</span></div>'+(rendu>0?'<div class="row b"><span>RENDU</span><span>'+fmil(rendu)+' F</span></div>':'')+'<div class="sep2"></div><div class="c" style="font-size:11px;margin-top:5px;">Merci · SANIX OpusFab</div><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');w.document.close();}
+function posImprimerTicket(v){var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');var ent=cfg.entreprise||cfg.nom||"Mon Entreprise";var rendu=v.mode==='especes'?Math.max(0,v.remis-v.ttc):0;var w=window.open('','_blank','width=300,height=550');if(!w)return;w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>*{margin:0;padding:0;}body{font-family:"Courier New",monospace;font-size:11px;width:58mm;padding:4mm;}.c{text-align:center;}.b{font-weight:bold;}.sep{border-top:1px dashed #000;margin:4px 0;}.sep2{border-top:2px solid #000;margin:4px 0;}.row{display:flex;justify-content:space-between;margin:2px 0;}</style></head><body><div class="c b" style="font-size:13px;margin-bottom:3px;">'+ent+'</div><div class="c" style="font-size:11px;">TICKET DE CAISSE</div><div class="c" style="font-size:11px;">'+v.date+' · '+v.heure+' · '+v.caissiere+'</div><div class="c b" style="font-size:11.5px;">Réf: '+v.ref+'</div><div class="sep2"></div>'+v.lignes.map(function(l){return'<div><div class="b">'+l.nom+'</div><div class="row" style="font-size:11.5px;"><span>'+l.qte+' × '+fmil(l.pu)+' F</span><span class="b">'+fmil(Math.round(l.qte*l.pu*(1-(l.remise||0)/100)))+' F</span></div></div>';}).join('')+(v.remiseGlob?'<div class="row" style="font-size:11.5px;"><span>Remise</span><span>-'+v.remiseGlob+'%</span></div>':'')+'<div class="sep2"></div><div class="row b" style="font-size:14px;"><span>TOTAL TTC</span><span>'+fmil(v.ttc)+' F</span></div><div class="sep"></div><div class="row" style="font-size:11.5px;"><span>Mode</span><span>'+v.mode.toUpperCase()+'</span></div>'+(rendu>0?'<div class="row b"><span>RENDU</span><span>'+fmil(rendu)+' F</span></div>':'')+'<div class="sep2"></div><div class="c" style="font-size:11px;margin-top:5px;">Merci · SANIX OpusFab</div><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');w.document.close();}
 
 window.posModalFermeture=function(){if(!POS.sessionId){showToast('Aucune caisse ouverte','','info');return;}var sess=(DB.pos_sessions||[]).find(function(s){return s.id===POS.sessionId;});if(!sess)return;var recap=document.getElementById('pos-ferm-recap');if(recap)recap.innerHTML=[{n:fmil(sess.totalVentes||0)+' F',l:'CA total',col:'#4ade80'},{n:sess.nbVentes||0,l:'Ventes',col:'#60a5fa'},{n:fmil(sess.especes||0)+' F',l:'Espèces',col:'#fff'},{n:fmil((sess.mobile||0)+(sess.carte||0))+' F',l:'Mobile+Carte',col:'#c084fc'}].map(function(x){return'<div style="text-align:center;"><div style="font-size:18px;font-weight:700;color:'+x.col+';">'+x.n+'</div><div style="font-size:11px;color:rgba(255,255,255,.4);">'+x.l+'</div></div>';}).join('');var ee=document.getElementById('pos-ferm-especes');if(ee)ee.value='';var ne=document.getElementById('pos-ferm-notes');if(ne)ne.value='';var ec=document.getElementById('pos-ferm-ecart');if(ec)ec.textContent='Attendu: '+fmil(sess.especes||0)+' F';document.getElementById('pos-modal-ferm').style.display='flex';setTimeout(function(){var e=document.getElementById('pos-ferm-especes');if(e)e.focus();},100);};
 window.posCalcEcart=function(){var sess=(DB.pos_sessions||[]).find(function(s){return s.id===POS.sessionId;});if(!sess)return;var compte=parseFloat((document.getElementById('pos-ferm-especes')||{}).value)||0;var ecart=compte-(sess.especes||0);var el=document.getElementById('pos-ferm-ecart');if(!el)return;el.textContent='Attendu: '+fmil(sess.especes||0)+' F · Écart: '+(ecart>=0?'+':'')+fmil(ecart)+' F';el.style.color=Math.abs(ecart)<1000?'#4ade80':Math.abs(ecart)<5000?'#fbbf24':'#f87171';};
@@ -45805,7 +45835,7 @@ window.posConfirmerFermeture=function(){
   showToast('Caisse clôturée','Ticket Z imprimé','ok');
 };
 
-function posImprimerTicketZ(sess){var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');var ent=cfg.entreprise||cfg.nom||"Mon Entreprise";var caisse=(DB.pos_caisses||[]).find(function(c){return c.id===sess.caisseId;})||{nom:'Caisse'};var ventes=(DB.pos_ventes||[]).filter(function(v){return v.sessionId===sess.id;});var tkMoyen=sess.nbVentes?Math.round(sess.totalVentes/sess.nbVentes):0;var am={};ventes.forEach(function(v){(v.lignes||[]).forEach(function(l){am[l.nom]=(am[l.nom]||0)+l.qte*l.pu;});});var top=Object.entries(am).sort(function(a,b){return b[1]-a[1];}).slice(0,5);var w=window.open('','_blank','width=300,height=650');if(!w)return;w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>*{margin:0;padding:0;}body{font-family:"Courier New",monospace;font-size:11px;width:58mm;padding:4mm;}.c{text-align:center;}.b{font-weight:bold;}.sep{border-top:1px dashed #000;margin:4px 0;}.sep2{border-top:2px solid #000;margin:5px 0;}.row{display:flex;justify-content:space-between;margin:2px 0;}</style></head><body><div class="c b" style="font-size:13px;">'+ent+'</div><div class="c b">★ RAPPORT DE CLÔTURE ★</div><div class="c" style="font-size:11px;">TICKET Z</div><div class="sep2"></div><div class="row"><span>Caisse</span><span class="b">'+caisse.nom+'</span></div><div class="row"><span>Caissière</span><span class="b">'+sess.caissiere+'</span></div><div class="row"><span>Date</span><span>'+sess.date+'</span></div><div class="row"><span>Ouverture</span><span>'+sess.heureOuv+'</span></div><div class="row"><span>Clôture</span><span>'+(sess.heureFerm||'—')+'</span></div><div class="sep2"></div><div class="row"><span>Nb ventes</span><span class="b">'+(sess.nbVentes||0)+'</span></div><div class="row"><span>Ticket moyen</span><span>'+fmil(tkMoyen)+' F</span></div><div class="sep"></div><div class="row"><span>Espèces</span><span>'+fmil(sess.especes||0)+' F</span></div><div class="row"><span>Mobile</span><span>'+fmil(sess.mobile||0)+' F</span></div><div class="row"><span>Carte</span><span>'+fmil(sess.carte||0)+' F</span></div><div class="sep2"></div><div class="row b" style="font-size:14px;"><span>CA TOTAL TTC</span><span>'+fmil(sess.totalVentes||0)+' F</span></div><div class="sep2"></div><div class="row"><span>Fond ouverture</span><span>'+fmil(sess.fondCaisse||0)+' F</span></div><div class="row"><span>Espèces comptées</span><span>'+fmil(sess.espCompte||0)+' F</span></div><div class="row b" style="color:'+(Math.abs(sess.ecart||0)<1000?'#000':'#c00')+'"><span>Écart</span><span>'+(sess.ecart>=0?'+':'')+fmil(sess.ecart||0)+' F</span></div>'+(top.length?'<div class="sep2"></div><div class="b c">TOP ARTICLES</div><div class="sep"></div>'+top.map(function(t){return'<div class="row" style="font-size:11.5px;"><span>'+t[0].slice(0,24)+'</span><span>'+fmil(t[1])+' F</span></div>';}).join(''):'')+(sess.notesFerm?'<div class="sep"></div><div style="font-size:11px;">'+sess.notesFerm+'</div>':'')+'<div class="sep2"></div><div class="c" style="font-size:11px;">SANIX OpusFab · '+new Date().toLocaleString('fr-FR')+'</div><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');w.document.close();}
+function posImprimerTicketZ(sess){var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');var ent=cfg.entreprise||cfg.nom||"Mon Entreprise";var caisse=(DB.pos_caisses||[]).find(function(c){return c.id===sess.caisseId;})||{nom:'Caisse'};var ventes=(DB.pos_ventes||[]).filter(function(v){return v.sessionId===sess.id;});var tkMoyen=sess.nbVentes?Math.round(sess.totalVentes/sess.nbVentes):0;var am={};ventes.forEach(function(v){(v.lignes||[]).forEach(function(l){am[l.nom]=(am[l.nom]||0)+l.qte*l.pu;});});var top=Object.entries(am).sort(function(a,b){return b[1]-a[1];}).slice(0,5);var w=window.open('','_blank','width=300,height=650');if(!w)return;w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>*{margin:0;padding:0;}body{font-family:"Courier New",monospace;font-size:11px;width:58mm;padding:4mm;}.c{text-align:center;}.b{font-weight:bold;}.sep{border-top:1px dashed #000;margin:4px 0;}.sep2{border-top:2px solid #000;margin:5px 0;}.row{display:flex;justify-content:space-between;margin:2px 0;}</style></head><body><div class="c b" style="font-size:13px;">'+ent+'</div><div class="c b">★ RAPPORT DE CLÔTURE ★</div><div class="c" style="font-size:11px;">TICKET Z</div><div class="sep2"></div><div class="row"><span>Caisse</span><span class="b">'+caisse.nom+'</span></div><div class="row"><span>Caissière</span><span class="b">'+sess.caissiere+'</span></div><div class="row"><span>Date</span><span>'+sess.date+'</span></div><div class="row"><span>Ouverture</span><span>'+sess.heureOuv+'</span></div><div class="row"><span>Clôture</span><span>'+(sess.heureFerm||'—')+'</span></div><div class="sep2"></div><div class="row"><span>Nb ventes</span><span class="b">'+(sess.nbVentes||0)+'</span></div><div class="row"><span>Ticket moyen</span><span>'+fmil(tkMoyen)+' F</span></div><div class="sep"></div><div class="row"><span>Espèces</span><span>'+fmil(sess.especes||0)+' F</span></div><div class="row"><span>Mobile</span><span>'+fmil(sess.mobile||0)+' F</span></div><div class="row"><span>Carte</span><span>'+fmil(sess.carte||0)+' F</span></div><div class="sep2"></div><div class="row b" style="font-size:14px;"><span>CA TOTAL TTC</span><span>'+fmil(sess.totalVentes||0)+' F</span></div><div class="sep2"></div><div class="row"><span>Fond ouverture</span><span>'+fmil(sess.fondCaisse||0)+' F</span></div><div class="row"><span>Espèces comptées</span><span>'+fmil(sess.espCompte||0)+' F</span></div><div class="row b" style="color:'+(Math.abs(sess.ecart||0)<1000?'#000':'#c00')+'"><span>Écart</span><span>'+(sess.ecart>=0?'+':'')+fmil(sess.ecart||0)+' F</span></div>'+(top.length?'<div class="sep2"></div><div class="b c">TOP ARTICLES</div><div class="sep"></div>'+top.map(function(t){return'<div class="row" style="font-size:11.5px;"><span>'+t[0].slice(0,24)+'</span><span>'+fmil(t[1])+' F</span></div>';}).join(''):'')+(sess.notesFerm?'<div class="sep"></div><div style="font-size:11px;">'+sess.notesFerm+'</div>':'')+'<div class="sep2"></div><div class="c" style="font-size:11px;">SANIX OpusFab · '+new Date().toLocaleString('fr-FR')+'</div><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');w.document.close();}
 
 
 
@@ -46984,7 +47014,7 @@ window.exportToExcel = function(type){
 
 // Export PDF rapport
 window.exportReportPDF = function(){
-  var cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var contacts = DB.contacts||[];
   var cmds = DB.cmds||[];
   var opps = DB.opps||[];
@@ -47406,8 +47436,8 @@ document.addEventListener('keydown', function(e){
     _saveTimer = setTimeout(function(){
       try{
         var snapshot = JSON.stringify(DB);
-        localStorage.setItem('sanixfactory_db', snapshot);
-        localStorage.setItem('sanixfactory_db_ts', new Date().toISOString());
+        localStorage.setItem('opusfab_db', snapshot);
+        localStorage.setItem('opusfab_db_ts', new Date().toISOString());
       }catch(e){ console.warn('[SANIX OpusFab] Erreur localStorage:', e.message); }
     }, 500);
     // Appeler l'original
@@ -47693,7 +47723,7 @@ function showSyncBar(pct, done) {
       showSyncBar(100, true);
     }
     // Toujours persister en localStorage
-    try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); } catch(e){}
+    try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); } catch(e){}
     return p;
   };
 })();
@@ -47721,13 +47751,13 @@ var _notifUnread = 0;
 
 function _initNotifStore() {
   try {
-    var saved = localStorage.getItem('sanixfactory_notifs');
+    var saved = localStorage.getItem('opusfab_notifs');
     if (saved) _notifStore = JSON.parse(saved);
   } catch(e) { _notifStore = []; }
 }
 
 function _saveNotifs() {
-  try { localStorage.setItem('sanixfactory_notifs', JSON.stringify(_notifStore.slice(0, 80))); } catch(e){}
+  try { localStorage.setItem('opusfab_notifs', JSON.stringify(_notifStore.slice(0, 80))); } catch(e){}
 }
 
 function addNotif(title, sub, type, section) {
@@ -48355,7 +48385,7 @@ window.exportCSV = function(type) {
   var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a'); a.href = url;
-  a.download = 'sanixcrm_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download = 'opusfab_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click(); URL.revokeObjectURL(url);
   if (window.showToast) window.showToast('Export CSV — '+rows.length-1+' lignes téléchargées','','ok');
 };
@@ -48364,7 +48394,7 @@ window.exportPDF = function(type) {
   var win = window.open('','_blank','width=900,height=650');
   if (!win) { if (window.showToast) window.showToast('Popup bloqué','Autorisez les popups','err'); return; }
   var cfg = {};
-  try { cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); } catch(e){}
+  try { cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}'); } catch(e){}
   var now = new Date().toLocaleDateString('fr-FR');
   var title = {ca:'Rapport CA & Commandes',contacts:'Liste des contacts',leads:'Pipeline Leads',devis:'Liste des devis'}[type]||'Rapport';
   var rows = [], headers = [], data = [];
@@ -48451,20 +48481,20 @@ function injectExportButtons() {
 ────────────────────────────────────────────────────────── */
 function getNotes(entityId) {
   try {
-    var all = JSON.parse(localStorage.getItem('sanixcrm_notes') || '{}');
+    var all = JSON.parse(localStorage.getItem('opusfab_notes') || '{}');
     return all[entityId] || [];
   } catch(e) { return []; }
 }
 function saveNote(entityId, text) {
   if (!text.trim()) return;
   try {
-    var all = JSON.parse(localStorage.getItem('sanixcrm_notes') || '{}');
+    var all = JSON.parse(localStorage.getItem('opusfab_notes') || '{}');
     if (!all[entityId]) all[entityId] = [];
     var user = window.SESSION ? SESSION.userName || SESSION.userId || 'Utilisateur' : 'Utilisateur';
     var initials = user.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2) || 'U';
     all[entityId].unshift({ id: Date.now()+'', text: text.trim(), author: user, initials: initials, time: new Date().toISOString() });
     if (all[entityId].length > 50) all[entityId] = all[entityId].slice(0, 50);
-    localStorage.setItem('sanixcrm_notes', JSON.stringify(all));
+    localStorage.setItem('opusfab_notes', JSON.stringify(all));
   } catch(e) {}
 }
 function renderNotesThread(entityId, container) {
@@ -48751,7 +48781,7 @@ function _aiAnalyze(q) {
 ────────────────────────────────────────────────────────── */
 setInterval(function() {
   if (window.DB) {
-    try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); } catch(e){}
+    try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); } catch(e){}
   }
 }, 30000);
 
@@ -49083,7 +49113,7 @@ function renderMargesChartsV2(){
 
 function generateFullReport(){
   if(!window.DB)return;
-  var cfg={};try{cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');}catch(e){}
+  var cfg={};try{cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');}catch(e){}
   var contacts=DB.contacts||[],leads=DB.leads||[],opps=DB.opps||[],cmds=DB.cmds||[];
   var now=new Date().toLocaleDateString('fr-FR');
   var caTotal=contacts.reduce(function(s,c){return s+(c.ca||0);},0);
@@ -49870,7 +49900,7 @@ function _reapproRenderApercu() {
 
   var fourn = _reapproState.fourn || {};
   var cfg = {};
-  try { cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); } catch(e) {}
+  try { cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}'); } catch(e) {}
   var now = new Date().toLocaleDateString('fr-FR');
   var refBC = 'BC-' + new Date().getFullYear() + '-' + (String((window.DB ? (DB.achats||[]).length : 0) + 1).padStart(4,'0'));
   var urgConf = { normale:'🟢 Normale', urgente:'🟠 Urgente', critique:'🔴 Critique' };
@@ -49956,7 +49986,7 @@ function _reapproRenderApercu() {
 ───────────────────────────────────────────── */
 function _reapproGenTexte() {
   var fourn = _reapproState.fourn || {};
-  var cfg = {}; try { cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); } catch(e) {}
+  var cfg = {}; try { cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}'); } catch(e) {}
   var urgLbls = { normale:'Normale', urgente:'URGENTE', critique:'CRITIQUE ⚠️' };
   var paiLbls = { comptant:'Comptant à la livraison', '30j':'30 jours', '60j':'60 jours', avance:'Avance de 50% requis', virement:'Virement bancaire' };
   var lines = _reapproState.lignes.map(function(l, i) {
@@ -50002,7 +50032,7 @@ window.envoyerReapproWhatsApp = function() {
 window.envoyerReapproEmail = function() {
   var fourn = _reapproState.fourn || {};
   var email = fourn.email || '';
-  var cfg = {}; try { cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); } catch(e){}
+  var cfg = {}; try { cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}'); } catch(e){}
   var sujet = encodeURIComponent('Bon de commande '+(_reapproState._refBC||'BC')+' — '+(cfg.nom||'SANIX OpusFab'));
   var corps = encodeURIComponent('Bonjour '+(fourn.contact||fourn.nom||'')+',\n\n' + _reapproGenTexte());
   var url = 'https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(email)+'&su='+sujet+'&body='+corps;
@@ -50025,7 +50055,7 @@ window.copierReappro = function() {
 window.imprimerReappro = function() {
   var apercu = document.getElementById('ra-apercu');
   if (!apercu) return;
-  var cfg = {}; try { cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); } catch(e){}
+  var cfg = {}; try { cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}'); } catch(e){}
   var win = window.open('','_blank','width=900,height=650');
   if (!win) { showToast('Popup bloqué','Autorisez les popups','err'); return; }
   win.document.write('<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"/><title>Bon de commande</title>'
@@ -50077,7 +50107,7 @@ window.validerReapproCommande = function() {
     createdAt: new Date().toISOString()
   };
   window.DB.achats.unshift(nouvelAchat);
-  try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); } catch(e){}
+  try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); } catch(e){}
 
   fermerReapproModal();
   showToast('✅ Commande '+refBC+' créée !',
@@ -51700,7 +51730,7 @@ window._saveDetNote = function(entityId) {
   var user = (typeof SESSION!=='undefined' && SESSION.userId) ? SESSION.userId : 'admin';
   var userObj = (typeof USERS!=='undefined' && USERS[user]) ? USERS[user] : {name:'Utilisateur',initials:'US'};
   window.DB.notes.push({ id:'nt'+Date.now(), entityId:entityId, entityType:'contact', text:inp.value.trim(), author:userObj.name||user, initials:(userObj.initials||user.slice(0,2)).toUpperCase(), time:new Date().toISOString() });
-  try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); } catch(e){}
+  try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); } catch(e){}
   inp.value = '';
   if (window.showToast) window.showToast('Note ajoutée','','ok');
   // Rafraîchir le panel notes
@@ -52028,7 +52058,7 @@ function _refreshSidebarKPIs() {
 window.imprimerFicheContact = function(id) {
   var c = (window.DB ? DB.contacts||[] : []).find(function(x){return x.id===id;});
   if (!c) return;
-  var cfg = {}; try { cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); } catch(e){}
+  var cfg = {}; try { cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}'); } catch(e){}
   var cmds = (window.DB ? DB.cmds||[] : []).filter(function(x){return x.cid===id&&x.status!=='cancel';});
   var opps = (window.DB ? DB.opps||[] : []).filter(function(x){return x.contactId===id;});
   var caReel = cmds.reduce(function(s,c2){return s+((c2.lignes||[]).reduce(function(ss,l){return ss+l.qte*l.pu;},0));},0);
@@ -52312,7 +52342,7 @@ window.renderIA = function() {
   }
 
   var r = window.IA.results;
-  var cfg = {}; try{cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');}catch(e){}
+  var cfg = {}; try{cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');}catch(e){}
   var ent = cfg.nom || "Mon Entreprise";
   var scoreHtml = r ? _iaScoreRing(r.scores.global, 88) : '';
   var scoreCol  = r ? (r.scores.global>=75?'#4ade80':r.scores.global>=50?'#fbbf24':'#f87171') : '#94A3B8';
@@ -53033,7 +53063,7 @@ function _orgaTreeHTML() {
   var emps = window.DB ? DB.employes||[] : [];
   if (!emps.length) return '<div style="padding:40px;text-align:center;color:var(--t3);">Aucun employé. <button class="btn btn-r btn-sm" onclick="openForm(\'employe\',null)">Ajouter</button></div>';
 
-  var cfg = {}; try{cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');}catch(e){}
+  var cfg = {}; try{cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');}catch(e){}
 
   // Regrouper par département
   var byDept = {};
@@ -53360,7 +53390,7 @@ window.exportOrganigramme = function() {
   // Create a printable version
   var win = window.open('','_blank','width=1000,height=700');
   if (!win) { if(window.showToast) showToast('Popup bloqué','Autorisez les popups','err'); return; }
-  var cfg={}; try{cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');}catch(e){}
+  var cfg={}; try{cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');}catch(e){}
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Organigramme — '+(cfg.nom||'SANIX OpusFab')+'</title>'
     +'<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>'
     +'<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:20px;background:#fff;}'
@@ -53466,12 +53496,12 @@ window.IA = window.IA || { running:false, results:null, tab:'diagnostic', prescF
 
 // Historique des analyses pour l'auto-amélioration
 var _iaHistory = (function(){
-  try { return JSON.parse(localStorage.getItem('sanixcrm_ia_history')||'[]'); } catch(e){ return []; }
+  try { return JSON.parse(localStorage.getItem('opusfab_ia_history')||'[]'); } catch(e){ return []; }
 })();
 
 // Paramètres IA appris automatiquement
 var _iaParams = (function(){
-  try { return JSON.parse(localStorage.getItem('sanixcrm_ia_params')||'{}'); } catch(e){ return {}; }
+  try { return JSON.parse(localStorage.getItem('opusfab_ia_params')||'{}'); } catch(e){ return {}; }
 })();
 
 /* ─ Pondérations dynamiques (s'améliorent avec chaque analyse) ─ */
@@ -53508,7 +53538,7 @@ function _autoCalibrate(results) {
   // Persister
   _iaParams.w_commercial = w.commercial; _iaParams.w_ops = w.ops; _iaParams.w_finance = w.finance;
   _iaParams.w_qualite = w.qualite; _iaParams.w_rh = w.rh; _iaParams.w_digital = w.digital;
-  try { localStorage.setItem('sanixcrm_ia_params', JSON.stringify(_iaParams)); } catch(e){}
+  try { localStorage.setItem('opusfab_ia_params', JSON.stringify(_iaParams)); } catch(e){}
   return w;
 }
 
@@ -53675,7 +53705,7 @@ window.iaCompute = function() {
   // Sauvegarder dans l'historique
   _iaHistory.push({ date:result.date, scores:result.scores, version:result.version });
   if (_iaHistory.length > 10) _iaHistory.shift(); // Garder 10 dernières analyses
-  try { localStorage.setItem('sanixcrm_ia_history', JSON.stringify(_iaHistory)); } catch(e){}
+  try { localStorage.setItem('opusfab_ia_history', JSON.stringify(_iaHistory)); } catch(e){}
 
   return result;
 };
@@ -54030,12 +54060,12 @@ console.log('%cSANIX OpusFab Ultra — IA Top Management + Organigramme ✅','co
 
 // ── Stockage des phases synchronisées ──
 var _chronoSync = (function() {
-  try { return JSON.parse(localStorage.getItem('sanixcrm_chrono_sync') || '{}'); }
+  try { return JSON.parse(localStorage.getItem('opusfab_chrono_sync') || '{}'); }
   catch(e) { return {}; }
 })();
 
 function _saveChronoSync() {
-  try { localStorage.setItem('sanixcrm_chrono_sync', JSON.stringify(_chronoSync)); }
+  try { localStorage.setItem('opusfab_chrono_sync', JSON.stringify(_chronoSync)); }
   catch(e) {}
 }
 
@@ -54250,7 +54280,7 @@ function _addPhaseToAgenda(p) {
     color: p.color
   });
   // Persister
-  try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); } catch(e) {}
+  try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); } catch(e) {}
   if (window.showToast) showToast('📅 Ajouté à l\'agenda', p.lbl.replace(/^[^\s]*\s/,'').slice(0,30), 'ok');
 }
 
@@ -54258,7 +54288,7 @@ function _removePhaseFromAgenda(phaseId) {
   if (!window.DB || !DB.acts) return;
   var actId = 'chrono-' + phaseId;
   DB.acts = (DB.acts||[]).filter(function(a){ return a.id !== actId; });
-  try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); } catch(e) {}
+  try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); } catch(e) {}
 }
 
 window._syncToutesChrono = function() {
@@ -61744,7 +61774,7 @@ window.supprimerAccident=function(id){
 window.imprimerDeclarationAT=function(id){
   var acc=(DB.accidents_travail||[]).find(function(a){return a.id===id;});
   if(!acc){ showToast('Déclaration introuvable','','err'); return; }
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var ent=cfg.entreprise||"Mon Entreprise";
   var st=ACC_STATUTS[acc.statut]||ACC_STATUTS.declare;
   var gr=ACC_GRAVITE[acc.gravite]||ACC_GRAVITE.leger;
@@ -61906,7 +61936,7 @@ function pf2GetBulletins(){
   // Fallback localStorage CRM
   if(!buls.length){
     try {
-      var db = JSON.parse(localStorage.getItem('sanixfactory_db')||'{}');
+      var db = JSON.parse(localStorage.getItem('opusfab_db')||'{}');
       var bp = db.bulletins_paie || (db.DB_PAIE && db.DB_PAIE.bulletins) || [];
       buls = bp.filter(function(b){ return b.mois && b.mois.startsWith(per); });
     } catch(e){}
@@ -61919,7 +61949,7 @@ function pf2GetEnt(){
   var p = {};
   try { if(typeof DB_PAIE !== 'undefined' && DB_PAIE.params) p = DB_PAIE.params; } catch(e){}
   var cfg = {};
-  try { cfg = (typeof getCfg === 'function') ? getCfg() : JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); } catch(e){}
+  try { cfg = (typeof getCfg === 'function') ? getCfg() : JSON.parse(localStorage.getItem('opusfab_config')||'{}'); } catch(e){}
   return {
     rs:       p.raison_sociale || cfg.nom      || 'SANIX Africa',
     ncc:      p.ncc            || cfg.ncc      || '—',
@@ -62746,7 +62776,7 @@ window.genererContratType = function(){
 
   // Infos entreprise
   var cfg = {};
-  try{ cfg = typeof getCfg==='function' ? getCfg() : JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){}
+  try{ cfg = typeof getCfg==='function' ? getCfg() : JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){}
   var entreprise = cfg.nom || 'SANIX Africa';
   var adresseEnt = cfg.adresse || '';
   var rccm       = cfg.rccm || '—';
@@ -63857,7 +63887,7 @@ window.genLettre=function(){
   if(!candId){ preview.textContent='Sélectionnez un candidat pour générer la lettre…'; return; }
 
   var c=(DB.candidats||[]).find(function(x){return x.id===candId;})||{prenom:'',nom:'',poste:''};
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var ent=cfg.nom||"Mon Entreprise SARL";
   var adr=cfg.adresse||'Abidjan, Côte d\'Ivoire';
   var fmtDate=function(d){
@@ -63954,7 +63984,7 @@ window.copyLettre=function(){
 
 window.imprimerLettre=function(){
   var t=(document.getElementById('rec-lettre-preview')||{}).textContent||'';
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var ent=cfg.nom||"Mon Entreprise SARL";
   var w=window.open('','_blank');
   w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Lettre RH</title>'
@@ -64131,11 +64161,11 @@ function openModal(id){ var m=document.getElementById(id); if(m){ m.style.displa
 /* Migration unique depuis localStorage si données déjà présentes */
 (function migrateFormData(){
   var keys = {
-    'sanixcrm_formations':       'formations',
-    'sanixcrm_sessions_form':    'sessions_formation',
-    'sanixcrm_inscriptions_form':'inscriptions_formation',
-    'sanixcrm_competences_ref':  'competences_ref',
-    'sanixcrm_comp_evals':       'competences_evals'
+    'opusfab_formations':       'formations',
+    'opusfab_sessions_form':    'sessions_formation',
+    'opusfab_inscriptions_form':'inscriptions_formation',
+    'opusfab_competences_ref':  'competences_ref',
+    'opusfab_comp_evals':       'competences_evals'
   };
   var migrated = false;
   Object.keys(keys).forEach(function(lsKey){
@@ -65660,11 +65690,11 @@ function openModal(id){ var m=document.getElementById(id); if(m){ m.style.displa
 function getEmployes(){ return (window.DB&&window.DB.employes)||[]; }
 
 /* ── Clés localStorage ── */
-var EC_ENT='sanixcrm_ec_entretiens';
-var EC_OBJ='sanixcrm_ec_objectifs';
-var EC_MOV='sanixcrm_ec_mouvements';
-var EC_MOB='sanixcrm_ec_mobilite';
-var EC_SUC='sanixcrm_ec_succession';
+var EC_ENT='opusfab_ec_entretiens';
+var EC_OBJ='opusfab_ec_objectifs';
+var EC_MOV='opusfab_ec_mouvements';
+var EC_MOB='opusfab_ec_mobilite';
+var EC_SUC='opusfab_ec_succession';
 
 function getEC(k){ try{ return JSON.parse(localStorage.getItem(k)||'[]'); }catch(e){ return []; } }
 function setEC(k,d){ localStorage.setItem(k,JSON.stringify(d)); }
@@ -65900,7 +65930,7 @@ window.deleteECEntretien=function(id){
 window.imprimerECEntretien=function(id){
   var e=getEC(EC_ENT).find(function(x){return x.id===id;})||{};
   var emp=getEmployes().find(function(x){return x.id===e.employeId;})||{};
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var ent=cfg.nom||'SANIX Africa';
   var critsLabels=['Résultats/Objectifs','Qualité du travail','Ponctualité/Assiduité','Esprit d\'équipe','Initiative/Créativité','Respect des procédures'];
   var critsVals=[e.c1,e.c2,e.c3,e.c4,e.c5,e.c6];
@@ -66680,7 +66710,7 @@ window.SANIX_GRILLES_EAE = {
         'Conformité dossiers employés'
       ]},
       { section:'COMPÉTENCES PERSONNELLES', items:[
-        'Maîtrise ERP SANIX Factory 4.0',
+        'Maîtrise de l\u2019ERP',
         'Discrétion et confidentialité',
         'Polyvalence et réactivité'
       ]}
@@ -67448,11 +67478,11 @@ var SM_MAL        = 'maladies_pro';
 /* Migration unique depuis localStorage */
 (function migrateSM(){
   var lsMap = {
-    'sanixcrm_sm_visites'   : 'visites_medicales',
-    'sanixcrm_sm_aptitudes' : 'aptitudes_medicales',
-    'sanixcrm_sm_epi_ref'   : 'epi_referentiel',
-    'sanixcrm_sm_dotations' : 'epi_dotations',
-    'sanixcrm_sm_maladies'  : 'maladies_pro'
+    'opusfab_sm_visites'   : 'visites_medicales',
+    'opusfab_sm_aptitudes' : 'aptitudes_medicales',
+    'opusfab_sm_epi_ref'   : 'epi_referentiel',
+    'opusfab_sm_dotations' : 'epi_dotations',
+    'opusfab_sm_maladies'  : 'maladies_pro'
   };
   var migrated = false;
   Object.keys(lsMap).forEach(function(lsKey){
@@ -67709,7 +67739,7 @@ window.deleteSMVisite=function(id){
 window.imprimerSMVisite=function(id){
   var v=getSM(SM_VIS).find(function(x){return x.id===id;})||{};
   var emp=getEmployes().find(function(x){return x.id===v.employeId;})||{};
-  var cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var ent=cfg.nom||'SANIX Africa';
   var w=window.open('','_blank');
   w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Visite médicale</title>'
@@ -72731,13 +72761,13 @@ var DEFAULT_PALIERS = [
 
 function getPaliers() {
   try {
-    var stored = localStorage.getItem('sanixcrm_paliers_primes');
+    var stored = localStorage.getItem('opusfab_paliers_primes');
     return stored ? JSON.parse(stored) : DEFAULT_PALIERS;
   } catch(e) { return DEFAULT_PALIERS; }
 }
 
 function savePaliers(paliers) {
-  localStorage.setItem('sanixcrm_paliers_primes', JSON.stringify(paliers));
+  localStorage.setItem('opusfab_paliers_primes', JSON.stringify(paliers));
 }
 
 /** Calcule le CA réel d'un commercial depuis DB.cmds (commandes livrées) */
@@ -79787,7 +79817,7 @@ window.printPackingList = function(){
 
 function _doPrintPackingList(col){
   var cfg = {};
-  try{ cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){}
+  try{ cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){}
   var ent     = cfg.nom || 'SANIX OpusFab';
   var cmd     = colGetCmd(col.cmdId)||{};
   var contact = colGetContact(cmd.cid||'');
@@ -83297,7 +83327,7 @@ function tauxPrimeAnciennete(moisAnc) {
 /** Retourne le nombre de jours ouvrables configurés (défaut 26) */
 function getJoursOuvr() {
   try {
-    var cfg = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}');
+    var cfg = JSON.parse(localStorage.getItem('opusfab_config') || '{}');
     return parseFloat(cfg.joursOuvrables) || 26;
   } catch(e) { return 26; }
 }
@@ -83305,7 +83335,7 @@ function getJoursOuvr() {
 /** Retourne la durée normale de travail journalière configurée (défaut 8h) */
 function getHeureNormale() {
   try {
-    var cfg = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}');
+    var cfg = JSON.parse(localStorage.getItem('opusfab_config') || '{}');
     return parseFloat(cfg.heureNormale) || 8;
   } catch(e) { return 8; }
 }
@@ -83316,7 +83346,7 @@ function getHeureNormale() {
  */
 function getTauxSupp() {
   try {
-    var cfg = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}');
+    var cfg = JSON.parse(localStorage.getItem('opusfab_config') || '{}');
     return parseFloat(cfg.tauxSup) || 1.15;
   } catch(e) { return 1.15; }
 }
@@ -83449,7 +83479,7 @@ window.genBulletinPaie = function(empId) {
   }
 
   // ── 4. RENDU HTML BULLETIN ────────────────────────────────────────
-  var cfg        = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}');
+  var cfg        = JSON.parse(localStorage.getItem('opusfab_config') || '{}');
   var entNom     = cfg.nom     || "Mon Entreprise SARL";
   var entAdresse = cfg.adresse || 'Abidjan, Côte d\'Ivoire';
   var entNCNPS   = cfg.ncnps   || '';
@@ -83811,7 +83841,7 @@ window.genBulletinPaie = function(empId) {
   var refDate = new Date(mois + '-01');
   var moisLabel = refDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
-  var cfg        = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}');
+  var cfg        = JSON.parse(localStorage.getItem('opusfab_config') || '{}');
   var joursOuvr  = parseFloat(cfg.joursOuvrables) || 26;
   var hn         = parseFloat(cfg.heureNormale)   || 8;
 
@@ -84108,7 +84138,7 @@ window.genBulletinPaie = function(empId) {
 window.genOrdreVirement = function(mois) {
   mois = mois || (document.getElementById('bulletin-mois')||{}).value || today().substring(0,7);
   var moisLabel = new Date(mois+'-01').toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-  var cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var entNom = cfg.nom || "Mon Entreprise SARL";
 
   // Bulletins du mois archivés
@@ -84582,7 +84612,7 @@ console.log('%c[SANIX OpusFab] ✅ DB.bulletins · Masse Salariale tab · Biomé
 
 /** saveData : alias unique vers la sauvegarde localStorage */
 window.saveData = function(){
-  try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); } catch(e){}
+  try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); } catch(e){}
 };
 
 /** saveDB : alias complémentaire utilisé dans les anciens patches */
@@ -86102,7 +86132,7 @@ window.imprimerInvFamille = function(){
     encours         : { lbl:'En-cours production',  ico:'⚙️' },
   };
   function fK(n){ return new Intl.NumberFormat('fr-FR').format(Math.round(n||0))+' F'; }
-  var cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var ent = cfg.nom || 'SANIX OpusFab';
   var grandTotal = arts.reduce(function(s,a){ return s+(a.stock||0)*(a.prixRevient||a.prix||0);},0);
 
@@ -87215,7 +87245,7 @@ window.auditLog = function(action, entity, data){
   /* Garder 500 entrées max */
   if (DB.audit_log.length > 500) DB.audit_log = DB.audit_log.slice(0, 500);
   /* Sauvegarde légère sans déclencher les hooks */
-  try { localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); } catch(e){}
+  try { localStorage.setItem('opusfab_db', JSON.stringify(DB)); } catch(e){}
 };
 
 /* ─────────────────────────────────────────────
@@ -88123,13 +88153,13 @@ window.renderImmobilisations = function(){
    4. BACKUP AUTO localStorage toutes les 5 min
 ─────────────────────────────────────────────── */
 ;(function setupAutoBackup(){
-  var BACKUP_KEY = 'sanixfactory_db_backup';
-  var BACKUP_TS  = 'sanixfactory_db_backup_ts';
+  var BACKUP_KEY = 'opusfab_db_backup';
+  var BACKUP_TS  = 'opusfab_db_backup_ts';
   var INTERVAL   = 5 * 60 * 1000; /* 5 minutes */
 
   function doBackup(){
     try {
-      var snap = localStorage.getItem('sanixfactory_db');
+      var snap = localStorage.getItem('opusfab_db');
       if (!snap) return;
       localStorage.setItem(BACKUP_KEY, snap);
       localStorage.setItem(BACKUP_TS, new Date().toISOString());
@@ -88151,7 +88181,7 @@ window.renderImmobilisations = function(){
     try {
       var d = JSON.parse(snap);
       Object.assign(window.DB, d);
-      localStorage.setItem('sanixfactory_db', snap);
+      localStorage.setItem('opusfab_db', snap);
       _T('✅ Backup restauré', 'Données du '+new Date(ts).toLocaleString('fr-FR'), 'ok');
       if (typeof window.refresh === 'function') window.refresh('');
     } catch(e){ _T('❌ Erreur restauration', e.message, 'err'); }
@@ -88325,7 +88355,7 @@ window.imprimerPlanAmort = function(immoId) {
   var annee  = new Date().getFullYear();
   var lignes = typeof _calcAmortissement === 'function' ? _calcAmortissement(im) : [];
   var fmtF   = function(n){ return new Intl.NumberFormat('fr-FR').format(Math.round(n||0))+' F'; };
-  var cfg    = {}; try{ cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){}
+  var cfg    = {}; try{ cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){}
 
   var rows = lignes.map(function(l){
     var isCur = l.annee === annee;
@@ -88565,7 +88595,7 @@ console.log('%c[SANIX OpusFab] ✅ askDel/saveDevis/saveAchat/marquerPayee sécu
 'use strict';
 
 /* ── Utilitaires ── */
-var _cfg  = function(){ try{ return JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){ return {}; } };
+var _cfg  = function(){ try{ return JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){ return {}; } };
 var _fmtF = function(n){ return new Intl.NumberFormat('fr-FR').format(Math.round(n||0))+' F'; };
 var _today= function(){ return new Date().toISOString().slice(0,10); };
 var _id   = function(){ return 'sx'+Date.now().toString(36)+Math.random().toString(36).slice(2,5); };
@@ -88780,7 +88810,7 @@ window.optimiserDB     = window.maintenanceAuto;
 
 /* Planificateur : maintenance au démarrage puis toutes les 24h */
 ;(function planifierMaintenance(){
-  var MAINT_KEY = 'sanixfactory_last_maintenance';
+  var MAINT_KEY = 'opusfab_last_maintenance';
   var last      = localStorage.getItem(MAINT_KEY);
   var now       = Date.now();
   var INTERVAL  = 24 * 60 * 60 * 1000; /* 24h */
@@ -89061,7 +89091,7 @@ window.exporterModule = function(modules){
 };
 
 /* Historique sauvegardes */
-var SAV_HIST_KEY = 'sanixfactory_sav_hist';
+var SAV_HIST_KEY = 'opusfab_sav_hist';
 function _ajouterHistSav(nom, taille){
   try {
     var hist = JSON.parse(localStorage.getItem(SAV_HIST_KEY)||'[]');
@@ -89158,7 +89188,7 @@ function _afficherHistSav(){
         if (!confirm('Importer '+nb+' module(s) depuis "'+( data.entreprise||'?')+'" ('+data.exportDate+')\n\nLes données actuelles seront remplacées.')) return;
         /* Fusionner */
         Object.assign(window.DB, src);
-        if (data.config) localStorage.setItem('sanixfactory_config', JSON.stringify(data.config));
+        if (data.config) localStorage.setItem('opusfab_config', JSON.stringify(data.config));
         if (typeof window.saveData === 'function') window.saveData();
         if (typeof window.auditLog === 'function') window.auditLog('IMPORT', 'database', { modules: nb, source: data.entreprise });
         _toast('✅ Import réussi', nb+' module(s) importés', 'ok');
@@ -89276,7 +89306,7 @@ var _fmtF  = function(n){ return new Intl.NumberFormat('fr-FR').format(Math.roun
               document.getElementById('paie-bulletin-preview');
     if (!res) { if (typeof _orig === 'function') _orig(); return; }
 
-    var cfg     = typeof getCfg === 'function' ? getCfg() : JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+    var cfg     = typeof getCfg === 'function' ? getCfg() : JSON.parse(localStorage.getItem('opusfab_config')||'{}');
     var logo    = typeof window.getLogoHTML === 'function' ? window.getLogoHTML('md', true) : '';
     var entete  = typeof window._getEnteteDoc === 'function' ? window._getEnteteDoc({ titre: 'Bulletin de Paie' }) : '';
 
@@ -89970,7 +90000,7 @@ window.calcAmortissement = function(immo){
 ;(function setupBroadcast(){
   if (typeof BroadcastChannel === 'undefined') return;
   var bc;
-  try { bc = new BroadcastChannel('sanixfactory_sync'); } catch(e){ return; }
+  try { bc = new BroadcastChannel('opusfab_sync'); } catch(e){ return; }
 
   var _lastSend = 0;
   var THROTTLE  = 2000; /* 2s minimum entre deux émissions */
@@ -89982,7 +90012,7 @@ window.calcAmortissement = function(immo){
     if (msg.type === 'DB_UPDATED') {
       /* Recharger silencieusement les données */
       try {
-        var saved = localStorage.getItem('sanixfactory_db');
+        var saved = localStorage.getItem('opusfab_db');
         if (saved) {
           var fresh = JSON.parse(saved);
           Object.assign(window.DB, fresh);
@@ -93871,7 +93901,7 @@ var SVb=function(){if(typeof saveDB==='function')saveDB();};
 var TTb=function(t,m,tp){if(typeof showToast==='function')showToast(t,m,tp||'ok');};
 var fmil=function(n){return new Intl.NumberFormat('fr-FR').format(Math.round(n||0));};
 
-/* BENG est maintenant un alias vers DB — store unifié sanixfactory_db */
+/* BENG est maintenant un alias vers DB — store unifié opusfab_db */
 if(!DB.lignes_budget)DB.lignes_budget=[];
 if(!DB.engagements)DB.engagements=[];
 var BENG={
@@ -95083,7 +95113,7 @@ window._imprimerFicheQUA=function(ofId){
   const _of=(DB.ofs||[]).find(o=>o.id===ofId); if(!_of) return;
   const art=(DB.articles||[]).find(a=>a.id===_of.articleId)||{name:'?',unit:'u.',ref:''};
   const cq=(DB.controles_cq||[]).filter(c=>c.ofId===ofId&&c.decision==='nc').slice(-1)[0]||{};
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const ent=cfg.nom||'Mon Entreprise SARL';
   const typeMap={aspect:'Aspect visuel',poids:'Poids/volume',etancheite:'Étanchéité',etiquetage:'Étiquetage',contamination:'Contamination',microbiologie:'Microbiologie',autre:'Autre'};
   const actionMap={retraitement:'Retraitement / reconditionnement',destruction:'Destruction du lot',retour_prod:'Retour en production',derogation:'Dérogation',en_attente:'En attente de décision'};
@@ -95144,7 +95174,7 @@ window.genFicheCession=function(ofId, numBLI, qte, date, resp, dest, notes){
   const totalProd=sessions.reduce(function(s,x){return s+(x.qte||0);},0);
   const totalH=sessions.reduce(function(s,x){return s+(x.duree||0);},0)||8;
   const totalRebuts=sessions.reduce(function(s,x){return s+(x.rebuts||0);},0);
-  const cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  const cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   const ent=cfg.nom||'Mon Entreprise SARL';
   const destinations={'magasin_pf':'Magasin Produits Finis','zone_expedition':'Zone Expédition','autre':'Autre'};
 
@@ -95527,12 +95557,12 @@ function _auditLog(table, action, id, before, after) {
 }
 
 function _dbSave() {
-  try{ localStorage.setItem('sanixfactory_db',JSON.stringify(DB)); }catch(e){
+  try{ localStorage.setItem('opusfab_db',JSON.stringify(DB)); }catch(e){
     console.warn('[DS] localStorage plein — compression en cours');
     // Trim les logs pour libérer de la place
     if(DB.audit_log&&DB.audit_log.length>100) DB.audit_log=DB.audit_log.slice(0,100);
     if(DB.notifications&&DB.notifications.length>50) DB.notifications=DB.notifications.slice(0,50);
-    try{ localStorage.setItem('sanixfactory_db',JSON.stringify(DB)); }catch(e2){}
+    try{ localStorage.setItem('opusfab_db',JSON.stringify(DB)); }catch(e2){}
   }
 }
 
@@ -95596,13 +95626,13 @@ var DataService = {
 
 /* ────────────────────────────────────────────
    3. WEBHOOK ROUTER — envoi sélectif par événement
-   Config dans localStorage sanixfactory_config.webhooks[]
+   Config dans localStorage opusfab_config.webhooks[]
    Format : [{event:'cmd:done', url:'https://...', active:true}]
    ──────────────────────────────────────────── */
 
 function _getWebhookConfig() {
   try{
-    var cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+    var cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}');
     // Support ancien format (webhookUrl unique) + nouveau format (tableau)
     var hooks = cfg.webhooks||[];
     if(!hooks.length && cfg.webhookUrl) {
@@ -95624,7 +95654,7 @@ function _fireWebhook(event, payload) {
       source:   'SANIX OpusFab',
       version:  'v23',
       ts:       new Date().toISOString(),
-      entreprise: (function(){ try{ return JSON.parse(localStorage.getItem('sanixfactory_config')||'{}').nom||''; }catch(e){return '';} })(),
+      entreprise: (function(){ try{ return JSON.parse(localStorage.getItem('opusfab_config')||'{}').nom||''; }catch(e){return '';} })(),
       data:     payload
     };
 
@@ -95666,7 +95696,7 @@ var _serverBaseUrl   = '';    // déterminé à l'initialisation
 
 function _detectServer() {
   var cfg = {};
-  try{ cfg=JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){}
+  try{ cfg=JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){}
   _serverBaseUrl = cfg.apiUrl||cfg.serverUrl||'';
   if(!_serverBaseUrl) { _serverAvailable=false; return; }
 
@@ -96954,7 +96984,7 @@ function migrateExistingData() {
   });
 
   if(fixed > 0) {
-    try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
+    try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
     console.log('%c[SF.Schema] Migration données: '+fixed+' champs corrigés ✅','color:#3AAA35;font-weight:700;');
   }
   return fixed;
@@ -97033,7 +97063,7 @@ Object.defineProperty(window, '_sf_today_guard', {
    ────────────────────────────────────────────────────────────── */
 if(typeof window.getCfg !== 'function') {
   window.getCfg = function(){
-    try{ return JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }
+    try{ return JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }
     catch(e){ return {}; }
   };
 }
@@ -97041,7 +97071,7 @@ if(typeof window.setCfg !== 'function') {
   window.setCfg = function(patch){
     var cfg = window.getCfg();
     Object.assign(cfg, patch);
-    try{ localStorage.setItem('sanixfactory_config', JSON.stringify(cfg)); }catch(e){}
+    try{ localStorage.setItem('opusfab_config', JSON.stringify(cfg)); }catch(e){}
     return cfg;
   };
 }
@@ -97193,7 +97223,7 @@ if(!window.SF) window.SF = {};
    Pas de serveur requis. Supporté par tous les navigateurs modernes.
    ───────────────────────────────────────────────────────────────── */
 var _bc     = null;
-var _bcName = 'sanixfactory_rt';
+var _bcName = 'opusfab_rt';
 var _handlers = {};   // event → [fn, ...]
 var _myTabId  = localStorage.getItem('sf_tab_id') || ('tab_'+Date.now());
 localStorage.setItem('sf_tab_id', _myTabId);
@@ -97318,7 +97348,7 @@ function _trySSE(baseUrl) {
 // Se connecter au WebSocket si un serveur est configuré
 setTimeout(function(){
   var baseUrl = (window.SF && window.SF.sync && window.SF.sync._serverBaseUrl) ||
-    (function(){ try{ return JSON.parse(localStorage.getItem('sanixfactory_config')||'{}').apiUrl||''; }catch(e){return '';} })();
+    (function(){ try{ return JSON.parse(localStorage.getItem('opusfab_config')||'{}').apiUrl||''; }catch(e){return '';} })();
   if(baseUrl) _connectWS(baseUrl);
 }, 3000);
 
@@ -97349,7 +97379,7 @@ function _mergeRemoteRecord(table, record, action) {
     }
   }
   // Sauvegarder localement
-  try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
+  try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -100122,7 +100152,7 @@ var _PRINT_STYLE = `
   </style>`;
 
 /* ── Helpers ── */
-var _cfg = function(){ try{ return JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){ return {}; } };
+var _cfg = function(){ try{ return JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){ return {}; } };
 var _fcfa2 = function(v){ return (parseFloat(v)||0).toLocaleString('fr-CI') + ' F CFA'; };
 var _date  = function(d){ if(!d) return '—'; try{ return new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}); }catch(e){ return d; } };
 var _gv    = function(id){ var el=document.getElementById(id); return el?(el.value||el.textContent||''):''; };
@@ -105522,7 +105552,7 @@ console.log('%c✅ PATCH v4.3 — GMAO FICHE DE VIE SANIX chargé :\n  • 12 é
 
      OPTIMISATIONS APPLIQUÉES (non-destructives, injectées en fin de fichier) :
 
-     1. CONFIG CACHE            — sanixfactory_config lu 67× → 1 lecture + cache
+     1. CONFIG CACHE            — opusfab_config lu 67× → 1 lecture + cache
      2. DB CACHE                — JSON.parse(localStorage) dans render* → invalidation ciblée
      3. CHART REGISTRY          — destroy() systématique avant new Chart()
      4. SAVE DB DEBOUNCE        — saveDB() 115× → debounce 800ms (max 1 écriture/800ms)
@@ -105542,16 +105572,16 @@ console.log('%c✅ PATCH v4.3 — GMAO FICHE DE VIE SANIX chargé :\n  • 12 é
 
 /* ══════════════════════════════════════════════════════════════════
    1. CONFIG CACHE
-   sanixfactory_config est lu 67× dans le code original.
+   opusfab_config est lu 67× dans le code original.
    On fournit une version cachée avec invalidation sur écriture.
 ══════════════════════════════════════════════════════════════════ */
 (function _patchConfigCache(){
   var _cfgCache  = null;
   var _cfgTs     = 0;
-  var CFG_KEY    = 'sanixfactory_config';
+  var CFG_KEY    = 'opusfab_config';
   var CFG_TTL    = 5000; // 5s — suffisant pour tous les renders en cascade
 
-  /* Proxy localStorage.getItem pour sanixfactory_config */
+  /* Proxy localStorage.getItem pour opusfab_config */
   var _origGet = localStorage.getItem.bind(localStorage);
   var _origSet = localStorage.setItem.bind(localStorage);
 
@@ -106200,7 +106230,7 @@ window._sfPerf = (function(){
       } catch(e) {}
       console.log('[PERF] localStorage total:', Math.round(total/1024) + ' KB');
       /* Détail par clé SF */
-      var sfKeys = ['sanixfactory_db','sanixfactory_config','gmao_ots',
+      var sfKeys = ['opusfab_db','opusfab_config','gmao_ots',
                     'gmao_equipements','gmao_plans','gmao_pieces',
                     'gmao_pieces_mvt','gmao_budget_lignes'];
       sfKeys.forEach(function(k){
@@ -109739,7 +109769,7 @@ setTimeout(function(){
     var cat     = (document.getElementById('quinz-categorie')||{}).value||'';
     var catLbl  = cat&&GRILLE_CONV[cat] ? cat.replace('_',' ').toUpperCase()+' — '+(GRILLE_CONV[cat]/1000).toFixed(0)+'K F/mois' : 'Taux libre';
 
-    var cfg     = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+    var cfg     = JSON.parse(localStorage.getItem('opusfab_config')||'{}');
     var entNom  = cfg.nom||'Mon Entreprise SARL';
     var entAdr  = cfg.adresse||'Abidjan, Côte d\'Ivoire';
     var fF2     = function(n){ return Math.round(n||0).toLocaleString('fr-CI')+' FCFA'; };
@@ -111390,12 +111420,12 @@ console.log('%c📒 Synchro OHADA STC chargée — 641/648/645/421/431/442/521',
 
   /* ── 3. Patch saveDB — s'assurer que les clés sont incluses ── */
   var _origSaveDB = window.saveDB || (function(){
-    try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e){}
+    try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e){}
   });
   window.saveDB = function() {
     DB_GUARDS.forEach(function(k){ if(DB[k] === undefined) DB[k] = []; });
     try{ _origSaveDB.apply(this, arguments); }catch(e){
-      try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e2){}
+      try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e2){}
     }
   };
 
@@ -111791,7 +111821,7 @@ window.exportRegistreMedicalCSV = function() {
 window.exportRegistreMedicalPDF = function() {
   var vis  = getSM('visites_medicales');
   var emps = (DB.employes||[]);
-  var cfg  = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg  = JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var ent  = cfg.nom || 'Entreprise';
   var fF   = function(d){ if(!d||d==='—') return '—'; var dd=new Date(d); return isNaN(dd)?d:dd.getDate().toString().padStart(2,'0')+'/'+(dd.getMonth()+1).toString().padStart(2,'0')+'/'+dd.getFullYear(); };
 
@@ -112022,7 +112052,7 @@ var _origSDsm = window.saveDB;
 window.saveDB = function() {
   SM_KEYS.forEach(function(k){ if(DB[k] === undefined) DB[k] = []; });
   if(_origSDsm) try{ _origSDsm.apply(this, arguments); }catch(e){}
-  else { try{ localStorage.setItem('sanixfactory_db', JSON.stringify(DB)); }catch(e2){} }
+  else { try{ localStorage.setItem('opusfab_db', JSON.stringify(DB)); }catch(e2){} }
 };
 
 /* ══════════════════════════════════════════════
@@ -112858,7 +112888,7 @@ setTimeout(_applyAllWraps, 2000);
     // pour éviter les boucles de wrapping circulaire.
     try {
       var serialized = JSON.stringify(window.DB);
-      localStorage.setItem('sanixfactory_db', serialized);
+      localStorage.setItem('opusfab_db', serialized);
       _quotaWarnShown = false;
     } catch(e) {
       if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
@@ -112866,7 +112896,7 @@ setTimeout(_applyAllWraps, 2000);
         var purgedCount = _purgeNonCritical();
         _storageToast('⚠️ Stockage plein ! ' + purgedCount + ' tables purgées. Relance...', 'error');
         try {
-          localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB));
+          localStorage.setItem('opusfab_db', JSON.stringify(window.DB));
           _storageToast('✅ Sauvegarde réussie après purge.', 'ok');
         } catch(e2) {
           _storageToast('❌ Impossible de sauvegarder ! Exportez vos données immédiatement.', 'error');
@@ -117864,7 +117894,7 @@ function _recDB(){
   return DB;
 }
 function _saveDB(){
-  try{ localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB)); }catch(e){}
+  try{ localStorage.setItem('opusfab_db', JSON.stringify(window.DB)); }catch(e){}
 }
 function _toBase64(file){
   return new Promise(function(resolve,reject){
@@ -117906,7 +117936,7 @@ window.ouvrirPostulationInterne = function(offreId){
 
   // Pré-remplir depuis l'employé connecté si disponible
   var session = null;
-  try{ session = JSON.parse(localStorage.getItem('sanixfactory_session')||'null'); }catch(e){}
+  try{ session = JSON.parse(localStorage.getItem('opusfab_session')||'null'); }catch(e){}
   var empId   = (session&&session.userId)||'';
   var emp     = (DB.employes||[]).find(function(e){ return e.id===empId; })||{};
 
@@ -118257,10 +118287,10 @@ function _htmlFormCandidatureExterne(offre, lien, offreId){
   '  };'+
   '  // Stockage cross-tab via localStorage (sera lu par le logiciel)'+
   '  try{'+
-  '    var key="sanixfactory_ext_candidature_"+candidature.id;'+
+  '    var key="opusfab_ext_candidature_"+candidature.id;'+
   '    localStorage.setItem(key, JSON.stringify(candidature));'+
   '    // Signal pour la fenêtre principale'+
-  '    localStorage.setItem("sanixfactory_ext_cand_pending", JSON.stringify({id:candidature.id,ts:Date.now()}));'+
+  '    localStorage.setItem("opusfab_ext_cand_pending", JSON.stringify({id:candidature.id,ts:Date.now()}));'+
   '  }catch(e){ alert("Erreur de stockage. Vérifiez la taille des fichiers."); btn.disabled=false; btn.textContent="Soumettre"; return; }'+
   '  document.getElementById("form-zone").style.display="none";'+
   '  document.getElementById("success-zone").style.display="block";'+
@@ -118279,7 +118309,7 @@ function _importerCandidaturesExternes(){
   var keysToProcess = [];
   for(var i=0; i<localStorage.length; i++){
     var k = localStorage.key(i);
-    if(k && k.indexOf('sanixfactory_ext_candidature_')===0) keysToProcess.push(k);
+    if(k && k.indexOf('opusfab_ext_candidature_')===0) keysToProcess.push(k);
   }
   keysToProcess.forEach(function(k){
     try{
@@ -118297,7 +118327,7 @@ function _importerCandidaturesExternes(){
     }catch(e){}
   });
   // Nettoyer signal
-  localStorage.removeItem('sanixfactory_ext_cand_pending');
+  localStorage.removeItem('opusfab_ext_cand_pending');
   if(imported > 0){
     _saveDB();
     if(typeof showToast==='function')
@@ -118746,7 +118776,7 @@ function _injectPostModalInt(){
    SURVEILLANCE localStorage (soumissions externes temps réel)
 ══════════════════════════════════════════════════════ */
 window.addEventListener('storage', function(e){
-  if(e.key === 'sanixfactory_ext_cand_pending' && e.newValue){
+  if(e.key === 'opusfab_ext_cand_pending' && e.newValue){
     // Une nouvelle candidature externe vient d'être soumise
     var nb = _importerCandidaturesExternes();
     if(nb>0){
@@ -119021,10 +119051,10 @@ function _computeMetrics(){
 ══════════════════════════════════════════════════════ */
 function _renderWelcome(m){
   var session = null;
-  try{ session = JSON.parse(localStorage.getItem('sanixfactory_session')||'null'); }catch(e){}
+  try{ session = JSON.parse(localStorage.getItem('opusfab_session')||'null'); }catch(e){}
   var prenom = (session&&session.name) ? session.name.split(' ')[0] : 'Bienvenue';
   var cfg = {};
-  try{ cfg = JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){}
+  try{ cfg = JSON.parse(localStorage.getItem('opusfab_config')||'{}'); }catch(e){}
   var ent = cfg.entreprise||cfg.nom||'SANIX OpusFab';
 
   var jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
@@ -119474,7 +119504,7 @@ window._renderUnifiedDash = _renderUnifiedDash;
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     SANIX FACTORY 4.4 — MODULE RÉCEPTION FOURNISSEUR ENRICHI
+     MODULE RÉCEPTION FOURNISSEUR
      Livreur · Scan BL · Contrôle Qualité · Dépôt · Synchro Compta
 ════════════════════════════════════════════════════════════════ -->
 <script>
@@ -119929,7 +119959,7 @@ window.brcv2ImprimerBR=window.imprimerBRC=function(id){
   if(!w) return;
   w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+doc.ref+'</title>'
     +'<style>body{font-family:Arial,sans-serif;padding:28px;color:#1e293b;font-size:12px;} h1{font-size:17px;color:#059669;margin:0;} table{width:100%;border-collapse:collapse;margin:12px 0;} th{background:#059669;color:#fff;padding:7px 10px;font-size:11px;} td{padding:7px 10px;border-bottom:1px solid #e2e8f0;font-size:11px;} .g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:10px 0;} .b{border:1px solid #e2e8f0;border-radius:8px;padding:9px 11px;} .lbl{font-size:11px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:2px;} .val{font-size:12px;font-weight:700;} .sig-g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:28px;} .sig-b{border:1px solid #e2e8f0;border-radius:8px;padding:12px;min-height:70px;} @media print{.np{display:none;}}</style></head><body>');
-  w.document.write('<div style="display:flex;justify-content:space-between;border-bottom:3px solid #059669;padding-bottom:12px;margin-bottom:14px;"><div><h1>📥 BON DE RÉCEPTION FOURNISSEUR</h1><b>'+doc.ref+'</b>'+(doc.oaRef?' · OA: '+doc.oaRef:'')+'</div><div style="text-align:right;"><div style="font-size:11.5px;color:#64748b;">SANIX FACTORY 4.0</div><span style="background:#d1fae5;color:#059669;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;">'+(doc.statut==='valide'?'✅ VALIDÉ':'📋 '+doc.statut.toUpperCase())+'</span></div></div>');
+  w.document.write('<div style="display:flex;justify-content:space-between;border-bottom:3px solid #059669;padding-bottom:12px;margin-bottom:14px;"><div><h1>📥 BON DE RÉCEPTION FOURNISSEUR</h1><b>'+doc.ref+'</b>'+(doc.oaRef?' · OA: '+doc.oaRef:'')+'</div><div style="text-align:right;"><div style="font-size:11.5px;color:#64748b;">OPUSFAB</div><span style="background:#d1fae5;color:#059669;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:5px;">'+(doc.statut==='valide'?'✅ VALIDÉ':'📋 '+doc.statut.toUpperCase())+'</span></div></div>');
   w.document.write('<div class="g2"><div class="b"><div class="lbl">Fournisseur</div><div class="val">'+doc.fournisseur+'</div></div><div class="b"><div class="lbl">N° BL Fournisseur</div><div class="val">'+(doc.numBL||'—')+'</div><div style="font-size:11.5px;color:#64748b;">Date BL: '+(doc.dateBL||'—')+'</div></div><div class="b"><div class="lbl">Date & Heure réception</div><div class="val">'+doc.date+(doc.heure?' à '+doc.heure:'')+'</div></div><div class="b"><div class="lbl">Agent réceptionneur</div><div class="val">'+doc.resp+'</div></div></div>');
   w.document.write('<div class="b" style="margin:10px 0;border-color:#F47920;"><div class="lbl" style="color:#F47920;">🧑 Identité du Livreur</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px;"><div><div class="lbl">Nom</div><div class="val">'+(doc.livreurNom||'—')+'</div></div><div><div class="lbl">Téléphone</div><div class="val">'+(doc.livreurTel||'—')+'</div></div><div><div class="lbl">N° CNI</div><div class="val">'+(doc.livreurCNI||'—')+'</div></div><div><div class="lbl">Véhicule / Plaque</div><div class="val">'+(doc.livreurVehicule||'—')+'</div></div><div><div class="lbl">Société transport</div><div class="val">'+(doc.livreurSociete||'—')+'</div></div></div></div>');
   w.document.write('<div class="b" style="margin:10px 0;border-color:#7c3aed;"><div class="lbl" style="color:#7c3aed;">🏭 Dépôt de destination</div><div class="val" style="margin-top:4px;">'+dep.code+' — '+dep.nom+(doc.zone?' · Zone: '+doc.zone:'')+'</div></div>');
@@ -119938,7 +119968,7 @@ window.brcv2ImprimerBR=window.imprimerBRC=function(id){
     +'</tbody></table>');
   w.document.write('<div class="b" style="margin:10px 0;border-color:#0891b2;"><div class="lbl" style="color:#0891b2;">🔬 Contrôle Qualité</div><div style="margin-top:5px;font-weight:700;">Résultat: '+(doc.cqResultat||'—')+(doc.cqResp?' · Responsable: '+doc.cqResp:'')+'</div>'+(doc.cqNote?'<div style="font-size:11px;color:#475569;margin-top:3px;">'+doc.cqNote+'</div>':'')+'</div>');
   w.document.write('<div class="sig-g"><div class="sig-b"><div class="lbl">Livreur</div><div style="font-size:11px;margin-top:4px;">'+(doc.livreurNom||'')+'</div><div style="border-top:1px solid #e2e8f0;margin-top:36px;padding-top:5px;font-size:11px;color:#94a3b8;">Signature + Cachet</div></div><div class="sig-b"><div class="lbl">Réceptionneur</div><div style="font-size:11px;margin-top:4px;">'+doc.resp+'</div><div style="border-top:1px solid #e2e8f0;margin-top:36px;padding-top:5px;font-size:11px;color:#94a3b8;">Signature + Date</div></div><div class="sig-b"><div class="lbl">Responsable CQ</div><div style="font-size:11px;margin-top:4px;">'+(doc.cqResp||'')+'</div><div style="border-top:1px solid #e2e8f0;margin-top:36px;padding-top:5px;font-size:11px;color:#94a3b8;">Visa CQ</div></div></div>');
-  w.document.write('<div style="text-align:center;margin-top:18px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:7px;">SANIX FACTORY 4.0 · '+doc.ref+' · Généré le '+_now()+' · Document requis pour règlement fournisseur</div>'
+  w.document.write('<div style="text-align:center;margin-top:18px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:7px;">'+doc.ref+' · Généré le '+_now()+' · Document requis pour règlement fournisseur</div>'
     +'<div class="np" style="text-align:center;margin-top:14px;"><button onclick="window.print()" style="padding:10px 24px;background:#059669;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">🖨 Imprimer / Enregistrer PDF</button></div></body></html>');
   w.document.close();
 };
@@ -123130,7 +123160,7 @@ window.genBulletinPaie = function(empId) {
   var refDate  = new Date(mois + '-01');
   var moisLabel = refDate.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
 
-  var cfg       = (typeof getCfg==='function') ? getCfg() : JSON.parse(localStorage.getItem('sanixfactory_config')||'{}');
+  var cfg       = (typeof getCfg==='function') ? getCfg() : JSON.parse(localStorage.getItem('opusfab_config')||'{}');
   var joursOuvr = parseFloat(cfg.joursOuvrables) || 26;
   var hn        = parseFloat(cfg.heureNormale)   || 8;
 
@@ -125748,7 +125778,7 @@ window._buildEmployeSelectOptions = _buildEmployeSelectOptions;
 
     // Récupérer session active
     var session = null;
-    try{ session = JSON.parse(localStorage.getItem('sanixfactory_session')||'null'); } catch(e){}
+    try{ session = JSON.parse(localStorage.getItem('opusfab_session')||'null'); } catch(e){}
     var sessionEmpId = (session && session.userId) || '';
 
     sel.innerHTML = _buildEmployeSelectOptions({
@@ -127661,7 +127691,7 @@ window.renderCRMDash=function(){
   // Banner
   var banner='<div class="crm-banner">'+
     '<div><div class="crm-banner-title">📊 Tableau de bord CRM</div>'+
-    '<div class="crm-banner-sub">SANIX FACTORY 4.0 — Performances commerciales</div>'+
+    '<div class="crm-banner-sub">Performances commerciales</div>'+
     '<div class="crm-banner-date">'+_jours()+'</div></div>'+
     '<div class="crm-banner-kpis">'+
     [['#','Clients',m.clients.length],['#','Prospects',m.prospects.length],['F','CA mois',_f(m.caMois||m.caTot)],['%','Conversion',m.txConv+'%']].map(function(k){
@@ -127791,7 +127821,7 @@ window.renderCRMDash=function(){
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════
-     SANIX FACTORY 4.0 — DÉMO CIRCUIT ABIDJAN v5.6
+     CIRCUIT DE LIVRAISON
      Données fictives réalistes · 5 points de livraison · Tricycles animés
 ═══════════════════════════════════════════════════════════════════ -->
 <script>
@@ -127875,7 +127905,7 @@ function _createDemoBtn(){
   subPanel.id='sf-demo-sub';
   subPanel.style.cssText='background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:12px;display:none;flex-direction:column;gap:7px;box-shadow:0 8px 30px rgba(15,23,42,.18);min-width:220px;';
   subPanel.innerHTML=
-    '<div style="font-size:11.5px;font-weight:700;color:#1E5FAD;letter-spacing:.04em;margin-bottom:2px;">SANIX FACTORY 4.0 \u2014 D\u00c9MO</div>'
+    '<div style="font-size:11.5px;font-weight:700;color:#1E5FAD;letter-spacing:.04em;margin-bottom:2px;">OPUSFAB \u2014 D\u00c9MO</div>'
     +_mkSubBtn('\uD83D\uDE80 Charger 5 livraisons Abidjan','#3AAA35','injectDemoData()')
     +_mkSubBtn('\uD83D\uDDD1\uFE0F Effacer donn\u00e9es d\u00e9mo','#E82020','clearDemoData()')
     +_mkSubBtn('\uD83D\uDDFA\uFE0F Aller au circuit','#F47920',"goTo('circuit',null,'Circuit optimis\u00e9')")
@@ -128012,7 +128042,7 @@ console.log('%c[SANIX OpusFab] \uD83D\uDDFA\uFE0F D\u00e9mo Circuit Abidjan v5.6
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════
-   SANIX FACTORY v5.7 · PATCH CRM+ (greffe MicroCRM)
+   MODULE CRM
    Modules : Rapport Journalier · Segmentation · Scoring Commercial
    Auteur  : SANIX AFRICA — Division Technologies
    Date    : 2026-04
@@ -129946,11 +129976,11 @@ function vider(definitif){
      if (window.DB && Array.isArray(window.DB[k])) window.DB[k] = [];
    });
   ['gmao_energie_releves','gmao_energie_compteurs','gmao_knowledge_base',
-   'pred_alertes','pred_actions_log','sanixfactory_notifs','sf_rt_queue',
-   'haccp_data','sanixcrm_ia_history'].forEach(function(k){
+   'pred_alertes','pred_actions_log','opusfab_notifs','sf_rt_queue',
+   'haccp_data','opusfab_ia_history'].forEach(function(k){
      try { localStorage.removeItem(k); } catch(e){}
    });
-  try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB || {})); } catch(e){}
+  try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB || {})); } catch(e){}
 
   if (definitif) {
     marquer();
@@ -129963,7 +129993,7 @@ function vider(definitif){
       /* La purge et les modules produisent eux-mêmes des notifications
          pendant qu'ils se réinitialisent. On les efface en dernier :
          un logiciel neuf s'ouvre sans messages à lire. */
-      try { localStorage.removeItem('sanixfactory_notifs'); } catch(e){}
+      try { localStorage.removeItem('opusfab_notifs'); } catch(e){}
       if (window.DB) window.DB.notifications = [];
       if (window.NOTIFS) {
         try { window.NOTIFS._list = []; window.NOTIFS._unread = 0;
@@ -129971,7 +130001,7 @@ function vider(definitif){
               if (window.NOTIFS._render) window.NOTIFS._render(); } catch(e){}
       }
       document.querySelectorAll('.ndot,.notif-badge,#notifBadge').forEach(function(e){ e.style.display='none'; });
-      try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB || {})); } catch(e){}
+      try { localStorage.setItem('opusfab_db', JSON.stringify(window.DB || {})); } catch(e){}
     }, 1600);
   }
 }
@@ -130000,7 +130030,7 @@ window.sfReinitialiser = function(){
 /* ── Fiche société : demandée une fois, jamais devinée ───────── */
 window.sfConfigurerSociete = function(){
   var c = {};
-  try { c = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}'); } catch(e){}
+  try { c = JSON.parse(localStorage.getItem('opusfab_config') || '{}'); } catch(e){}
   var nom = prompt('Raison sociale de votre entreprise :', c.nom || '');
   if (!nom) return;
   c.nom      = nom.trim();
@@ -130010,7 +130040,7 @@ window.sfConfigurerSociete = function(){
   c.rccm     = (prompt('Numéro RCCM :', c.rccm || '') || '').trim();
   c.dfe      = (prompt('Compte contribuable (DFE) :', c.dfe || '') || '').trim();
   c._aConfigurer = false;
-  try { localStorage.setItem('sanixfactory_config', JSON.stringify(c)); } catch(e){}
+  try { localStorage.setItem('opusfab_config', JSON.stringify(c)); } catch(e){}
 
   /* Report vers la base : la fiche société y fait foi */
   if (window.sb && window.SESSION && window.SESSION.entrepriseId) {
@@ -130028,7 +130058,7 @@ window.sfConfigurerSociete = function(){
 /* Invite discrète tant que la fiche est vide */
 function inviter(){
   var c = {};
-  try { c = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}'); } catch(e){}
+  try { c = JSON.parse(localStorage.getItem('opusfab_config') || '{}'); } catch(e){}
   if (c.nom || document.getElementById('sf-invite-societe')) return;
   if (!window.SESSION || !window.SESSION.userId) return;
   var d = document.createElement('div');
@@ -131816,6 +131846,310 @@ window.sfComptesDormants = function(){ return relever(); };
 #sf-forcepass,
 #sf-bloquant,
 #_err_log{ z-index:var(--z-bloquant)!important; }
+</style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — MARCHE EN AVANT
+   Une en-tête unique pour tous les modules, et les onglets regroupés
+   par étape, dans l'ordre du flux. Rien n'est inventé : l'étape, le
+   titre et le sous-titre sont lus dans la barre latérale, qui porte
+   déjà les neuf phases de l'entreprise. Aucun chiffre, aucun libellé
+   d'exemple n'est écrit ici.
+═══════════════════════════════════════════════════════════════════ */
+(function marcheEnAvant(){
+'use strict';
+
+/* Regroupement des onglets par étape, pour les modules qui en ont
+   beaucoup. C'est de la configuration d'écran, pas de la donnée : un
+   module absent de cette table affiche ses onglets en un seul groupe. */
+var ETAPES = {
+  gpao: [
+    {t:'Planifier',  cles:['flux','budget_vente','previsions','pic','pdp','mrp']},
+    {t:'Fabriquer',  cles:['nomenclatures','ofs','ordonnancement','planning']},
+    {t:'Mesurer',    cles:['performance','trs','couts']}
+  ],
+  tresorerie: [
+    {t:'Encaisser',  cles:['treso','mouvements','cashflow','rapprochement']},
+    {t:'Facturer',   cles:['facturation','fact-a-facturer','factures-liste','factures-dso']},
+    {t:'Comptabiliser', cles:['compta','journal','saisie','grandlivre','balance','resultat','bilan','tva','interop']}
+  ],
+  qualite: [
+    {t:'Contrôler',  cles:['controles','plans','prelevements']},
+    {t:'Traiter',    cles:['nc','actions','capa']},
+    {t:'Certifier',  cles:['audits','documents','indicateurs']}
+  ],
+  achats: [
+    {t:'Demander',   cles:['demandes','consultation']},
+    {t:'Commander',  cles:['commandes','oa']},
+    {t:'Réceptionner', cles:['receptions','factures']}
+  ]
+};
+
+var _index = null;       /* section -> {phase, entrees} */
+
+/* ── Lecture de la barre latérale ─────────────────────────────── */
+function indexer(){
+  if (_index) return _index;
+  _index = {};
+  var phase = null;
+  var barre = document.querySelector('.sb') || document;
+  [].forEach.call(barre.querySelectorAll('.mav-sep, .ni[onclick]'), function(n){
+    if (n.classList.contains('mav-sep')) {
+      var num = n.querySelector('.mav-step'), lab = n.querySelector('.mav-label');
+      phase = {
+        num: num ? num.textContent.trim() : '',
+        label: lab ? lab.textContent.trim() : '',
+        couleur: num ? (getComputedStyle(num).backgroundColor || '') : ''
+      };
+      return;
+    }
+    var m = (n.getAttribute('onclick') || '').match(/goTo\('([\w-]+)'/);
+    if (!m) return;
+    var sec = m[1];
+    var titre = (n.textContent || '').replace(/\s+/g, ' ').trim();
+    /* Le compteur d'une pastille n'appartient pas au libellé. */
+    titre = titre.replace(/\s*\d+\s*$/, '').trim();
+    if (!_index[sec]) _index[sec] = { phase: phase, entrees: [] };
+    if (titre && _index[sec].entrees.indexOf(titre) < 0) _index[sec].entrees.push(titre);
+  });
+  return _index;
+}
+
+/* ── En-tête de module ────────────────────────────────────────── */
+function el(tag, cls, txt){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (txt != null) n.textContent = String(txt);
+  return n;
+}
+
+function enTete(sec, titreCourant){
+  var info = indexer()[sec];
+  var hote = document.getElementById('sec-' + sec);
+  if (!hote) return;
+
+  var ancien = hote.querySelector(':scope > .mav-tete');
+  var tete = el('header', 'mav-tete');
+
+  /* Pastille d'étape : la couleur vient de la barre latérale. */
+  if (info && info.phase && info.phase.label) {
+    var p = el('span', 'mav-pastille');
+    var pt = el('i', 'mav-pastille-pt');
+    if (info.phase.couleur) pt.style.background = info.phase.couleur;
+    p.appendChild(pt);
+    p.appendChild(document.createTextNode(
+      (info.phase.num && /^\d+$/.test(info.phase.num) ? info.phase.num + ' · ' : '') + info.phase.label));
+    tete.appendChild(p);
+  }
+
+  var titre = titreCourant || (info && info.entrees[0]) || sec;
+  tete.appendChild(el('h1', 'mav-titre', titre));
+
+  /* Sous-titre : les sous-parties réelles du module — ses onglets, sinon
+     les autres entrées de la barre latérale. Jamais une phrase inventée. */
+  var parts = [].slice.call(hote.querySelectorAll('.tab')).map(function(t){
+    return (t.textContent || '').replace(/\s+/g, ' ').replace(/^[^\w\u00C0-\u017F]+/, '').trim();
+  }).filter(Boolean);
+  if (!parts.length && info) parts = info.entrees.filter(function(x){ return x !== titre; });
+  parts = parts.filter(function(x, i){ return x !== titre && parts.indexOf(x) === i; });
+  if (parts.length) tete.appendChild(el('p', 'mav-sous', parts.slice(0, 7).join(' · ')));
+
+  /* Action : celle que la barre du haut expose déjà, pas une invention. */
+  var top = document.getElementById('topAddBtn');
+  if (top && top.style.display !== 'none' && top.textContent.trim()) {
+    var act = el('div', 'mav-actions');
+    var b = el('button', 'mav-btn mav-btn--p');
+    b.type = 'button';
+    b.innerHTML = top.innerHTML;
+    b.addEventListener('click', function(){ top.click(); });
+    act.appendChild(b);
+    tete.appendChild(act);
+  }
+
+  if (ancien) hote.replaceChild(tete, ancien);
+  else hote.insertBefore(tete, hote.firstChild);
+}
+
+/* ── Barre d'étapes : les onglets, regroupés et numérotés ─────── */
+function cleOnglet(t){
+  var o = t.getAttribute('onclick') || '';
+  var m = o.match(/switch\w*Tab\(\s*'([\w-]+)'/) || o.match(/filterTab\([^,]+,\s*'([\w-]+)'/);
+  if (m) return m[1];
+  return (t.id || '').replace(/^gpao-stab-/, '');
+}
+
+function barreEtapes(sec){
+  var hote = document.getElementById('sec-' + sec);
+  if (!hote) return;
+  /* La rangée n'est pas toujours enfant direct de la section. */
+  var rangee = hote.querySelector(':scope > .tabs') || hote.querySelector('.tabs')
+             || (hote.querySelector('.gpao-stab') || {}).parentElement;
+  if (!rangee || rangee.classList.contains('mav-traitee')) return;
+  /* Selon les modules l'onglet s'appelle .tab ou .gpao-stab. */
+  var onglets = [].slice.call(rangee.querySelectorAll('.tab, .gpao-stab'));
+  if (onglets.length < 2) return;
+
+  var plan = ETAPES[sec];
+  var groupes = [];
+
+  if (plan) {
+    var pris = {};
+    plan.forEach(function(g){
+      var lot = onglets.filter(function(t){
+        var c = cleOnglet(t);
+        return c && g.cles.indexOf(c) >= 0 && !pris[c] && (pris[c] = 1);
+      });
+      if (lot.length) groupes.push({ titre: g.t, onglets: lot });
+    });
+    var restants = onglets.filter(function(t){ return !pris[cleOnglet(t)]; });
+    if (restants.length) {
+      var infoR = indexer()[sec];
+      groupes.push({ titre: groupes.length ? 'Autres vues'
+                            : ((infoR && infoR.phase && infoR.phase.label) || 'Étapes'),
+                     onglets: restants });
+    }
+  } else {
+    var info = indexer()[sec];
+    groupes.push({ titre: (info && info.phase && info.phase.label) || 'Étapes', onglets: onglets });
+  }
+
+  var barre = el('div', 'mav-etapes');
+  groupes.forEach(function(g, i){
+    var carte = el('section', 'mav-etape');
+    var t = el('div', 'mav-etape-t');
+    t.appendChild(el('span', 'mav-etape-n', i + 1));
+    t.appendChild(el('span', null, g.titre));
+    carte.appendChild(t);
+    var corps = el('div', 'mav-etape-b');
+    g.onglets.forEach(function(o){ corps.appendChild(o); });
+    carte.appendChild(corps);
+    barre.appendChild(carte);
+  });
+
+  rangee.classList.add('mav-traitee');
+  rangee.appendChild(barre);
+}
+
+/* ── Raccord ──────────────────────────────────────────────────── */
+function poser(sec, titre){
+  try { enTete(sec, titre); barreEtapes(sec); } catch(e){ console.warn('[marche] ', e.message); }
+}
+
+var _actuel = null;   /* le module affiché */
+
+/* Certains modules reconstruisent leur section après le retour de goTo et
+   emportent l'en-tête au passage. Plutôt que de deviner leur calendrier,
+   on la repose des qu'elle disparaît. */
+var _veille = null;
+function surveiller(){
+  if (_veille || typeof MutationObserver !== 'function') return;
+  var differe = null;
+  _veille = new MutationObserver(function(){
+    if (!_actuel) return;
+    var sec = document.getElementById('sec-' + _actuel.sec);
+    if (!sec || sec.querySelector(':scope > .mav-tete')) return;
+    clearTimeout(differe);
+    differe = setTimeout(function(){ poser(_actuel.sec, _actuel.titre); }, 60);
+  });
+  _veille.observe(document.getElementById('mc') || document.body,
+                  { childList: true, subtree: true });
+}
+
+var _goTo = window.goTo;
+window.goTo = function(id, el2, titre){
+  var r = (typeof _goTo === 'function') ? _goTo.apply(this, arguments) : undefined;
+  _actuel = { sec: id, titre: titre };
+  setTimeout(function(){ poser(id, titre); }, 0);
+  return r;
+};
+
+/* La veille demarre au chargement : sinon la toute premiere navigation
+   se fait sans filet, et c'est justement celle ou le module se construit. */
+function demarrer(){
+  surveiller();
+  var actif = document.querySelector('.sec.on');
+  if (actif && actif.id) {
+    var sec = actif.id.replace(/^sec-/, '');
+    _actuel = { sec: sec, titre: (document.getElementById('pageTitle') || {}).textContent };
+    poser(_actuel.sec, _actuel.titre);
+  }
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer);
+else demarrer();
+
+window.sfMarcheEnAvant = poser;
+})();
+</script>
+<style id="sf-marche-avant">
+/* ═══════════════════════════════════════════════════════════════════
+   MARCHE EN AVANT — présentation
+   Une en-tête identique dans tous les modules, puis les étapes du flux
+   de gauche à droite. Rien ne remonte le courant.
+═══════════════════════════════════════════════════════════════════ */
+.mav-tete{
+  display:grid;grid-template-columns:1fr auto;grid-template-areas:
+    "pastille actions" "titre actions" "sous actions";
+  align-items:start;gap:2px 16px;padding:2px 0 16px;
+}
+.mav-pastille{
+  grid-area:pastille;justify-self:start;display:inline-flex;align-items:center;gap:6px;
+  padding:3px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--bd);
+  font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.2px;margin-bottom:6px;
+}
+.mav-pastille-pt{width:7px;height:7px;border-radius:50%;background:var(--t3);display:inline-block;}
+.mav-titre{
+  grid-area:titre;margin:0;font-size:25px;font-weight:700;color:var(--t1);
+  letter-spacing:-.6px;line-height:1.15;
+}
+.mav-sous{
+  grid-area:sous;margin:5px 0 0;font-size:12.5px;color:var(--t2);line-height:1.55;max-width:80ch;
+}
+.mav-actions{grid-area:actions;display:flex;gap:8px;align-items:center;}
+.mav-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 15px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:600;color:var(--t1);
+  background:var(--wh);border:1px solid var(--bd2);border-radius:var(--r-sm);
+  white-space:nowrap;transition:.13s;
+}
+.mav-btn:hover{border-color:var(--P);color:var(--P);}
+.mav-btn--p{background:var(--P);border-color:var(--P);color:#fff;}
+.mav-btn--p:hover{background:var(--P-h);border-color:var(--P-h);color:#fff;}
+
+/* ── Les étapes ───────────────────────────────────────────────── */
+.mav-etapes{
+  display:flex;flex-wrap:wrap;gap:10px;width:100%;margin-bottom:16px;
+}
+.mav-etape{
+  flex:1 1 240px;min-width:0;
+  background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px 11px;
+}
+.mav-etape-t{
+  display:flex;align-items:center;gap:7px;margin-bottom:9px;
+  font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--t3);
+}
+.mav-etape-n{
+  width:17px;height:17px;border-radius:50%;background:var(--P);color:#fff;flex-shrink:0;
+  font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;letter-spacing:0;
+}
+.mav-etape-b{display:flex;flex-wrap:wrap;gap:6px;}
+/* L'onglet reprend la mise en forme de l'étape : même famille, même poids. */
+.mav-etape-b .tab{
+  padding:7px 12px;font-size:12px;border-radius:var(--r-sm);
+  background:var(--wh);border:1px solid var(--bd);color:var(--t2);
+}
+.mav-etape-b .tab:hover{border-color:var(--bd2);color:var(--t1);}
+.mav-etape-b .tab.on{background:var(--P-w);border-color:var(--P);color:var(--P);font-weight:700;}
+
+/* La rangée d'origine ne sert plus qu'à porter la barre. */
+.tabs.mav-traitee{display:block;overflow:visible;margin-bottom:0;}
+
+@media(max-width:760px){
+  .mav-tete{grid-template-columns:1fr;grid-template-areas:"pastille" "titre" "sous" "actions";}
+  .mav-actions{margin-top:12px;}
+  .mav-btn{flex:1 1 auto;justify-content:center;}
+  .mav-titre{font-size:21px;}
+  .mav-etape{flex-basis:100%;}
+}
 </style>
 </body>
 </html>

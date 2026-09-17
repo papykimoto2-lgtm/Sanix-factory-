@@ -592,6 +592,52 @@ compris avant que le conteneur ait été trouvé — ou après que l'initialisat
 y a renoncé. Visible en fenêtre étroite seulement, le garde de largeur
 masquant le reste du temps. Garde ajouté, vérifié à 420 px : aucune exception.
 
+## 9 octies. Marche en avant — en-tête unique et étapes
+
+### Dépersonnalisation
+
+| Terme | Avant | Après |
+|---|---|---|
+| Chaînes visibles | 10 | 0 |
+| Clés de stockage `sanixfactory_*` / `sanixcrm_*` | 220 | 0 |
+
+Les clés passent à `opusfab_*`. Un module posé **en tête de document**, avant
+toute lecture, recopie une fois les anciennes clés puis les efface : la
+configuration des postes déjà en service n'est pas perdue. Une clé déjà
+écrite sous le nouveau nom l'emporte, elle n'est pas écrasée.
+
+Restent deux occurrences, dans ce module de reprise lui-même : il doit nommer
+l'ancien préfixe pour le trouver.
+
+### En-tête de module
+
+Une seule en-tête pour tous les modules, sur le modèle fourni :
+
+| Élément | D'où il vient |
+|---|---|
+| Pastille d'étape | la phase de la barre latérale, numéro et couleur compris |
+| Titre | le libellé de navigation |
+| Sous-titre | les onglets réels du module, joints par « · » |
+| Action | le bouton que la barre du haut expose déjà |
+
+**Rien n'est écrit en dur** : pas un libellé d'exemple, pas un chiffre. Tout est
+lu dans le document. Un module renommé dans la barre latérale change de titre
+sans qu'on touche à cette couche.
+
+### Étapes
+
+Les onglets sont regroupés en étapes numérotées, de gauche à droite. Le
+regroupement est de la configuration d'écran — déclaré pour Production,
+Trésorerie, Qualité et Achats ; les autres modules affichent leurs onglets en
+un groupe portant le nom de leur phase.
+
+### Auto-réparation
+
+Certains modules reconstruisent leur section après le retour de `goTo` et
+emportaient l'en-tête. Plutôt que de deviner leur calendrier, un observateur
+la repose dès qu'elle disparaît. La veille démarre au chargement, pas à la
+première navigation — c'est justement celle où le module se construit.
+
 ## 10. Reste à faire
 
 0. **Activer la protection des mots de passe compromis** : Dashboard →
