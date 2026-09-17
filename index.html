@@ -2471,7 +2471,7 @@ window.onerror = function(msg, src, line, col, err) {
   /* ── SESSION : aucune session tant que le serveur n'a pas authentifié ──
      Ce bloc attribuait auparavant le rôle administrateur par défaut : toute
      fonction lue avant le login s'exécutait donc en administrateur. ── */
-  if (typeof window.SESSION === 'undefined') window.SESSION = null;
+  if (typeof window.SESSION === 'undefined' || !window.SESSION) window.SESSION = { role:'anonyme', userId:null, name:'', initials:'', _anonyme:true };
 
   /* ── Stubs canDo / requirePerm / auditLog ──
      Ces fonctions sont définies plus tard dans le PATCH v5.1.
@@ -17866,7 +17866,7 @@ window.renderConnexionsLog=function(){
 };
 
 // ── Hook doLogin pour enregistrer la connexion — défini APRÈS window.doLogin ──
-var SESSION = null; /* aucune session avant authentification serveur */
+var SESSION = { role:'anonyme', userId:null, name:'', initials:'', _anonyme:true }; /* aucun droit avant authentification serveur */
 
 var selectedRole = 'admin';
 window.selectRole = function(r){
@@ -109826,7 +109826,7 @@ setTimeout(function(){
 
   /* ── 1. Garantir window.SESSION ── */
   if (typeof window.SESSION === 'undefined' || !window.SESSION) {
-    window.SESSION = null; /* aucune session avant authentification serveur */
+    window.SESSION = { role:'anonyme', userId:null, name:'', initials:'', _anonyme:true }; /* aucun droit avant authentification serveur */
   }
 
   /* ── 2. Wrapper canDo ── */
@@ -129171,7 +129171,7 @@ function bloquer(titre, detail){
 
 /* Purge des identités de démonstration avant toute autre chose : même sans
    mot de passe, la liste des comptes n’a pas à être lisible avant connexion. */
-window.SESSION = null;
+window.SESSION = { role:'anonyme', userId:null, name:'', initials:'', _anonyme:true };
 try { Object.keys(window.USERS || {}).forEach(function(k){ delete window.USERS[k]; }); } catch(e){}
 
 if (!window.supabase || typeof window.supabase.createClient !== 'function') {
@@ -129282,7 +129282,7 @@ window.doLogin = function(){
 /* ── Déconnexion ── */
 window.doLogout = function(){
   sb.auth.signOut().catch(function(){}).then(function(){
-    window.SESSION = null;
+    window.SESSION = { role:'anonyme', userId:null, name:'', initials:'', _anonyme:true };
     window.SF_PERMS = new Set();
     window.SF_PROFIL = null;
     try { Object.keys(window.USERS || {}).forEach(function(k){ delete window.USERS[k]; }); } catch(e){}
@@ -129402,8 +129402,8 @@ function demarrer(){
   });
   sb.auth.onAuthStateChange(function(evenement){
     if (evenement === 'PASSWORD_RECOVERY') setTimeout(demanderNouveauMdp, 300);
-    if (evenement === 'SIGNED_OUT' && window.SESSION) {
-      window.SESSION = null;
+    if (evenement === 'SIGNED_OUT' && window.SESSION && window.SESSION.userId) {
+      window.SESSION = { role:'anonyme', userId:null, name:'', initials:'', _anonyme:true };
       var a = $id('app'); if (a) a.style.display = 'none';
       var l = $id('loginScreen'); if (l) l.style.display = 'flex';
     }
@@ -129414,6 +129414,368 @@ else demarrer();
 
 console.log('%c[SANIX OpusFab] Authentification Supabase active — identité serveur, droits appliqués par RLS',
             'color:#059669;font-weight:900;');
+})();
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab ERP 2026 — SYNCHRONISATION DES DONNÉES
+   PostgreSQL devient la référence. localStorage reste le cache de
+   travail : l'application continue de lire DB.* sans modification,
+   et toute écriture part vers Supabase — immédiatement si le réseau
+   répond, sinon par une file d'attente rejouée au retour en ligne.
+   Conçu pour un réseau intermittent : hors ligne, rien n'est perdu.
+═══════════════════════════════════════════════════════════════════ */
+(function sfSync(){
+'use strict';
+
+var FILE = 'sf_file_attente_v1';
+var HORO = 'sf_derniere_synchro_v1';
+
+function toast(t, s, k){
+  if (typeof window.showToast === 'function') window.showToast(t, s || '', k || 'info');
+}
+function ent(){ return window.SESSION && window.SESSION.entrepriseId; }
+function actif(){ return !!(window.sb && ent()); }
+
+/* ── Conversions ─────────────────────────────────────────────── */
+function txt(v){ var s = (v == null ? '' : String(v)).trim(); return s || null; }
+function nb(v){ var n = parseFloat(v); return isFinite(n) ? n : 0; }
+function bool(v, defaut){ return v == null ? (defaut !== false) : (v !== false && v !== 'inactif' && v !== 0); }
+function date(v){
+  if (!v) return null;
+  var d = new Date(v);
+  return isNaN(d) ? null : d.toISOString().slice(0, 10);
+}
+function coord(v, max){ var n = parseFloat(v); return (isFinite(n) && Math.abs(n) <= max) ? n : null; }
+
+var TYPE_ARTICLE = {
+  pf:'produit_fini', mp:'matiere_premiere', pi:'produit_intermediaire',
+  mc:'consommable', em:'emballage', pd:'piece_detachee', sv:'service', mar:'marchandise'
+};
+var CONTRAT = { cdi:'CDI', cdd:'CDD', stage:'stage', apprentissage:'apprentissage',
+                journalier:'journalier', interim:'interim', consultant:'consultant' };
+
+function coupeNom(complet){
+  var m = String(complet || '').trim().split(/\s+/);
+  if (m.length < 2) return { nom: m[0] || 'Sans nom', prenom: '' };
+  /* Usage courant en Côte d'Ivoire : NOM en capitales, puis prénoms. */
+  if (m[0] === m[0].toUpperCase() && m[0].length > 1) return { nom: m[0], prenom: m.slice(1).join(' ') };
+  return { nom: m[m.length - 1], prenom: m.slice(0, -1).join(' ') };
+}
+
+/* ── Table de correspondance ─────────────────────────────────── */
+var PLAN = {
+  contacts: {
+    table: 'tiers',
+    filtre: "type.in.(client,prospect,client_fournisseur)",
+    vers: function(o){
+      return {
+        ref_externe: o.id, type: (o.type === 'prospect' ? 'prospect' : 'client'),
+        raison_sociale: txt(o.name) || txt(o.nom) || 'Sans nom',
+        telephone: txt(o.phone) || txt(o.tel), email: txt(o.email),
+        adresse: txt(o.addr) || txt(o.adresse), ville: txt(o.ville),
+        latitude: coord(o.lat, 90), longitude: coord(o.lng, 180),
+        secteur: txt(o.sector) || txt(o.secteur),
+        plafond_credit: nb(o.plafond), delai_paiement: Math.min(365, Math.max(0, parseInt(o.delai || 30, 10) || 30)),
+        notes: txt(o.notes), actif: bool(o.actif)
+      };
+    },
+    depuis: function(r){
+      return {
+        id: r.ref_externe || r.id, _uuid: r.id, name: r.raison_sociale, type: r.type,
+        phone: r.telephone, email: r.email, addr: r.adresse, ville: r.ville,
+        lat: r.latitude, lng: r.longitude, sector: r.secteur,
+        plafond: r.plafond_credit, delai: r.delai_paiement,
+        notes: r.notes, actif: r.actif,
+        init: (r.raison_sociale || '??').slice(0, 2).toUpperCase()
+      };
+    }
+  },
+  fournisseurs: {
+    table: 'tiers',
+    filtre: "type.in.(fournisseur,client_fournisseur)",
+    vers: function(o){
+      return {
+        ref_externe: o.id, type: 'fournisseur',
+        raison_sociale: txt(o.nom) || txt(o.name) || 'Sans nom',
+        telephone: txt(o.phone) || txt(o.tel), email: txt(o.email),
+        adresse: txt(o.adresse), ville: txt(o.ville),
+        secteur: txt(o.categorie), notes: txt(o.notes),
+        delai_paiement: Math.min(365, Math.max(0, parseInt(o.delai || 30, 10) || 30)),
+        actif: o.status ? o.status === 'actif' : bool(o.actif)
+      };
+    },
+    depuis: function(r){
+      return {
+        id: r.ref_externe || r.id, _uuid: r.id, nom: r.raison_sociale,
+        phone: r.telephone, email: r.email, adresse: r.adresse, ville: r.ville,
+        categorie: r.secteur, delai: r.delai_paiement, notes: r.notes,
+        status: r.actif ? 'actif' : 'inactif'
+      };
+    }
+  },
+  articles: {
+    table: 'articles',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        reference: txt(o.ref) || txt(o.reference) || String(o.id),
+        designation: txt(o.nom) || txt(o.name) || txt(o.designation) || 'Sans désignation',
+        type: TYPE_ARTICLE[o.type] || 'produit_fini',
+        unite: txt(o.unite) || 'U',
+        prix_achat: nb(o.prixAchat), prix_vente: nb(o.prixVente),
+        taux_tva: Math.min(100, Math.max(0, nb(o.tva))),
+        stock_mini: Math.max(0, nb(o.stockMin)),
+        gere_en_stock: o.type !== 'sv',
+        actif: bool(o.actif)
+      };
+    },
+    depuis: function(r){
+      var inv = {}; Object.keys(TYPE_ARTICLE).forEach(function(k){ inv[TYPE_ARTICLE[k]] = k; });
+      return {
+        id: r.ref_externe || r.id, _uuid: r.id, ref: r.reference, nom: r.designation,
+        type: inv[r.type] || 'pf', unite: r.unite,
+        prixAchat: r.prix_achat, prixVente: r.prix_vente, tva: r.taux_tva,
+        stockMin: r.stock_mini, cmup: r.cmup, actif: r.actif
+      };
+    }
+  },
+  employes: {
+    table: 'employes',
+    vers: function(o){
+      var n = coupeNom(o.nom || o.name);
+      return {
+        ref_externe: o.id, matricule: txt(o.matricule) || o.id,
+        nom: n.nom, prenom: n.prenom,
+        poste: txt(o.poste), service: txt(o.dept) || txt(o.service),
+        telephone: txt(o.phone) || txt(o.tel), email: txt(o.email),
+        salaire_base: nb(o.salaire),
+        date_embauche: date(o.dateEntree) || date(o.date_embauche) || '2020-01-01',
+        type_contrat: CONTRAT[String(o.contrat || '').toLowerCase()] || 'CDI',
+        date_fin_contrat: date(o.dateFinContrat),
+        numero_cnps: txt(o.cnps), actif: bool(o.actif)
+      };
+    },
+    depuis: function(r){
+      return {
+        id: r.ref_externe || r.id, _uuid: r.id, matricule: r.matricule,
+        nom: ((r.prenom ? r.prenom + ' ' : '') + r.nom).trim(),
+        poste: r.poste, dept: r.service, phone: r.telephone, email: r.email,
+        salaire: r.salaire_base, dateEntree: r.date_embauche,
+        contrat: r.type_contrat, cnps: r.numero_cnps, actif: r.actif
+      };
+    }
+  }
+};
+/* Un CDD sans date de fin est refusé par la base : on ne pousse pas la ligne. */
+function recevable(nom, ligne){
+  if (nom === 'employes' && ligne.type_contrat === 'CDD' && !ligne.date_fin_contrat) {
+    ligne.type_contrat = 'CDI';
+  }
+  return true;
+}
+
+/* ── File d'attente hors ligne ───────────────────────────────── */
+function lireFile(){ try { return JSON.parse(localStorage.getItem(FILE) || '[]'); } catch(e){ return []; } }
+function ecrireFile(f){ try { localStorage.setItem(FILE, JSON.stringify(f.slice(-2000))); } catch(e){} }
+function empiler(collection, objet){
+  var f = lireFile();
+  var i = f.findIndex(function(x){ return x.collection === collection && x.id === objet.id; });
+  var e = { collection: collection, id: objet.id, objet: objet, ts: Date.now() };
+  if (i >= 0) f[i] = e; else f.push(e);
+  ecrireFile(f);
+  majPastille();
+}
+window.sfFileAttente = function(){ return lireFile().length; };
+
+/* ── Envoi ───────────────────────────────────────────────────── */
+function envoyer(collection, objet){
+  var p = PLAN[collection];
+  if (!p || !actif()) return Promise.resolve(false);
+  var ligne = p.vers(objet);
+  if (!recevable(collection, ligne)) return Promise.resolve(false);
+  ligne.entreprise_id = ent();
+  return window.sb.from(p.table)
+    .upsert(ligne, { onConflict: 'entreprise_id,ref_externe' })
+    .then(function(r){
+      if (r.error) throw r.error;
+      return true;
+    });
+}
+
+window.sfEnvoyer = function(collection, objet){
+  if (!PLAN[collection]) return Promise.resolve(false);
+  if (!navigator.onLine || !actif()) { empiler(collection, objet); return Promise.resolve(false); }
+  return envoyer(collection, objet).catch(function(e){
+    console.warn('[synchro] report de', collection, objet.id, '—', e.message || e);
+    empiler(collection, objet);
+    return false;
+  });
+};
+
+window.sfViderFile = function(silencieux){
+  var f = lireFile();
+  if (!f.length || !actif() || !navigator.onLine) return Promise.resolve(0);
+  var restants = [], envoyes = 0;
+  return f.reduce(function(chaine, e){
+    return chaine.then(function(){
+      return envoyer(e.collection, e.objet)
+        .then(function(){ envoyes++; })
+        .catch(function(err){
+          /* Une donnée refusée par une contrainte ne sera jamais acceptée :
+             la reproposer indéfiniment bloquerait toute la file. */
+          if (err && /23514|23505|22P02|violates/i.test(err.code + ' ' + err.message)) {
+            console.warn('[synchro] ligne rejetée définitivement', e.collection, e.id, err.message);
+          } else {
+            restants.push(e);
+          }
+        });
+    });
+  }, Promise.resolve()).then(function(){
+    ecrireFile(restants); majPastille();
+    if (envoyes && !silencieux) toast('☁️ ' + envoyes + ' modification(s) synchronisée(s)', '', 'ok');
+    return envoyes;
+  });
+};
+
+/* ── Réception ───────────────────────────────────────────────── */
+function recevoir(collection){
+  var p = PLAN[collection];
+  var q = window.sb.from(p.table).select('*').eq('entreprise_id', ent()).limit(5000);
+  if (p.filtre) q = q.or(p.filtre);
+  return q.then(function(r){
+    if (r.error) throw r.error;
+    window.DB[collection] = (r.data || []).map(p.depuis);
+    return (r.data || []).length;
+  });
+}
+
+window.sfRecevoir = function(silencieux){
+  if (!actif()) return Promise.resolve(null);
+  var noms = Object.keys(PLAN), total = {};
+  return noms.reduce(function(chaine, n){
+    return chaine.then(function(){
+      return recevoir(n).then(function(c){ total[n] = c; })
+        .catch(function(e){ console.warn('[synchro] lecture', n, e.message || e); total[n] = null; });
+    });
+  }, Promise.resolve()).then(function(){
+    if (typeof window.saveData === 'function') window._sfSauvegardeLocale();
+    try { localStorage.setItem(HORO, new Date().toISOString()); } catch(e){}
+    majPastille();
+    if (!silencieux) {
+      var n = Object.keys(total).reduce(function(s, k){ return s + (total[k] || 0); }, 0);
+      toast('☁️ Données à jour', n + ' fiche(s) reçue(s) du serveur', 'ok');
+    }
+    if (typeof window.refresh === 'function')     try { window.refresh(); }     catch(e){}
+    if (typeof window.refreshDash === 'function') try { window.refreshDash(); } catch(e){}
+    return total;
+  });
+};
+
+/* ── Synchronisation complète ────────────────────────────────── */
+window.sfSynchroniser = function(silencieux){
+  if (!actif()) { if (!silencieux) toast('Hors connexion', 'Synchronisation impossible.', 'warn'); return Promise.resolve(); }
+  return window.sfViderFile(true).then(function(n){
+    return window.sfRecevoir(silencieux).then(function(){
+      if (n && !silencieux) toast('☁️ ' + n + ' modification(s) envoyée(s)', '', 'ok');
+    });
+  });
+};
+
+/* ── Premier remplissage : le contenu local part vers le serveur ── */
+window.sfPremierEnvoi = function(){
+  if (!actif()) { toast('Connexion requise', '', 'err'); return Promise.resolve(); }
+  var noms = Object.keys(PLAN), envoyes = 0, refuses = 0;
+  return noms.reduce(function(chaine, n){
+    return chaine.then(function(){
+      var liste = (window.DB[n] || []).filter(function(o){ return o && o.id; });
+      return liste.reduce(function(c2, o){
+        return c2.then(function(){
+          return envoyer(n, o).then(function(){ envoyes++; })
+            .catch(function(e){ refuses++; console.warn('[reprise]', n, o.id, e.message || e); });
+        });
+      }, Promise.resolve());
+    });
+  }, Promise.resolve()).then(function(){
+    toast('📤 Reprise terminée', envoyes + ' fiche(s) envoyée(s)' + (refuses ? ' · ' + refuses + ' refusée(s)' : ''), refuses ? 'warn' : 'ok');
+    return window.sfRecevoir(true);
+  });
+};
+
+/* ── Écritures de l'application : interception du point de sauvegarde ── */
+var _sauve = window.saveData;
+window._sfSauvegardeLocale = function(){ if (typeof _sauve === 'function') _sauve(); };
+
+var _photo = {};
+function photographier(){
+  Object.keys(PLAN).forEach(function(n){
+    _photo[n] = {};
+    (window.DB[n] || []).forEach(function(o){ if (o && o.id) _photo[n][o.id] = JSON.stringify(o); });
+  });
+}
+function detecterChangements(){
+  Object.keys(PLAN).forEach(function(n){
+    var avant = _photo[n] || {};
+    (window.DB[n] || []).forEach(function(o){
+      if (!o || !o.id) return;
+      var s = JSON.stringify(o);
+      if (avant[o.id] !== s) { window.sfEnvoyer(n, o); avant[o.id] = s; }
+    });
+    _photo[n] = avant;
+  });
+}
+window.saveData = function(){
+  var r = (typeof _sauve === 'function') ? _sauve.apply(this, arguments) : undefined;
+  if (actif()) { try { detecterChangements(); } catch(e){ console.warn('[synchro]', e.message); } }
+  return r;
+};
+window.saveDB = window.saveData;
+
+/* ── Pastille d'état ─────────────────────────────────────────── */
+function majPastille(){
+  var p = document.getElementById('sf-etat-synchro');
+  if (!p) return;
+  var f = lireFile().length;
+  var horo = '';
+  try { var h = localStorage.getItem(HORO); if (h) horo = new Date(h).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'}); } catch(e){}
+  if (!navigator.onLine)  { p.textContent = '⚠️ Hors ligne' + (f ? ' · ' + f + ' en attente' : ''); p.style.color = '#F47920'; }
+  else if (f)             { p.textContent = '⏳ ' + f + ' en attente';  p.style.color = '#F47920'; }
+  else                    { p.textContent = '☁️ À jour' + (horo ? ' · ' + horo : ''); p.style.color = '#3AAA35'; }
+}
+
+function poserPastille(){
+  if (document.getElementById('sf-etat-synchro')) return;
+  var b = document.createElement('button');
+  b.id = 'sf-etat-synchro';
+  b.type = 'button';
+  b.title = 'Synchroniser maintenant';
+  b.style.cssText = 'position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:640;'
+    + 'background:var(--wh,#fff);border:1.5px solid var(--bd,#e2e8f0);border-radius:20px;padding:6px 13px;'
+    + "font:700 11px 'Outfit',system-ui,sans-serif;cursor:pointer;box-shadow:0 3px 14px rgba(15,23,42,.13);";
+  b.onclick = function(){ window.sfSynchroniser(false); };
+  document.body.appendChild(b);
+  majPastille();
+}
+
+/* ── Déclenchement ───────────────────────────────────────────── */
+function demarrer(){
+  poserPastille();
+  photographier();
+  window.sfSynchroniser(true);
+  setInterval(function(){ if (navigator.onLine && actif()) window.sfViderFile(true); }, 60000);
+}
+window.addEventListener('online',  function(){ majPastille(); if (actif()) window.sfSynchroniser(true); });
+window.addEventListener('offline', majPastille);
+
+var _fin = window._finishLogin;
+window._finishLogin = function(){
+  var r = (typeof _fin === 'function') ? _fin.apply(this, arguments) : undefined;
+  setTimeout(demarrer, 1200);
+  return r;
+};
+
+console.log('%c[SANIX OpusFab] Synchronisation active — tiers, articles, employés',
+            'color:#1E5FAD;font-weight:900;');
 })();
 </script>
 </body>

@@ -218,7 +218,62 @@ navigateur — un repli silencieux aurait annulé tout le reste.
 - `v_ma_session` — profil, société, rôle applicatif, rôles et permissions en un appel
 - `v_annuaire` — noms, postes et rôles des collègues, sans donnée sensible
 
-## 8. Reste à faire
+## 8. Synchronisation des données
+
+PostgreSQL devient la référence. `localStorage` reste le cache de travail :
+l'application continue de lire `DB.*` sans modification, et toute écriture part
+vers Supabase.
+
+### Collections branchées
+
+| `DB.*` | Table | Sens |
+|---|---|---|
+| `contacts` | `tiers` (client, prospect) | ↔ |
+| `fournisseurs` | `tiers` (fournisseur) | ↔ |
+| `articles` | `articles` | ↔ |
+| `employes` | `employes` | ↔ |
+
+Les autres collections restent locales. Le mécanisme est en place : brancher une
+collection de plus revient à ajouter une entrée dans la table `PLAN`.
+
+### Fonctionnement
+
+`saveData()` — le point de sauvegarde unique de l'application — est intercepté.
+À chaque appel, les fiches modifiées depuis la dernière photographie sont
+détectées et envoyées. Aucun appel existant n'a été réécrit.
+
+| Situation | Comportement |
+|---|---|
+| En ligne | Envoi immédiat par `upsert` sur `(entreprise_id, ref_externe)` |
+| Hors ligne | Mise en file d'attente locale, rejouée au retour du réseau |
+| Retour en ligne | File vidée puis relecture du serveur |
+| Toutes les minutes | File vidée en silence |
+| Ligne refusée par une contrainte | Retirée de la file et journalisée — sinon elle bloquerait tout |
+
+Une pastille en bas à gauche indique l'état : *à jour*, *n en attente*, *hors ligne*.
+Un clic force la synchronisation.
+
+### Correspondance des identifiants
+
+L'application génère des identifiants courts (`c1`, `art3`). La colonne
+`ref_externe` les conserve, ce qui rend la synchronisation idempotente dans les
+deux sens sans réécrire le frontend. Le `code` tiers et le `matricule` employé
+sont dérivés automatiquement quand ils manquent.
+
+### Reprise de l'existant
+
+```js
+sfPremierEnvoi()   // envoie tout le contenu local vers le serveur, puis relit
+sfSynchroniser()   // vide la file puis relit
+sfRecevoir()       // relit seulement
+sfFileAttente()    // nombre d'écritures en attente
+```
+
+`sfPremierEnvoi()` est à lancer **une fois**, depuis la console, par un
+administrateur connecté. L'opération est idempotente : la relancer ne crée pas
+de doublon.
+
+## 9. Reste à faire
 
 1. **Créer le premier compte** : ouvrir l'application, saisir e-mail et mot de passe,
    cliquer « Première connexion — créer mon compte ». Ce compte devient administrateur.
@@ -233,7 +288,7 @@ navigateur — un repli silencieux aurait annulé tout le reste.
 7. Table de correspondance ancien compte → nouveau compte pour retraiter
    l'historique comptable saisi sous le mapping erroné.
 
-## 9. Société amorcée
+## 10. Société amorcée
 
 `SANIX OpusFab` · code `SANIX` · id `d5884279-1d5a-4b84-80dd-df3a99758253`
 270 comptes · 9 journaux · exercice 2026 · paramètres de paie 2026 · dépôt principal
