@@ -454,6 +454,41 @@ renouvellement imposé, changement volontaire) :
 Rien ne quitte le navigateur. La vérification contre les fuites connues
 (HaveIBeenPwned) reste le rôle de Supabase : un interrupteur en console.
 
+## 9 quater. Service worker — remplacé
+
+L'ancien worker était installé depuis une URL `blob:` et mettait en cache
+**toute** réponse `GET`.
+
+| Défaut | Conséquence |
+|---|---|
+| Enregistré depuis une URL `blob:` | refusé par les navigateurs : le mode hors ligne ne marchait pas |
+| Cache-first, nom de cache constant | une nouvelle mise en ligne n'atteignait jamais un poste déjà venu |
+| Toute réponse `GET` mise en cache | les lectures Supabase authentifiées étaient écrites dans le cache, y survivaient à la déconnexion et restaient lisibles par l'utilisateur suivant du poste |
+
+Le remplacement est un fichier servi, `sw.js`, au périmètre explicite.
+
+| Règle | Mise en œuvre |
+|---|---|
+| Rien de personnel en cache | en-tête `Authorization`, requête paramétrée ou origine tierce → jamais gardée |
+| Supabase | hors périmètre par construction |
+| Coquille | servie du cache puis rafraîchie en fond |
+| Nouvelle version | signalée, jamais imposée au milieu d'une saisie |
+| Anciens caches | effacés à l'activation, y compris ceux de l'ancien worker (`sanixcrm*`) |
+
+Vérifié en Chromium sur serveur HTTP :
+
+| Contrôle | Résultat |
+|---|---|
+| Worker actif après 1er chargement | oui |
+| Contenu des caches | la coquille seule |
+| Lecture Supabase authentifiée mise en cache | **non** |
+| 2ᵉ chargement | 1,2 s |
+| Serveur éteint, `/` et `/index.html` | 200, application complète |
+| Exceptions | 0 |
+
+Note : une navigation porte toujours `credentials:'include'`. Exclure sur ce
+seul critère empêchait de servir la coquille hors ligne — corrigé.
+
 ## 10. Reste à faire
 
 0. **Activer la protection des mots de passe compromis** : Dashboard →

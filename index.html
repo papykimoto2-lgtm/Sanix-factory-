@@ -43918,51 +43918,35 @@ window.renderSoldeChart=function(){
    MODULE 4 — SERVICE WORKER (Mode hors-ligne)
 ══════════════════════════════════════════════════════════════ */
 (function _installServiceWorker(){
-  if(!('serviceWorker' in navigator)) return;
+  /* L'ancien worker etait enregistre depuis une URL blob: — refusee par les
+     navigateurs — et mettait en cache TOUTE reponse GET, y compris les
+     lectures Supabase authentifiees, qui survivaient a la deconnexion.
+     Il est remplace par un fichier servi, au perimetre explicite. */
+  if (!('serviceWorker' in navigator)) return;
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
 
-  var swCode=`
-const CACHE='sanixcrm-v1-cache';
-const ASSETS=['./'];
+  navigator.serviceWorker.register('./sw.js', {scope: './'}).then(function(reg){
+    /* Purge des caches de l'ancien worker, qui pouvaient contenir des
+       donnees d'un utilisateur precedent. */
+    if (window.caches && caches.keys) caches.keys().then(function(noms){
+      noms.filter(function(n){ return n.indexOf('sanixcrm') === 0; })
+          .forEach(function(n){ caches.delete(n); });
+    });
+    if (reg.installing) reg.installing.addEventListener('statechange', function(ev){
+      if (ev.target.state === 'activated' && typeof showToast === 'function')
+        showToast('\u2705 Mode hors ligne activ\u00e9', 'L\u2019application s\u2019ouvre sans r\u00e9seau.', 'ok');
+    });
+  }).catch(function(e){ console.warn('[sw] non enregistr\u00e9 :', e.message); });
 
-self.addEventListener('install',function(e){
-  e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(ASSETS);}));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate',function(e){
-  e.waitUntil(caches.keys().then(function(keys){
-    return Promise.all(keys.filter(function(k){return k!==CACHE;}).map(function(k){return caches.delete(k);}));
-  }));
-  self.clients.claim();
-});
-
-self.addEventListener('fetch',function(e){
-  if(e.request.method!=='GET') return;
-  e.respondWith(
-    caches.match(e.request).then(function(cached){
-      var fresh=fetch(e.request).then(function(res){
-        if(res&&res.status===200){
-          var clone=res.clone();
-          caches.open(CACHE).then(function(c){c.put(e.request,clone);});
-        }
-        return res;
-      }).catch(function(){return cached;});
-      return cached||fresh;
-    })
-  );
-});
-`;
-
-  try{
-    var blob=new Blob([swCode],{type:'application/javascript'});
-    var url=URL.createObjectURL(blob);
-    navigator.serviceWorker.register(url,{scope:'./'}).then(function(reg){
-      console.log('✅ SANIX OpusFab SW enregistré — scope:',reg.scope);
-      if(reg.installing) reg.installing.addEventListener('statechange',function(e){
-        if(e.target.state==='activated') showToast('✅ Mode hors-ligne activé','SANIX OpusFab disponible sans connexion','ok');
-      });
-    }).catch(function(e){console.log('SW non enregistré (blob URL):',e.message);});
-  }catch(e){console.log('SW blob non supporté');}
+  /* Une nouvelle version ne s'impose jamais au milieu d'une saisie. */
+  navigator.serviceWorker.addEventListener('message', function(ev){
+    if (!ev.data || ev.data.type !== 'sf-version-disponible') return;
+    if (window._sfVersionSignalee) return;
+    window._sfVersionSignalee = true;
+    if (typeof showToast === 'function')
+      showToast('\u21BB Nouvelle version disponible',
+                'Rechargez la page quand vous aurez termin\u00e9 votre saisie.', 'info');
+  });
 })();
 
 /* ══════════════════════════════════════════════════════════════
