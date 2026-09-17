@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="SANIX OpusFab ERP 2026"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<meta name="theme-color" content="#1E5FAD"/>
+<meta name="theme-color" content="#191A2E"/>
 <link rel="manifest" id="pwa-manifest-link"/>
 <title>SANIX OpusFab ERP 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
@@ -35836,8 +35836,8 @@ window.installerPWA=function(){
     scope: '.',
     display: 'standalone',
     orientation: 'portrait-primary',
-    background_color: '#0F172A',
-    theme_color: '#1E5FAD',
+    background_color: '#191A2E',
+    theme_color: '#191A2E',
     lang: 'fr',
     categories: ['business', 'productivity'],
     shortcuts: [
@@ -129778,5 +129778,255 @@ console.log('%c[SANIX OpusFab] Synchronisation active — tiers, articles, emplo
             'color:#1E5FAD;font-weight:900;');
 })();
 </script>
+<style id="sf-theme-opusfab">
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — THÈME
+   Administration sobre : barre latérale indigo, accent violet,
+   surfaces plates cernées d'un trait fin. Aucun dégradé, aucune ombre
+   portée : la hiérarchie vient de la typographie et de l'espacement.
+   Posé en fin de document pour l'emporter sur les 119 blocs antérieurs.
+═══════════════════════════════════════════════════════════════════ */
+:root{
+  --P:#7c3aed;          /* accent principal            */
+  --P-h:#6d28d9;        /* accent survolé              */
+  --P-w:#f5f3ff;        /* accent très clair, aplats   */
+  --nav-bg:#191A2E;     /* barre latérale              */
+  --nav-t:rgba(255,255,255,.62);
+  --nav-t2:rgba(255,255,255,.34);
+
+  --bg:#F5F6F8;
+  --wh:#FFFFFF;
+  --bd:#E8EAEE;
+  --bd2:#D7DBE2;
+  --t1:#111827;
+  --t2:#6B7280;
+  --t3:#9CA3AF;
+
+  --r:10px;
+  --r-sm:8px;
+  --sh:none;
+  --sh2:0 4px 18px rgba(17,24,39,.08);
+  --sh3:0 12px 40px rgba(17,24,39,.14);
+  --grad:var(--P);
+  --g2:var(--P);
+  --g3:var(--P);
+}
+
+body{background:var(--bg);color:var(--t1);}
+
+/* ── Barre latérale ─────────────────────────────────────────── */
+.sb{width:234px;background:var(--nav-bg);}
+.sb-brand{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,.07);}
+.sb-logo{display:none;}
+.sb-brand-name{font-size:17px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;}
+.sb-brand-tag{display:none;}
+
+.sb-user-badge{background:rgba(255,255,255,.04);border:none;border-radius:var(--r-sm);}
+.sb-av,.sb-av.admin{background:var(--P)!important;}
+.sb-role-badge{display:none;}
+
+.sb-nav{padding:10px 10px 6px;}
+
+/* Intitulés de rubrique : petites capitales discrètes */
+.mav-sep{
+  border-top:none!important;
+  padding:16px 8px 6px;margin:0;
+}
+.mav-sep:first-child{padding-top:6px;}
+.mav-step{display:none!important;}
+.mav-label{
+  font-size:10px!important;font-weight:700!important;
+  letter-spacing:.9px;text-transform:uppercase;
+  color:var(--nav-t2)!important;background:none!important;
+}
+
+/* Entrées de navigation — les dégradés en attribut style sont neutralisés */
+.sb .ni{
+  background:none!important;border:none!important;
+  border-radius:var(--r-sm);padding:9px 11px;margin-bottom:2px;
+  font-size:13px;font-weight:500;color:var(--nav-t);
+}
+.sb .ni span{color:inherit!important;font-weight:inherit!important;}
+.sb .ni:hover{background:rgba(255,255,255,.07)!important;color:#fff;}
+.sb .ni.on{background:var(--P)!important;color:#fff!important;font-weight:600;}
+.sb .ni.on::before{display:none;}
+.sb .ni-ico{
+  width:17px;height:17px;background:none!important;border-radius:0;
+  font-size:12.5px;color:#F59E0B;
+}
+.sb .ni.on .ni-ico{color:#fff!important;}
+.sb .ni-badge{
+  background:rgba(255,255,255,.14)!important;color:#fff;
+  font-size:10px;font-weight:700;padding:1px 6px;
+}
+.sb .ni.on .ni-badge{background:rgba(255,255,255,.26)!important;}
+.sb-group+.sb-group{border-top:none;}
+
+.sb-footer{padding:12px 14px 14px;border-top:1px solid rgba(255,255,255,.07);}
+.sb-logout{color:var(--nav-t2);font-size:12px;padding:7px 11px;}
+.sb-logout:hover{background:rgba(255,255,255,.07);color:#fff;}
+
+/* ── Barre supérieure ───────────────────────────────────────── */
+.tb{height:58px;background:var(--wh);border-bottom:1px solid var(--bd);box-shadow:none;padding:0 24px;}
+.tb-title{font-size:18px;font-weight:700;color:var(--t1);letter-spacing:-.2px;}
+.tb-icon{
+  width:34px;height:34px;border:none;background:none;color:var(--t2);border-radius:50%;
+}
+.tb-icon:hover{background:var(--bg);color:var(--t1);}
+.tb-icon .ndot{background:#EF4444;border-color:var(--wh);}
+
+/* ── Surfaces ───────────────────────────────────────────────── */
+.card{
+  background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);
+  box-shadow:none;margin-bottom:14px;
+}
+
+/* ── Indicateurs ────────────────────────────────────────────── */
+.kpi{
+  background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);
+  border-top:1px solid var(--bd)!important;padding:18px 20px;box-shadow:none;
+}
+.kico{display:none;}
+.kl{
+  font-size:12.5px;font-weight:400;color:var(--t2);
+  text-transform:none;letter-spacing:0;margin:0 0 8px;
+}
+.kn{font-size:28px;font-weight:700;color:var(--t1);letter-spacing:-.5px;margin:0;}
+.kd{font-size:11.5px;font-weight:500;margin-top:7px;}
+.kpi-spark{display:none;}
+/* Un montant en souffrance reste rouge : c'est une information, pas un ornement */
+.kpi.alerte .kn,.kn.alerte,.kn.dn{color:#DC2626;}
+
+/* ── Actions ────────────────────────────────────────────────── */
+.btn{border-radius:var(--r-sm);font-weight:600;font-size:13px;padding:9px 16px;box-shadow:none!important;}
+.btn-r{background:var(--P);color:#fff;}
+.btn-r:hover{background:var(--P-h);}
+.btn-b,.btn-g{background:var(--P);color:#fff;}
+.btn-b:hover,.btn-g:hover{background:var(--P-h);filter:none;}
+.btn-ghost{background:var(--wh);color:var(--t2);border:1px solid var(--bd2);}
+.btn-ghost:hover{border-color:var(--P);color:var(--P);}
+/* La suppression garde le rouge : la couleur porte ici un avertissement */
+.btn-r:has(.fa-trash),.btn-r:has(.fa-trash-can),.btn-r:has(.fa-xmark),
+.btn-danger{background:#DC2626!important;color:#fff;}
+.btn-r:has(.fa-trash):hover,.btn-r:has(.fa-trash-can):hover,
+.btn-danger:hover{background:#B91C1C!important;}
+
+/* ── Formulaires ────────────────────────────────────────────── */
+.fi,input.fi,select.fi,textarea.fi{
+  border-radius:var(--r-sm);border:1px solid var(--bd2);font-size:13px;
+}
+.fi:focus{border-color:var(--P);outline:2px solid var(--P-w);outline-offset:0;}
+.fl{font-size:12px;font-weight:500;color:var(--t2);}
+
+/* ── Onglets ────────────────────────────────────────────────── */
+.tab{font-size:13px;font-weight:500;color:var(--t2);}
+.tab.on,.tab.active{color:var(--P);border-bottom-color:var(--P);font-weight:600;}
+
+/* ── Écran de connexion ─────────────────────────────────────── */
+#loginScreen{background:var(--nav-bg);}
+.login-card{border-radius:14px;}
+.login-btn{background:var(--P);box-shadow:none;}
+.login-btn:hover{background:var(--P-h);}
+.login-logomark{display:none;}
+.login-brand{font-size:19px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;}
+
+/* ── Pastille de synchronisation ────────────────────────────── */
+#sf-etat-synchro{border-radius:var(--r-sm);border-color:var(--bd);box-shadow:none;}
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+@media(max-width:768px){
+  .sb{width:min(86vw,270px);}
+  .tb{height:54px;padding:0 14px;}
+  .tb-title{font-size:16px;}
+  .kpi{padding:14px 15px;}
+  .kn{font-size:23px;}
+  .kl{font-size:12px;}
+}
+
+/* ── Reprise : aplats restants ──────────────────────────────── */
+.content{background:var(--bg)!important;}
+.sec,.sec.on{background:none!important;}
+.dash-header{background:var(--wh)!important;border:1px solid var(--bd);border-radius:var(--r);color:var(--t1)!important;}
+
+/* Bandeau d'accueil : carte blanche, comme le reste des surfaces */
+.du-welcome{
+  background:var(--wh)!important;color:var(--t1)!important;
+  border:1px solid var(--bd);border-radius:var(--r);padding:18px 20px;
+}
+.du-welcome-title{font-size:16px;font-weight:700;color:var(--t1);}
+.du-welcome-sub{font-size:13px;color:var(--t2);opacity:1;}
+.du-clock{font-family:var(--f);font-weight:700;color:var(--t1);opacity:1;}
+
+/* Indicateurs injectés par les modules v2 : même traitement que .kpi */
+.kpi-card{
+  border:1px solid var(--bd)!important;border-top:1px solid var(--bd)!important;
+  border-radius:var(--r);padding:16px 18px;background:var(--wh);box-shadow:none;
+}
+.kpi-strip{gap:14px;}
+
+/* Boutons de la barre supérieure */
+.tb-btn.red{background:var(--P);}
+.tb-btn.red:hover{background:var(--P-h);}
+.tb-btn.ghost{background:var(--wh);border:1px solid var(--bd2);}
+
+/* Bouton flottant */
+.fab,#appelFab{background:var(--P)!important;box-shadow:0 4px 16px rgba(124,58,237,.35)!important;}
+
+/* ── Reprise 2 : liserés colorés et bandeaux ────────────────── */
+/* Les tuiles portaient un liseré de 3px par module. La couleur reste
+   sur le libellé et l'icône, où elle informe, pas sur un trait décoratif. */
+.pkpi,[class*="kpi"]{border-top-width:1px!important;border-top-color:var(--bd)!important;}
+.pkpi{border:1px solid var(--bd)!important;border-radius:var(--r);box-shadow:none;}
+
+/* Bandeaux pleine largeur : aplat plutôt que dégradé */
+#lic-banner{background:var(--P)!important;}
+.offline-banner,#offlineBanner{background:#F59E0B!important;}
+
+/* Filet décoratif sous la barre supérieure */
+.tb+div[style*="linear-gradient"],.topline,.grad-line{display:none!important;}
+.main>div[style*="height:3px"],.main>div[style*="height:4px"]{display:none!important;}
+
+/* Tableaux */
+.tbl-v2 thead tr{background:var(--bg)!important;}
+.tbl-v2 thead th{color:var(--t2)!important;font-weight:600;}
+table thead th{font-weight:600;}
+
+/* ── Reprise 3 : filets en pseudo-éléments ──────────────────── */
+/* Le liseré de 3px des tuiles est un ::before, invisible aux règles de bordure. */
+.du-kpi::before,.kpi::before,.pkpi::before,.card::before{display:none!important;}
+.du-kpi{border:1px solid var(--bd);border-radius:var(--r);padding:15px 16px;}
+.du-kpi:hover{transform:none;box-shadow:0 2px 10px rgba(17,24,39,.06);border-color:var(--bd2);}
+.du-kpi-module{font-size:10px;font-weight:600;letter-spacing:.5px;color:var(--t2);}
+.du-kpi-val{font-size:24px;font-weight:700;letter-spacing:-.4px;}
+.du-kpi-lbl{font-size:12px;color:var(--t2);font-weight:400;}
+.du-kpi-grid{gap:14px;}
+
+/* ── Reprise 4 : spécificité ────────────────────────────────── */
+/* Plusieurs modules injectent leur feuille au moment du rendu, donc après
+   ce bloc. Un sélecteur d'identifiant l'emporte quel que soit l'ordre. */
+#app .du-kpi::before,#app .kpi::before,#app .pkpi::before{display:none!important;}
+#app .du-kpi{border:1px solid var(--bd)!important;border-radius:var(--r)!important;padding:15px 16px!important;}
+#app .du-kpi:hover{transform:none!important;box-shadow:0 2px 10px rgba(17,24,39,.06)!important;}
+#app .du-kpi-val{font-size:24px!important;font-weight:700!important;letter-spacing:-.4px;}
+#app .du-kpi-module{font-size:10px!important;font-weight:600!important;color:var(--t2)!important;}
+#app .du-welcome{background:var(--wh)!important;color:var(--t1)!important;border:1px solid var(--bd)!important;}
+#app .kpi,#app .kpi-card,#app .pkpi{
+  border:1px solid var(--bd)!important;border-radius:var(--r)!important;box-shadow:none!important;
+}
+#app .content{background:var(--bg)!important;}
+
+/* ── Reprise 5 : filets posés en <div> avec styles en ligne ──── */
+/* Les tuiles reçoivent un enfant absolu de 3px servant de liseré coloré.
+   Ce n'est ni une bordure ni un pseudo-élément : il faut le viser par son
+   attribut style. La couleur reste sur le libellé du module. */
+#app .du-kpi>div[style*="height:3px"],
+#app .kpi>div[style*="height:3px"],
+#app .pkpi>div[style*="height:3px"],
+#app .card>div[style*="height:3px"][style*="top:0"]{display:none!important;}
+#app .du-kpi{padding-top:15px!important;}
+
+/* Filet décoratif sous la barre supérieure : BEDA ALU s'en passe. */
+#app .stripe,.main>.stripe{display:none!important;}
+</style>
 </body>
 </html>
