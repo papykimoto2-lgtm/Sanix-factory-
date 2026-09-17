@@ -45,6 +45,7 @@ Clé publiable : `sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d`
 | 19 | `rls_moindre_privilege_ecriture` | 45 politiques `FOR ALL` scindées en INSERT / UPDATE / DELETE + index dupliqué supprimé |
 | 20 | `index_cles_etrangeres_metier` | 52 index sur les clés étrangères métier ; colonnes de traçabilité écartées |
 | 21 | `compte_nouveau_inactif_par_defaut` | Un compte créé de lui-même arrive **inactif** et sans rôle |
+| 22 | `journal_usage_ia` | Table `ia_usages` + `ia_appels_du_jour()` pour l'audit et le plafond |
 
 ---
 
@@ -517,6 +518,41 @@ vente, Prévisions, PIC, PDP, MRP. L'étape ouverte se distingue par un fond
 plein et un trait plus épais, pas par une teinte de plus. Quand le goulot est
 ailleurs, une phrase dit lequel et pourquoi. Un clic sur une station y mène.
 
+## 9 sexies. Assistant — la clé quitte le navigateur
+
+Trois appels visaient `api.anthropic.com` **directement depuis le navigateur**,
+sans clé : ils échouaient en silence. Une quatrième couche, pour la lecture de
+cartes de visite, passait l'image du client à un **proxy CORS public** en
+comptant sur lui pour détenir la clé ; elle était neutralisée par un `return`
+en tête de fonction, mais le code restait.
+
+Tout passe désormais par la fonction de bord `ia`.
+
+| Verrou | Mise en œuvre |
+|---|---|
+| Jeton valide | `verify_jwt`, posé par la plateforme |
+| Profil actif | lu sous la RLS de l'appelant, **sur son propre identifiant** |
+| Modèle | le client nomme un *usage*, le serveur choisit le modèle |
+| Volume | plafond quotidien par profil, charge utile bornée |
+| Traçabilité | chaque appel journalisé dans `ia_usages`, réussi ou non |
+| Fuite d'erreur | le message du fournisseur ne remonte jamais au navigateur |
+
+Usages ouverts : `redaction`, `analyse` (Opus 5), `extraction`, `vision`
+(Haiku 4.5). Les identifiants de modèles du code client étaient périmés
+(`claude-sonnet-4-6`, `claude-haiku-4-5-20251001`) — le client n'en porte plus
+aucun.
+
+**Défaut corrigé en cours de route** : le contrôle du profil filtrait sur
+`actif = true` sans préciser *quel* profil. La politique de lecture laisse voir
+toute la société : la requête aurait échoué dès le deuxième employé.
+
+### À faire une fois, en console
+
+Poser le secret : Dashboard → Edge Functions → `ia` → Secrets →
+`ANTHROPIC_API_KEY`. Sans lui, la fonction répond 503 avec un message clair et
+l'application continue de fonctionner — l'assistant est un confort, jamais un
+passage obligé.
+
 ## 10. Reste à faire
 
 0. **Activer la protection des mots de passe compromis** : Dashboard →
@@ -531,7 +567,7 @@ ailleurs, une phrase dit lequel et pourquoi. Un clic sur une station y mène.
    Seule l'authentification passe par Supabase à ce stade.
 5. **Transmission FNE à la DGI** : les colonnes existent, l'appel à l'API DGI
    reste à brancher (documentation de l'API requise).
-6. Edge Function proxy pour l'IA — la clé Anthropic ne doit jamais atteindre le client.
+6. ~~Edge Function proxy pour l'IA~~ — fait : fonction `ia`, il reste à poser le secret.
 7. Reprise des à-nouveaux via le journal `AN`.
 8. Table de correspondance ancien compte → nouveau compte pour retraiter
    l'historique comptable saisi sous le mapping erroné.

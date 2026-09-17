@@ -55665,18 +55665,10 @@ window.genererTemplateIA = function(){
     +(prompt?'Contexte : '+prompt+'. ':'')
     +'Le message doit être direct, personnel, avec appel à l\'action clair. Ne fournis que le texte du message, sans titre ni explication.';
 
-  fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({
-      model:'claude-sonnet-4-6', max_tokens:400,
-      system: sysPrompt,
-      messages:[{role:'user',content:userMsg}]
-    })
-  }).then(function(r){return r.json();})
-    .then(function(d){
-      var text = (d.content&&d.content[0]&&d.content[0].text)||'Erreur de génération';
-      if(outEl) outEl.value = text.trim();
+  /* La cle reste sur le serveur : on passe par la fonction de bord. */
+  window.sfAICall(userMsg, {usage:'redaction', system:sysPrompt, max_tokens:400})
+    .then(function(text){
+      if(outEl) outEl.value = (text||'').trim();
     })
     .catch(function(){
       // Fallback si l'API n'est pas disponible
@@ -73401,20 +73393,7 @@ console.log('%cSANIX OpusFab \u1F5FA\u1F5FA — Leaflet Géolocalisation & Suivi
     + '  "secteur": "Parmi: Restauration, Alimentaire, Hôtellerie, Commerce, Santé, Industrie, Transport, Autre"\n'
     + '}';
 
-  /* Payload Anthropic standard */
-  function _bizPayload(b64, mime, prompt) {
-    return JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
-          { type: 'text', text: prompt }
-        ]
-      }]
-    });
-  }
+  /* Le choix du modele appartient au serveur : plus de payload cote client. */
 
   /* Parseur de réponse Anthropic */
   function _bizParseResponse(data) {
@@ -73462,28 +73441,23 @@ console.log('%cSANIX OpusFab \u1F5FA\u1F5FA — Leaflet Géolocalisation & Suivi
     });
   }
 
-  /* ── Couche 2 : proxy CORS public (allorigins) ── */
+  /* ── Couche 2 : la fonction de bord ────────────────────────────
+     L'ancienne couche visait un proxy CORS public en lui confiant
+     l'image du client et en comptant sur lui pour detenir la cle. Elle
+     etait desactivee par un return en tete de fonction ; le code mort
+     restait. La fonction `ia` du projet fait le travail, cle cote
+     serveur et appel journalise. */
   function _callViaProxy(b64, mime, prompt) {
-    return Promise.reject(new Error('Proxy CORS public désactivé (sécurité) — utilisez le serveur local /api/scan-card ou un proxy privé.'));
-    var payload = _bizPayload(b64, mime, prompt);
-    var target = 'https://api.anthropic.com/v1/messages';
-    // Note : allorigins ne peut pas injecter les headers Anthropic requis
-    // → on utilise un mini-service CORS connu compatible
-    return fetch('https://corsproxy.io/?' + encodeURIComponent(target), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': '',   // laissé vide, le serveur proxy doit avoir la clé
-        'anthropic-version': '2023-06-01'
-      },
-      body: payload,
-      signal: AbortSignal.timeout(30000)
-    })
-    .then(function(r) {
-      if (!r.ok) throw new Error('Proxy HTTP ' + r.status);
-      return r.json();
-    })
-    .then(_bizParseResponse);
+    if (typeof window.sfAICall !== 'function')
+      return Promise.reject(new Error('Assistant non disponible.'));
+    return window.sfAICall([{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+        { type: 'text',  text: prompt }
+      ]
+    }], { usage: 'vision', max_tokens: 1000 })
+    .then(function(texte) { return _bizParseResponse({ content: [{ type: 'text', text: texte }] }); });
   }
 
   function analyzeBizCard(b64, mime) {
@@ -78446,19 +78420,10 @@ window.lancerAnalyseIATRS=function(){
     +'5. Donnez 3 recommandations prioritaires concrètes pour améliorer le TRS\n'
     +'Répondez de manière structurée, concise, orientée action industrielle. Utilisez des emojis pour la lisibilité.';
 
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-6',
-      max_tokens:1000,
-      messages:[{role:'user',content:prompt}]
-    })
-  }).then(function(r){return r.json();})
-  .then(function(data){
+  window.sfAICall(prompt, {usage:'analyse', max_tokens:1000})
+  .then(function(txt){
     if(btn){btn.disabled=false;btn.innerHTML='<i class="fa fa-brain"></i> Analyser';}
-    var txt=(data.content||[]).filter(function(b){return b.type==='text';}).map(function(b){return b.text;}).join('');
-    if(!txt){res.innerHTML='<div style="color:#dc2626;padding:12px;font-size:11px;">Erreur API: '+(data.error?.message||'Réponse inattendue')+'</div>';return;}
+    if(!txt){res.innerHTML='<div style="color:#dc2626;padding:12px;font-size:11px;">Assistant indisponible.</div>';return;}
     // Convertir markdown basique en HTML
     txt=txt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>');
     res.innerHTML='<div style="padding:12px;line-height:1.6;font-size:12px;color:var(--t1);"><p>'+txt+'</p></div>'
@@ -103694,18 +103659,8 @@ window.lancerAnalyseIA = function() {
     +'4. 📋 Plan d\'action — 3 recommandations concrètes avec priorité et délai\n\n'
     +'Sois concis, direct, avec des chiffres. Contexte : Afrique de l\'Ouest, ressources limitées.';
 
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-6',
-      max_tokens:1000,
-      messages:[{role:'user',content:prompt}]
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    var txt = (data.content||[]).filter(function(c){return c.type==='text';}).map(function(c){return c.text;}).join('');
+  window.sfAICall(prompt, {usage:'analyse', max_tokens:1000})
+  .then(function(txt){
     contenu.textContent = txt || 'Pas de réponse.';
     btn.disabled = false; btn.innerHTML = '<i class="fa fa-robot"></i> Relancer l\'analyse IA';
   })
@@ -112743,91 +112698,78 @@ setTimeout(_applyAllWraps, 2000);
 
 
 /* ───────────────────────────────────────────────────────────────────────
-   PATCH 2 — ROUTEUR API IA CENTRALISÉ
-   Les 3 appels directs à api.anthropic.com sont centralisés ici.
-   La clé API est lue depuis :
-     1. window._SF_AI_KEY (injectée par le serveur au chargement)
-     2. localStorage 'sf_ai_proxy_url' pour passer par un proxy backend
-     3. Fallback : appel direct sans clé (requête rejetée côté Anthropic → message d'erreur clair)
-   Usage dans le code : window.sfAICall(prompt, options) → Promise<string>
+   ROUTEUR IA — TOUT PASSE PAR LA FONCTION DE BORD
+   La clé Anthropic vit dans la fonction `ia` du projet Supabase et n'entre
+   jamais dans le navigateur. Le client ne choisit pas son modèle : il
+   nomme un usage, le serveur décide. Quatre verrous côté serveur — jeton,
+   profil actif, usage en liste blanche, plafond quotidien — et chaque
+   appel est journalisé.
+   Usage : window.sfAICall(messages, {usage, system, max_tokens})
    ─────────────────────────────────────────────────────────────────────── */
-(function _patchAIRouter() {
-  var AI_ENDPOINT = 'https://api.anthropic.com/v1/messages';
-  var AI_MODEL    = 'claude-sonnet-4-6';
+(function _routeurIA() {
+  function pointDeSortie() {
+    /* Un proxy posé à la main l'emporte : certains clients hébergent le leur. */
+    var manuel = '';
+    try { manuel = localStorage.getItem('sf_ai_proxy_url') || ''; } catch(e){}
+    if (manuel) return manuel;
+    var base = (window.SF_SUPABASE && window.SF_SUPABASE.url) || '';
+    return base ? base.replace(/\/+$/, '') + '/functions/v1/ia' : '';
+  }
 
-  /**
-   * Appel IA centralisé.
-   * @param {string|Array} messages  String (user message) ou tableau [{role,content}]
-   * @param {object} opts  { system, max_tokens, onChunk }
-   * @returns {Promise<string>} Texte généré
-   */
   window.sfAICall = async function(messages, opts) {
     opts = opts || {};
+    var url = pointDeSortie();
+    if (!url) throw new Error('[IA] Projet Supabase non configuré.');
 
-    // Résolution de l'URL et de la clé
-    var proxyUrl = (typeof window._SF_AI_PROXY === 'string' && window._SF_AI_PROXY)
-                || localStorage.getItem('sf_ai_proxy_url')
-                || '';
-    var apiKey = ''; // SEC: la clé API ne transite JAMAIS par le client
-    if (!proxyUrl) throw new Error('[IA] Proxy IA non configuré. La clé Anthropic doit rester côté serveur (sfAISetProxy).');
-    var url = proxyUrl;
-
-    var msgArray = typeof messages === 'string'
-      ? [{ role: 'user', content: messages }]
-      : messages;
-
-    var body = {
-      model:      opts.model || AI_MODEL,
-      max_tokens: opts.max_tokens || 1000,
-      messages:   msgArray
-    };
-    if (opts.system) body.system = opts.system;
-
-    var headers = { 'Content-Type': 'application/json' };
-    // N'envoyer la clé que si présente (le proxy peut la gérer côté serveur)
-    if (apiKey)  headers['x-api-key']         = apiKey;
-    if (!proxyUrl) headers['anthropic-version'] = '2023-06-01';
-
+    /* Le jeton de la session en cours : la fonction refuse sans lui. */
+    var jeton = '';
     try {
-      var r = await fetch(url, { method: 'POST', headers: headers, body: JSON.stringify(body) });
-      if (!r.ok) {
-        var errBody = await r.json().catch(function(){ return {}; });
-        var msg = (errBody.error && errBody.error.message) || ('HTTP ' + r.status);
-        throw new Error('[IA] ' + msg);
-      }
-      var data = await r.json();
-      var text = (data.content || [])
-        .filter(function(b) { return b.type === 'text'; })
-        .map(function(b) { return b.text; })
-        .join('');
-      return text || '';
-    } catch(e) {
-      console.error('[SF v4.1 P2] Erreur sfAICall:', e.message);
-      throw e;
-    }
+      var s = window.sb && await window.sb.auth.getSession();
+      jeton = (s && s.data && s.data.session && s.data.session.access_token) || '';
+    } catch(e){}
+    if (!jeton) throw new Error('[IA] Connectez-vous pour utiliser l’assistant.');
+
+    var corps = {
+      usage:    opts.usage || 'analyse',
+      messages: typeof messages === 'string' ? [{role:'user', content:messages}] : messages
+    };
+    if (opts.max_tokens) corps.max_tokens = opts.max_tokens;
+    if (opts.system) corps.system = opts.system;
+
+    var r = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization':'Bearer ' + jeton},
+      body: JSON.stringify(corps)
+    });
+    var data = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error('[IA] ' + (data.erreur || ('HTTP ' + r.status)));
+    return data.texte || '';
   };
 
-  /**
-   * Configuration du proxy IA depuis l'interface paramétrage.
-   * Appelable via : window.sfAISetProxy('https://mon-serveur.ci/api/ai')
-   */
+  /* Repli commun : l'assistant est un confort, jamais un passage obligé. */
+  window.sfAIEssayer = function(messages, opts, siEchec) {
+    return window.sfAICall(messages, opts).catch(function(e){
+      console.warn('[IA] indisponible :', e.message);
+      if (typeof siEchec === 'function') return siEchec(e);
+      throw e;
+    });
+  };
+
   window.sfAISetProxy = function(proxyUrl, apiKey) {
-    if (proxyUrl) localStorage.setItem('sf_ai_proxy_url', proxyUrl);
-    if (apiKey) { console.warn('[SF SEC] Clé API refusée côté client — configurez-la sur le proxy serveur.'); }
-    try{ localStorage.removeItem('sf_ai_key'); }catch(e){}
-    console.log('[SF v4.1 P2] Proxy IA configuré →', proxyUrl || '(direct)');
+    if (apiKey) console.warn('[IA] Clé refusée côté client — elle reste sur le serveur.');
+    try {
+      if (proxyUrl) localStorage.setItem('sf_ai_proxy_url', proxyUrl);
+      else localStorage.removeItem('sf_ai_proxy_url');
+      localStorage.removeItem('sf_ai_key');
+    } catch(e){}
   };
 
   window.sfAIGetConfig = function() {
-    return {
-      proxy:     localStorage.getItem('sf_ai_proxy_url') || '',
-      hasKey:    !!localStorage.getItem('sf_ai_key'),
-      model:     AI_MODEL,
-      endpoint:  AI_ENDPOINT
-    };
+    return { proxy: pointDeSortie(), cleCoteClient: false,
+             usages: ['redaction','analyse','extraction','vision'] };
   };
 
-  console.log('%c[SF v4.1 P2] ✅ Routeur IA centralisé actif (sfAICall)', 'color:#059669;font-weight:700;');
+  console.log('%c[SANIX OpusFab] Assistant routé par la fonction de bord', 'color:#059669;font-weight:700;');
 })();
 
 
@@ -113141,7 +113083,7 @@ setTimeout(_applyAllWraps, 2000);
 
     // Config IA
     var aiCfg = typeof window.sfAIGetConfig === 'function' ? window.sfAIGetConfig() : {};
-    report.aiProxy  = aiCfg.proxy || '(direct api.anthropic.com)';
+    report.aiProxy  = aiCfg.proxy || '(non configuré)';
     report.aiHasKey = aiCfg.hasKey || false;
 
     // Rapport console (sans console.group — non dispo dans tous les contextes)
