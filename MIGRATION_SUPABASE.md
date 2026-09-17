@@ -638,6 +638,38 @@ emportaient l'en-tête. Plutôt que de deviner leur calendrier, un observateur
 la repose dès qu'elle disparaît. La veille démarre au chargement, pas à la
 première navigation — c'est justement celle où le module se construit.
 
+## 9 nonies. Données d'exemple — le garde était à l'envers
+
+Le tableau de bord d'une base vierge affichait 4 non-conformités, 2 incidents,
+1 ordre de travail, 2 présents sur 4 et un score de santé de 94. Ces chiffres
+étaient calculés — sur des données que l'application s'était écrites à
+elle-même.
+
+Le garde posé sur les douze semences testait :
+
+```
+si la base est DEJA pleine  →  ne pas semer
+```
+
+Donc sur une base **vierge** — exactement le cas d'une livraison — les douze
+s'exécutaient. Il bloquait le seul cas où semer était inoffensif.
+
+| Correction | Mise en œuvre |
+|---|---|
+| Sens inversé | rien ne se sème de soi-même, quel que soit l'état de la base |
+| Porte posée **avant** tout | six semences s'exécutent dès la lecture du document, aucun garde posé après coup ne les rattrape |
+| Jeu de démonstration | conservé, sur demande : `sfChargerDemo()` pose le drapeau et recharge |
+| Retour en arrière | `sfQuitterDemo()` retire le drapeau et vide |
+| Postes déjà ouverts | marqueur de purge porté à `v3` : ils se vident une fois |
+
+**Vérifié sur 16 collections** — SMQ, SHE, GMAO, contrats, campagnes, lignes,
+dépôts, WhatsApp, HACCP, employés, contacts, articles, OF :
+
+| État | Résultat |
+|---|---|
+| Chargement normal | **0 ligne** partout |
+| Après `sfChargerDemo()` + rechargement | les jeux reviennent |
+
 ## 10. Reste à faire
 
 0. **Activer la protection des mots de passe compromis** : Dashboard →

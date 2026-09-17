@@ -12,6 +12,17 @@
 <link rel="manifest" id="pwa-manifest-link"/>
 <script>
 /* ═══════════════════════════════════════════════════════════════════
+   PORTE DE DÉMONSTRATION
+   Aucune donnée d'exemple ne s'écrit d'elle-même. Les jeux de
+   démonstration restent disponibles, mais seulement quand on les
+   demande — bouton « Charger un jeu de démonstration ». Posé avant
+   tout le reste : plusieurs semences s'exécutent dès leur lecture.
+═══════════════════════════════════════════════════════════════════ */
+window.SF_DEMO = false;
+try { window.SF_DEMO = localStorage.getItem('opusfab_demo') === '1'; } catch(e){}
+window.sfDemoActive = function(){ return window.SF_DEMO === true; };
+
+/* ═══════════════════════════════════════════════════════════════════
    REPRISE DES CLÉS DE STOCKAGE
    Les clés portaient l'ancien nom du produit. Les renommer sans rien
    reprendre aurait vidé la configuration des postes déjà en service :
@@ -25102,6 +25113,8 @@ window.saveCompte=function(){
 
   // ── Données démo seed ──
   function seedSMQ(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
     if((DB.smq_ac||[]).length>0) return;
     var y=new Date().getFullYear();
     DB.smq_processus=[
@@ -25865,6 +25878,8 @@ window.saveCompte=function(){
 
   // ── Seed démo ──
   function seedSHE(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
     if((DB.she_hazards||[]).length>0) return;
     var y=new Date().getFullYear();
     DB.she_hazards=[
@@ -32764,6 +32779,8 @@ if(!DB.contrats) DB.contrats = [];
 
 // ── Données de démo ──
 (function seedContrats(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   if(DB.contrats.length > 0) return;
   var y = new Date().getFullYear();
   DB.contrats = [
@@ -35258,6 +35275,8 @@ function _loadRelancesConfig() {
 if(!DB.campagnes) DB.campagnes=[];
 
 (function seedCampagnes(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   if(DB.campagnes.length>0) return;
   var y=new Date().getFullYear();
   DB.campagnes=[
@@ -35594,6 +35613,8 @@ if(!DB.operations_of) DB.operations_of=[];
 
 /* ── Données démo lignes de production ── */
 (function seedLignes(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   if(DB.lignes.length>0) return;
   DB.lignes=[
     {id:'lg1',nom:'Ligne A — Découpe',code:'L-A',capacite:500,unite:'feuilles/h',equipeIds:[],statut:'active',desc:'Découpe carton — Presse hydraulique',couleur:'#1E5FAD'},
@@ -36168,6 +36189,8 @@ window.confirmerTransfertLigne=function(opId, ofId){
 /* ── Init tables ── */
 /* ── Seed dépôts ── */
 (function seedDepots(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   if(DB.depots.length>0) return;
   DB.depots=[
     {id:'dp1',nom:'Magasin Matières Premières',code:'MMP',type:'matieres',capacite:50000,unite:'kg/m²',responsable:'',localisation:'Bâtiment A',couleur:'#1E5FAD'},
@@ -54842,6 +54865,8 @@ if(!DB.waHistorique)DB.waHistorique= [];
 
 // ── Seed groupes de démo ──
 (function seedWA(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   if(DB.waGroups.length) return;
   DB.waGroups = [
     {
@@ -90886,6 +90911,8 @@ var FD={quotidien:1,hebdomadaire:7,bimensuel:14,mensuel:30,trimestriel:90,semest
 var FL={quotidien:'Quotidien',hebdomadaire:'Hebdo',bimensuel:'Bimensuel',mensuel:'Mensuel',trimestriel:'Trimestriel',semestriel:'Semestriel',annuel:'Annuel'};
 
 function seedDemoGantt(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   gs(GK_EQ,[
     {id:'eq1',code:'EXT-001',nom:'Extrudeuse 3000T',       statut:'actif',emplacement:'Ligne A'},
     {id:'eq2',code:'IMP-001',nom:'Imprimante Flexo 6c',    statut:'actif',emplacement:'Ligne B'},
@@ -91797,6 +91824,8 @@ setTimeout(function(){
    1. DONNÉES DE DÉMONSTRATION
 ══════════════════════════════════════════════════════════════ */
 function seedHACCP(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   if (DB.haccp_produits.length > 0) return; // déjà initialisé
 
   DB.haccp_produits = [
@@ -106030,34 +106059,40 @@ console.log('%c✅ PATCH v4.3 — GMAO FICHE DE VIE SANIX chargé :\n  • 12 é
     'seedWA', 'seedDemoGantt', 'seedHACCP', 'ggDemoData'
   ];
 
-  function _isDBPopulated(){
-    /* DB est peuplée si au moins contacts ou articles existent */
-    return window.DB && (
-      (window.DB.contacts  && window.DB.contacts.length  > 0) ||
-      (window.DB.articles  && window.DB.articles.length  > 0) ||
-      (window.DB.employes  && window.DB.employes.length  > 0)
-    );
-  }
-
+  /* Le garde precedent ne bloquait les semences QUE si la base etait deja
+     pleine. Sur une base vierge — le cas d'une livraison — elles
+     s'executaient donc toutes. Le sens est inverse : rien ne se seme de
+     soi-meme, quel que soit l'etat de la base. */
   function _wrapSeed(fnName){
     var original = window[fnName];
     if (typeof original !== 'function' || original._seedPatched) return;
-
     window[fnName] = function(force) {
-      /* Permettre force=true pour les boutons "Démo" manuels */
-      if (force === true) return original.apply(this, arguments);
-      /* Éviter le seed auto si DB déjà peuplée */
-      if (_isDBPopulated()) {
-        return; /* Skip silencieux */
-      }
-      return original.apply(this, arguments);
+      if (force === true || window.sfDemoActive()) return original.apply(this, arguments);
+      return;
     };
     window[fnName]._seedPatched = true;
   }
 
-  setTimeout(function(){
-    SEED_FNS.forEach(_wrapSeed);
-  }, 600);
+  SEED_FNS.forEach(_wrapSeed);
+  /* Certaines sont definies plus tard dans le document. */
+  setTimeout(function(){ SEED_FNS.forEach(_wrapSeed); }, 600);
+
+  /* Le jeu de demonstration reste accessible, mais sur demande. */
+  /* Plusieurs semences s'executent des la lecture du document et ne
+     laissent aucune fonction derriere elles : on pose le drapeau, puis
+     on recharge. C'est le seul moyen de toutes les rejouer. */
+  window.sfChargerDemo = function(){
+    try { localStorage.setItem('opusfab_demo', '1'); } catch(e){}
+    window.SF_DEMO = true;
+    if (typeof showToast === 'function')
+      showToast('Jeu de demonstration', 'Chargement en cours\u2026', 'ok');
+    setTimeout(function(){ location.reload(); }, 400);
+  };
+  window.sfQuitterDemo = function(){
+    try { localStorage.removeItem('opusfab_demo'); } catch(e){}
+    window.SF_DEMO = false;
+    if (typeof window.sfReinitialiser === 'function') window.sfReinitialiser();
+  };
 })();
 
 
@@ -108367,6 +108402,8 @@ function _eqNom(id){ var e=_g(GK_EQ2).find(function(x){return x.id===id;}); retu
    DONNÉES DÉMO
 ══════════════════════════════════════════════════════ */
 (function seedGammes(){
+  /* Aucune donnee d'exemple sans demande explicite. */
+  if (!window.sfDemoActive()) return;
   if(_g(GK_GE).length) return; // déjà initialisé
   var eqs = _g(GK_EQ2);
   var eq1 = eqs[0]?eqs[0].id:'';
@@ -129937,7 +129974,9 @@ table thead th{font-weight:600;}
 ═══════════════════════════════════════════════════════════════════ */
 (function livraisonVierge(){
 'use strict';
-var MARQUEUR = 'sf_livraison_vierge_v2';
+/* v3 : jusqu'ici les semences de demonstration s'executaient d'elles-memes
+   sur une base vierge. Les postes deja ouverts en portent les traces. */
+var MARQUEUR = 'sf_livraison_vierge_v3';
 
 function dejaFait(){ try { return localStorage.getItem(MARQUEUR) === '1'; } catch(e){ return false; } }
 function marquer(){ try { localStorage.setItem(MARQUEUR, '1'); } catch(e){} }
