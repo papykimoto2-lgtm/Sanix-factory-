@@ -129732,7 +129732,7 @@ table thead th{font-weight:600;}
 ═══════════════════════════════════════════════════════════════════ */
 (function livraisonVierge(){
 'use strict';
-var MARQUEUR = 'sf_livraison_vierge_v1';
+var MARQUEUR = 'sf_livraison_vierge_v2';
 
 function dejaFait(){ try { return localStorage.getItem(MARQUEUR) === '1'; } catch(e){ return false; } }
 function marquer(){ try { localStorage.setItem(MARQUEUR, '1'); } catch(e){} }
@@ -129761,15 +129761,43 @@ function vider(definitif){
     setTimeout(function(){ window.goTo = _goTo; }, 600);
   }
 
+  /* Collections et clés que viderDemoData() ne couvre pas encore :
+     études HACCP, évaluations fournisseurs, équipes, relevés d'énergie,
+     base de connaissances et alertes prédictives. Ce sont des données,
+     pas du paramétrage — les barèmes et grilles sont conservés. */
+  ['haccp_diagrammes','haccp_dangers','haccp_ccps','haccp_surveillances',
+   'haccp_verifications','haccp_actions','eval_fourn','equipes','audits',
+   'reclamations','controles'].forEach(function(k){
+     if (window.DB && Array.isArray(window.DB[k])) window.DB[k] = [];
+   });
+  ['gmao_energie_releves','gmao_energie_compteurs','gmao_knowledge_base',
+   'pred_alertes','pred_actions_log','sanixfactory_notifs','sf_rt_queue',
+   'haccp_data','sanixcrm_ia_history'].forEach(function(k){
+     try { localStorage.removeItem(k); } catch(e){}
+   });
+  try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB || {})); } catch(e){}
+
   if (definitif) {
     marquer();
     console.log('%c[SANIX OpusFab] Livraison sans données — base vierge',
                 'color:#F59E0B;font-weight:700;');
     setTimeout(function(){
-      ['refresh','refreshDash','renderDashUnifie','_genererNotifs'].forEach(function(fn){
+      ['refresh','refreshDash','renderDashUnifie'].forEach(function(fn){
         if (typeof window[fn] === 'function') { try { window[fn](); } catch(e){} }
       });
-    }, 800);
+      /* La purge et les modules produisent eux-mêmes des notifications
+         pendant qu'ils se réinitialisent. On les efface en dernier :
+         un logiciel neuf s'ouvre sans messages à lire. */
+      try { localStorage.removeItem('sanixfactory_notifs'); } catch(e){}
+      if (window.DB) window.DB.notifications = [];
+      if (window.NOTIFS) {
+        try { window.NOTIFS._list = []; window.NOTIFS._unread = 0;
+              if (window.NOTIFS._updateBadge) window.NOTIFS._updateBadge();
+              if (window.NOTIFS._render) window.NOTIFS._render(); } catch(e){}
+      }
+      document.querySelectorAll('.ndot,.notif-badge,#notifBadge').forEach(function(e){ e.style.display='none'; });
+      try { localStorage.setItem('sanixfactory_db', JSON.stringify(window.DB || {})); } catch(e){}
+    }, 1600);
   }
 }
 
@@ -129782,6 +129810,17 @@ function sequence(){ setTimeout(function(){ vider(false); }, 400);
                      setTimeout(function(){ vider(true);  }, 3200); }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sequence);
 else sequence();
+
+/* ── Remise à zéro manuelle ──────────────────────────────────
+   Utile quand des données de démonstration subsistent d'une version
+   antérieure : le marqueur empêche alors la purge automatique. */
+window.sfReinitialiser = function(){
+  if (!confirm('Effacer toutes les données locales et repartir d\'une base vierge ?\n\n'
+             + 'Les données déjà synchronisées sur le serveur ne sont pas touchées.')) return;
+  try { localStorage.removeItem(MARQUEUR); } catch(e){}
+  vider(true);
+  setTimeout(function(){ location.reload(); }, 700);
+};
 
 /* ── Fiche société : demandée une fois, jamais devinée ───────── */
 window.sfConfigurerSociete = function(){
@@ -129844,5 +129883,158 @@ window._finishLogin = function(){
 };
 })();
 </script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — NAVIGATION REPLIABLE
+   Dix rubriques et une soixantaine d'entrées tenaient dans une liste
+   continue qui dépassait l'écran. Chaque rubrique devient un en-tête
+   qu'on ouvre et referme ; l'état est conservé d'une session à l'autre,
+   et la rubrique de la page courante s'ouvre d'elle-même.
+═══════════════════════════════════════════════════════════════════ */
+(function navRepliable(){
+'use strict';
+var CLE = 'sf_rubriques_ouvertes_v1';
+
+function lire(){
+  try { var v = JSON.parse(localStorage.getItem(CLE) || '[]'); return Array.isArray(v) ? v : []; }
+  catch(e){ return []; }
+}
+function ecrire(l){ try { localStorage.setItem(CLE, JSON.stringify(l)); } catch(e){} }
+
+function cleRubrique(sep){
+  var lab = sep.querySelector('.mav-label');
+  return (lab ? lab.textContent : sep.textContent).trim().slice(0, 40) || 'rubrique';
+}
+
+/* Contenu d'une rubrique : les frères suivants jusqu'au prochain intitulé */
+function corps(sep){
+  var out = [], n = sep.nextElementSibling;
+  while (n && !n.classList.contains('mav-sep')) { out.push(n); n = n.nextElementSibling; }
+  return out;
+}
+
+function appliquer(sep, ouvert, memoriser){
+  corps(sep).forEach(function(n){ n.style.display = ouvert ? '' : 'none'; });
+  sep.classList.toggle('sf-ouvert', ouvert);
+  sep.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+  var ch = sep.querySelector('.sf-chevron');
+  if (ch) ch.style.transform = ouvert ? 'rotate(90deg)' : 'rotate(0deg)';
+  if (memoriser === false) return;
+  var l = lire(), k = cleRubrique(sep), i = l.indexOf(k);
+  if (ouvert && i < 0) l.push(k);
+  if (!ouvert && i >= 0) l.splice(i, 1);
+  ecrire(l);
+}
+
+function estOuvert(sep){ return sep.classList.contains('sf-ouvert'); }
+
+/* Ouvre la rubrique qui contient l'entrée active, sans rien refermer */
+function ouvrirRubriqueActive(){
+  var actif = document.querySelector('.sb-nav .ni.on');
+  if (!actif) return;
+  var seps = [].slice.call(document.querySelectorAll('.sb-nav .mav-sep'));
+  for (var i = 0; i < seps.length; i++) {
+    if (corps(seps[i]).some(function(n){ return n === actif || n.contains(actif); })) {
+      if (!estOuvert(seps[i])) appliquer(seps[i], true);
+      return;
+    }
+  }
+}
+
+function equiper(){
+  var nav = document.querySelector('.sb-nav');
+  if (!nav || nav.dataset.sfRepliable) return;
+  var seps = [].slice.call(nav.querySelectorAll('.mav-sep'));
+  if (!seps.length) return;
+  nav.dataset.sfRepliable = '1';
+
+  var ouvertes = lire();
+  var premiereFois = !localStorage.getItem(CLE);
+
+  seps.forEach(function(sep){
+    sep.setAttribute('role', 'button');
+    sep.setAttribute('tabindex', '0');
+    sep.style.cursor = 'pointer';
+    sep.style.userSelect = 'none';
+
+    if (!sep.querySelector('.sf-chevron')) {
+      var ch = document.createElement('span');
+      ch.className = 'sf-chevron';
+      ch.setAttribute('aria-hidden', 'true');
+      ch.textContent = '›';
+      sep.appendChild(ch);
+    }
+    var compte = document.createElement('span');
+    compte.className = 'sf-compte';
+    compte.textContent = corps(sep).reduce(function(s, n){ return s + n.querySelectorAll('.ni').length; }, 0) || '';
+    sep.insertBefore(compte, sep.querySelector('.sf-chevron'));
+
+    function basculer(){ appliquer(sep, !estOuvert(sep)); }
+    sep.addEventListener('click', basculer);
+    sep.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); basculer(); }
+    });
+
+    /* Première ouverture : tout replié, la liste redevient lisible d'un coup d'œil. */
+    appliquer(sep, premiereFois ? false : ouvertes.indexOf(cleRubrique(sep)) >= 0, false);
+  });
+
+  if (premiereFois) ecrire([]);
+  ouvrirRubriqueActive();
+}
+
+/* La navigation est réécrite par plusieurs modules : on se raccroche après eux. */
+var _goTo = window.goTo;
+window.goTo = function(){
+  var r = (typeof _goTo === 'function') ? _goTo.apply(this, arguments) : undefined;
+  setTimeout(function(){ equiper(); ouvrirRubriqueActive(); }, 60);
+  return r;
+};
+var _fin = window._finishLogin;
+window._finishLogin = function(){
+  var r = (typeof _fin === 'function') ? _fin.apply(this, arguments) : undefined;
+  [300, 1200, 2600].forEach(function(d){ setTimeout(equiper, d); });
+  return r;
+};
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(equiper, 500); });
+else setTimeout(equiper, 500);
+
+/* Tout replier / tout déplier, depuis la console ou un raccourci ultérieur */
+window.sfReplierTout = function(){
+  document.querySelectorAll('.sb-nav .mav-sep').forEach(function(s){ appliquer(s, false); });
+};
+window.sfDeplierTout = function(){
+  document.querySelectorAll('.sb-nav .mav-sep').forEach(function(s){ appliquer(s, true); });
+};
+})();
+</script>
+<style id="sf-theme-nav">
+/* Intitulé de rubrique : devient un en-tête actionnable */
+#app .sb-nav .mav-sep{
+  display:flex!important;align-items:center;gap:8px;
+  padding:9px 10px 9px 11px!important;margin:2px 0 0!important;
+  border-radius:8px;transition:background .13s;
+}
+#app .sb-nav .mav-sep:hover{background:rgba(255,255,255,.06);}
+#app .sb-nav .mav-sep:focus-visible{outline:2px solid var(--P);outline-offset:-2px;}
+#app .sb-nav .mav-sep .mav-label{flex:1;min-width:0;}
+#app .sb-nav .mav-sep.sf-ouvert .mav-label{color:rgba(255,255,255,.72)!important;}
+
+#app .sb-nav .sf-compte{
+  font-size:10px;font-weight:600;color:rgba(255,255,255,.28);
+  background:rgba(255,255,255,.07);border-radius:9px;padding:1px 6px;min-width:18px;text-align:center;
+}
+#app .sb-nav .mav-sep.sf-ouvert .sf-compte{background:rgba(124,58,237,.3);color:#c4b5fd;}
+
+#app .sb-nav .sf-chevron{
+  font-size:15px;line-height:1;color:rgba(255,255,255,.3);
+  transition:transform .16s ease;flex-shrink:0;width:11px;text-align:center;
+}
+#app .sb-nav .mav-sep.sf-ouvert .sf-chevron{color:rgba(255,255,255,.55);}
+
+/* Décalage des entrées : on lit d'un coup d'œil ce qui dépend de quoi */
+#app .sb-nav .sb-group .ni{padding-left:22px;}
+#app .sb-nav .sb-group{margin-bottom:2px;}
+</style>
 </body>
 </html>
