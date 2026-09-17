@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src * data: blob:; connect-src 'self' https://mglosevjadbvwurdrlsz.supabase.co wss://mglosevjadbvwurdrlsz.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src * data: blob:; connect-src 'self' blob: https://mglosevjadbvwurdrlsz.supabase.co https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com wss://mglosevjadbvwurdrlsz.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org; manifest-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -2238,6 +2238,7 @@ const DataService = (function(){
      SYNC SERVEUR (OPTIONNEL)
   =============================== */
   async function sync(){
+    if (!window.SF_BACKEND_HERITE) return;   /* backend hérité absent en production */
     try {
       const res = await fetch('/api/sync', {
         method: 'POST',
@@ -2285,6 +2286,13 @@ window.closeModal = function(id){
 <script>
 ;(function() {
   'use strict';
+
+  /* Couche serveur héritée (/api/db, /api/config, /api/notifs).
+     Elle suppose un backend SQLite local qui n'existe pas en production :
+     chaque appel se soldait par un 404 et une mise en garde en console.
+     Supabase assure désormais la persistance. Réactivable en posant
+     SF_BACKEND_HERITE = true avant ce bloc. */
+  if (!window.SF_BACKEND_HERITE) return;
 
   // ── Chargement asynchrone depuis le serveur ──
   async function chargerDepuisServeur() {
@@ -18475,6 +18483,9 @@ var DEL_STEPS = ['Confirmée','Colisée','En route','Livrée'];
 'use strict';
 
 var _BASE = (function() {
+  /* Sans backend déclaré, on ne pointe nulle part : les appels relatifs
+     tombaient sur l'hébergement statique et renvoyaient 404 en boucle. */
+  if (!window.SF_BACKEND_HERITE) return null;
   var port = location.port;
   if (!port || port === '80' || port === '443') return '';
   if (port === '3000') return '';
@@ -18659,6 +18670,7 @@ window.doLogout = async function() {
 
 // Health check silencieux au demarrage
 (async function() {
+  if (_BASE === null) return;
   try {
     var r = await fetch(_BASE + '/api/health', { signal: AbortSignal.timeout(2000) });
     if (r.ok) {
@@ -52824,7 +52836,7 @@ window.lancerAnalyseIA = function() {
       setTimeout(function(){
         window.renderIA();
         if (!window.IA.results && !window.IA.running) {
-          setTimeout(window.lancerAnalyseIA, 300);
+          setTimeout(function(){ if (typeof window.lancerAnalyseIA === 'function') window.lancerAnalyseIA(); }, 300);
         }
       }, 200);
     }
@@ -85178,7 +85190,7 @@ window.refreshSynchroBand = function(){
     try { window.refreshSynchroBand(); } catch(e){}
   };
   // Premier appel immédiat
-  try { setTimeout(window.refreshSynchroBand, 500); } catch(e){}
+  try { setTimeout(function(){ if (typeof window.refreshSynchroBand === 'function') window.refreshSynchroBand(); }, 500); } catch(e){}
 })();
 
 /* ─────────────────────────────────────────────
@@ -91214,10 +91226,10 @@ console.log('%cGMAO Gantt v3 OK','color:#1E5FAD;font-weight:900;');
     var _origGoTo2 = window.goTo;
     window.goTo = function(id, el, title){
       _origGoTo2.apply(this, arguments);
-      if (id === 'dashboard') setTimeout(window.refreshErpKpiStrip, 200);
+      if (id === 'dashboard') setTimeout(function(){ if (typeof window.refreshErpKpiStrip === 'function') window.refreshErpKpiStrip(); }, 200);
     };
     if (!window.curSection || window.curSection === 'dashboard') {
-      setTimeout(window.refreshErpKpiStrip, 1000);
+      setTimeout(function(){ if (typeof window.refreshErpKpiStrip === 'function') window.refreshErpKpiStrip(); }, 1000);
     }
 
   }, 600);
@@ -125223,7 +125235,7 @@ function _loadParamRegimes(){
   set('param-debut-nuit',      cfg.heureDebutNuit||'22:00');
   set('param-fin-nuit',        cfg.heureFinNuit||'06:00');
   // Aperçu initial
-  setTimeout(window.saveParamRegimes, 100);
+  setTimeout(function(){ if (typeof window.saveParamRegimes === 'function') window.saveParamRegimes(); }, 100);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -128662,8 +128674,16 @@ window._sfSafeInvoke=function(code,evt,ctx){
     console.warn('[SF SEC] Handler bloqué:',code.slice(0,100));
     return;
   }
-  try{ return (new Function('event',code)).call(ctx||null,evt||{type:'synthetic'}); }
-  catch(e){ console.warn('[SF SEC] invoke:',e.message); }
+  /* La CSP interdit l'évaluation de chaîne, et c'est la bonne décision :
+     une liste noire de motifs ne protège pas d'un contournement. Les
+     gestionnaires nommés sont appelés directement, le reste est refusé. */
+  var nom = code.trim().replace(/\(\s*\)\s*;?$/, '');
+  if (/^[A-Za-z_$][\w$]*$/.test(nom) && typeof window[nom] === 'function') {
+    try { return window[nom].call(ctx || null, evt || {type:'synthetic'}); }
+    catch(e){ console.warn('[SF SEC] invoke:', e.message); }
+    return;
+  }
+  console.warn('[SF SEC] Handler refusé — seuls les appels de fonction nommée sont admis :', code.slice(0,80));
 };
 
 /* ── 5. Login durci : verifyPass + anti-bruteforce + changement forcé ── */
@@ -129027,6 +129047,10 @@ window.sfPeut = function(p){ return window.SF_PERMS.has(p) || (window.SESSION &&
 
 /* ── Adaptation de l'écran de connexion ── */
 function adapterEcran(){
+  /* L'aperçu de rôle devinait le profil depuis l'identifiant saisi.
+     Le rôle vient désormais du serveur, après authentification. */
+  var apercu = $id('login-role-preview'); if (apercu) apercu.style.display = 'none';
+  var selCom = $id('commercialSelect');   if (selCom) selCom.style.display = 'none';
   var u = $id('loginUser');
   if (u) {
     u.type = 'email'; u.placeholder = 'prenom.nom@entreprise.ci';
