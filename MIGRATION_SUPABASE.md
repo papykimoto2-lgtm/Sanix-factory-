@@ -421,6 +421,23 @@ Un administrateur active ensuite le compte et lui attribue un rôle. Cela ne
 dispense pas de fermer l'inscription publique — c'est une deuxième barrière,
 pas un remplaçant.
 
+### Veille des comptes dormants
+
+Un compte inactif sans rôle ne gêne personne — et ne se voit pas. À l'ouverture
+de session, un administrateur reçoit une alerte pour chaque compte de ce type
+qu'il n'a pas encore vu : c'est le signal que l'inscription publique est encore
+ouverte **et utilisée**.
+
+| Point | Choix |
+|---|---|
+| Qui voit l'alerte | administrateur uniquement |
+| Droits demandés | aucun de plus : la politique `prof_lecture` suffit |
+| Répétition | une fois par compte, mémorisé dans `sf_comptes_dormants_vus` |
+| Jointure imbriquée indisponible | repli sur deux lectures simples plutôt qu'une alerte muette |
+| Clé `user_roles` absente de la réponse | repli aussi — sinon tout le monde serait signalé |
+
+`sfComptesDormants()` en console retourne la liste à tout moment.
+
 ### Robustesse des mots de passe — côté application
 
 Contrôle **strictement local**, aux trois points d'entrée (création de compte,

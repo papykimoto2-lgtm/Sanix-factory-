@@ -131564,5 +131564,107 @@ window.sfAnalytique = rendreAnalytique;
   .cai-tuile{max-width:none;}
 }
 </style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — VEILLE DES COMPTES DORMANTS
+   Un compte cree de lui-meme arrive inactif et sans role (migration 21).
+   Il reste invisible tant que personne ne le regarde. Si l'inscription
+   publique est encore ouverte en console, c'est ici qu'on le voit.
+═══════════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+var VU = 'sf_comptes_dormants_vus';
+var _fait = false;
+
+function estAdmin(){
+  var s = window.SESSION;
+  return !!(s && s._serverAuth && (s.role === 'admin' || (s.roles || []).indexOf('admin') >= 0));
+}
+
+function relever(){
+  if (!window.sb || !window.SESSION || !window.SESSION.entrepriseId) return Promise.resolve([]);
+  /* La politique de lecture des profils laisse l'administrateur voir les
+     comptes inactifs de sa societe : aucune elevation n'est demandee. */
+  return window.sb.from('profiles')
+    /* Deux cles etrangeres relient user_roles a profiles : on nomme la bonne. */
+    .select('id,email,nom,prenom,created_at,user_roles!user_roles_user_id_fkey(role_code)')
+    .eq('entreprise_id', window.SESSION.entrepriseId)
+    .eq('actif', false)
+    .then(function(r){
+      /* Sans la cle 'user_roles', on ne sait pas qui a un role : tout le monde
+         serait signale. On repasse alors par deux lectures explicites. */
+      var utilisable = !r.error && r.data
+        && (!r.data.length || Object.prototype.hasOwnProperty.call(r.data[0], 'user_roles'));
+      if (utilisable)
+        return r.data.filter(function(p){ return !(p.user_roles || []).length; });
+      return deuxRequetes();
+    })
+    .catch(function(){ return deuxRequetes(); });
+}
+
+/* Repli si la jointure imbriquee n'est pas resolue : deux lectures simples,
+   au meme cout de droits, plutot qu'une alerte muette. */
+function deuxRequetes(){
+  return window.sb.from('profiles')
+    .select('id,email,nom,prenom,created_at')
+    .eq('entreprise_id', window.SESSION.entrepriseId)
+    .eq('actif', false)
+    .then(function(r){
+      var profils = (!r.error && r.data) || [];
+      if (!profils.length) return [];
+      return window.sb.from('user_roles')
+        .select('user_id')
+        .eq('entreprise_id', window.SESSION.entrepriseId)
+        .then(function(q){
+          var avecRole = {};
+          ((!q.error && q.data) || []).forEach(function(x){ avecRole[x.user_id] = true; });
+          return profils.filter(function(p){ return !avecRole[p.id]; });
+        });
+    })
+    .catch(function(){ return []; });
+}
+
+function dejaVus(){
+  try { return JSON.parse(localStorage.getItem(VU) || '[]'); } catch(e){ return []; }
+}
+function noter(ids){
+  try { localStorage.setItem(VU, JSON.stringify(ids.slice(-200))); } catch(e){}
+}
+
+function signaler(){
+  if (_fait || !estAdmin()) return;
+  _fait = true;
+  relever().then(function(liste){
+    if (!liste.length) return;
+    var vus = dejaVus();
+    var neufs = liste.filter(function(p){ return vus.indexOf(p.id) < 0; });
+    noter(vus.concat(liste.map(function(p){ return p.id; })));
+    if (!neufs.length) return;
+
+    var qui = neufs.slice(0, 3).map(function(p){ return p.email; }).join(', ');
+    if (neufs.length > 3) qui += ' et ' + (neufs.length - 3) + ' autre(s)';
+    if (typeof showToast === 'function') {
+      showToast(
+        '⚠️ ' + neufs.length + ' compte(s) créé(s) sans autorisation',
+        qui + ' — inactifs, sans accès. Si vous ne les attendiez pas, '
+            + 'fermez l’inscription publique dans la console Supabase.',
+        'warn');
+    } else {
+      console.warn('[veille] comptes dormants :', qui);
+    }
+  });
+}
+
+/* On attend l'ouverture de session plutot que de sonder la base en boucle. */
+var essais = 0;
+var minuteur = setInterval(function(){
+  if (estAdmin()) { clearInterval(minuteur); signaler(); }
+  else if (++essais > 120) clearInterval(minuteur);
+}, 1000);
+
+window.sfComptesDormants = function(){ return relever(); };
+})();
+</script>
 </body>
 </html>
