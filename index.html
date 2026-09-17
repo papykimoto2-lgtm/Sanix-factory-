@@ -129146,6 +129146,50 @@ var TYPE_ARTICLE = {
 var CONTRAT = { cdi:'CDI', cdd:'CDD', stage:'stage', apprentissage:'apprentissage',
                 journalier:'journalier', interim:'interim', consultant:'consultant' };
 
+/* La base contraint ces valeurs par CHECK : tout terme inconnu est ramene
+   au plus proche etat legal plutot que de faire echouer la ligne entiere. */
+var STATUT_OF = { planifie:'planifie', lance:'lance', en_cours:'en_cours', partiel:'en_cours',
+                  suspendu:'suspendu', pause:'suspendu', termine:'termine', fini:'termine',
+                  cloture:'cloture', annule:'annule' };
+var PRIORITE_OF = { basse:8, faible:8, normale:5, moyenne:5, haute:3, urgente:2, critique:1 };
+var STATUT_ACHAT = { brouillon:'brouillon', en_attente:'envoye', envoye:'envoye', confirme:'confirme',
+                     partiel:'partiellement_recu', partiellement_recu:'partiellement_recu',
+                     recu:'recu', livre:'recu', facture:'facture',
+                     paye:'paye', regle:'paye', partiellement_paye:'partiellement_paye', annule:'annule' };
+var TYPE_CQ = { reception:'reception', entree:'reception', en_cours:'en_cours', process:'en_cours',
+                final:'final', sortie:'final', liberation_lot:'liberation_lot', lot:'liberation_lot',
+                rappel:'liberation_lot', audit:'audit' };
+var RESULTAT_CQ = { conforme:'conforme', ok:'conforme', non_conforme:'non_conforme', nc:'non_conforme',
+                    derogation:'derogation', en_attente:'en_attente', ouverte:'en_attente' };
+
+/* Le client nomme ses articles 'art3', la base leur donne un uuid.
+   La synchronisation des articles a déjà posé le pont : on s'en sert
+   plutôt que d'interroger le serveur à chaque ligne. */
+function uuidArticle(idClient){
+  if (!idClient) return null;
+  var a = ((window.DB && window.DB.articles) || []).find(function(x){ return x.id === idClient; });
+  return (a && a._uuid) || null;
+}
+function refArticle(uuid){
+  if (!uuid) return null;
+  var a = ((window.DB && window.DB.articles) || []).find(function(x){ return x._uuid === uuid; });
+  return a ? a.id : null;
+}
+
+/* Même pont pour les tiers : fournisseurs et clients partagent la table. */
+function uuidTiers(idClient){
+  if (!idClient) return null;
+  var l = ((window.DB && window.DB.fournisseurs) || []).concat((window.DB && window.DB.contacts) || []);
+  var t = l.find(function(x){ return x.id === idClient; });
+  return (t && t._uuid) || null;
+}
+function refTiers(uuid){
+  if (!uuid) return null;
+  var l = ((window.DB && window.DB.fournisseurs) || []).concat((window.DB && window.DB.contacts) || []);
+  var t = l.find(function(x){ return x._uuid === uuid; });
+  return t ? t.id : null;
+}
+
 function coupeNom(complet){
   var m = String(complet || '').trim().split(/\s+/);
   if (m.length < 2) return { nom: m[0] || 'Sans nom', prenom: '' };
@@ -129256,6 +129300,173 @@ var PLAN = {
         contrat: r.type_contrat, cnps: r.numero_cnps, actif: r.actif
       };
     }
+  },
+  /* ── Chaîne de planification ─────────────────────────────────
+     Les identifiants d'article du client ('art3') sont résolus vers
+     l'identifiant de la base par la clé externe déjà synchronisée. */
+  budget_vente: {
+    table: 'budget_vente',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        periode: date(o.mois || o.periode || o.date) || (new Date().getFullYear() + '-01-01'),
+        article_id: uuidArticle(o.artId || o.articleId),
+        quantite: nb(o.quantite || o.qte),
+        montant: nb(o.montant || o.ca || o.objectif),
+        realise_qte: nb(o.realiseQte), realise_montant: nb(o.realise || o.realiseMontant),
+        commentaire: txt(o.commentaire || o.note)
+      };
+    },
+    depuis: function(r){
+      return {id:r.ref_externe || r.id, _uuid:r.id, mois:r.periode, artId:refArticle(r.article_id),
+              quantite:r.quantite, montant:r.montant, realise:r.realise_montant, commentaire:r.commentaire};
+    }
+  },
+  previsions: {
+    table: 'previsions',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        article_id: uuidArticle(o.artId || o.articleId),
+        periode: date(o.mois || o.periode) || (new Date().toISOString().slice(0,8) + '01'),
+        quantite: nb(o.prevue || o.quantite || o.qte),
+        realise: o.reelle == null ? null : nb(o.reelle),
+        methode: ({budget:'manuelle', manuelle:'manuelle', mm:'moyenne_mobile',
+                   lissage:'lissage_exponentiel', regression:'regression'})[o.methode] || 'manuelle'
+      };
+    },
+    depuis: function(r){
+      return {id:r.ref_externe || r.id, _uuid:r.id, artId:refArticle(r.article_id), mois:r.periode,
+              prevue:r.quantite, reelle:r.realise, methode:r.methode};
+    }
+  },
+  pic: {
+    table: 'pic_periodes',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        periode: date(o.mois || o.periode || o.semaine) || (new Date().toISOString().slice(0,8) + '01'),
+        charge_heures: nb(o.charge || o.heures_besoin || o.besoin),
+        capacite_heures: nb(o.capacite || o.heures_capacite || o.dispo),
+        effectif: o.effectif == null ? null : nb(o.effectif),
+        commentaire: txt(o.commentaire)
+      };
+    },
+    depuis: function(r){
+      return {id:r.ref_externe || r.id, _uuid:r.id, mois:r.periode,
+              charge:r.charge_heures, capacite:r.capacite_heures, taux:r.taux_charge, effectif:r.effectif};
+    }
+  },
+  pdp_plans: {
+    table: 'pdp_lignes',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        article_id: uuidArticle(o.artId || o.articleId),
+        periode: date(o.semaine || o.periode || o.mois) || (new Date().toISOString().slice(0,10)),
+        quantite_planifiee: nb(o.qte_pdp || o.quantite || o.qte),
+        stock_initial: nb(o.stock_proj || o.stock),
+        commandes_fermes: nb(o.cmd_ferme || o.commandes),
+        statut: ({propose:'propose', ferme:'ferme', lance:'lance', annule:'annule'})[o.statut] || 'propose'
+      };
+    },
+    depuis: function(r){
+      return {id:r.ref_externe || r.id, _uuid:r.id, artId:refArticle(r.article_id), semaine:r.periode,
+              qte_pdp:r.quantite_planifiee, stock_proj:r.stock_initial,
+              cmd_ferme:r.commandes_fermes, stock_prev:r.stock_previsionnel, statut:r.statut};
+    }
+  },
+  mrp_besoins: {
+    table: 'mrp_besoins',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        article_id: uuidArticle(o.artId || o.articleId),
+        date_besoin: date(o.semaine || o.date || o.dateBesoin) || (new Date().toISOString().slice(0,10)),
+        besoin_brut: nb(o.besoin_brut || o.brut || o.quantite),
+        stock_disponible: nb(o.stock_dispo || o.stock),
+        attendu: nb(o.attendu),
+        ordre_propose: !!(o.ordre_prop || o.ordrePropose)
+      };
+    },
+    depuis: function(r){
+      return {id:r.ref_externe || r.id, _uuid:r.id, artId:refArticle(r.article_id), semaine:r.date_besoin,
+              besoin_brut:r.besoin_brut, stock_dispo:r.stock_disponible,
+              besoin_net:r.besoin_net, ordre_prop:r.ordre_propose};
+    }
+  },
+  /* ── Exécution : fabrication, achats, contrôles ────────────── */
+  ofs: {
+    table: 'ordres_fabrication',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        reference: txt(o.ref) || String(o.id),
+        article_id: uuidArticle(o.articleId || o.artId),
+        quantite_prevue: Math.max(1, nb(o.qte)),
+        quantite_produite: Math.max(0, nb(o.qteProd)),
+        quantite_rebut: Math.max(0, nb(o.rebuts)),
+        date_debut_prevue: date(o.debut || o.dateDebut),
+        date_fin_prevue: date(o.fin || o.dateFin),
+        priorite: PRIORITE_OF[String(o.prio || o.priorite || '').toLowerCase()] || 5,
+        statut: STATUT_OF[String(o.statut || '').toLowerCase()] || 'planifie',
+        notes: txt(o.notes)
+      };
+    },
+    depuis: function(r){
+      var inv = {}; Object.keys(STATUT_OF).forEach(function(k){ if (!inv[STATUT_OF[k]]) inv[STATUT_OF[k]] = k; });
+      var ip = {}; Object.keys(PRIORITE_OF).forEach(function(k){ if (!ip[PRIORITE_OF[k]]) ip[PRIORITE_OF[k]] = k; });
+      return {id:r.ref_externe || r.id, _uuid:r.id, ref:r.reference, articleId:refArticle(r.article_id),
+              qte:r.quantite_prevue, qteProd:r.quantite_produite, rebuts:r.quantite_rebut,
+              debut:r.date_debut_prevue, fin:r.date_fin_prevue,
+              prio:ip[r.priorite] || 'normale', statut:inv[r.statut] || r.statut, notes:r.notes};
+    }
+  },
+  achats: {
+    table: 'documents_achat',
+    filtre: "type.eq.commande",
+    vers: function(o){
+      var ht = nb(o.total);
+      return {
+        ref_externe: o.id, type: 'commande',
+        reference: txt(o.ref) || String(o.id),
+        tiers_id: uuidTiers(o.fournId),
+        date_document: date(o.date) || new Date().toISOString().slice(0, 10),
+        date_reception: date(o.dateReception),
+        statut: STATUT_ACHAT[String(o.statut || '').toLowerCase()] || 'brouillon',
+        montant_ht: Math.max(0, ht),
+        montant_tva: Math.max(0, nb(o.tva)),
+        montant_ttc: Math.max(0, nb(o.totalTTC) || ht + nb(o.tva)),
+        montant_regle: Math.max(0, nb(o.paye)),
+        notes: txt(o.notes)
+      };
+    },
+    depuis: function(r){
+      var inv = {}; Object.keys(STATUT_ACHAT).forEach(function(k){ if (!inv[STATUT_ACHAT[k]]) inv[STATUT_ACHAT[k]] = k; });
+      return {id:r.ref_externe || r.id, _uuid:r.id, ref:r.reference, fournId:refTiers(r.tiers_id),
+              date:r.date_document, dateReception:r.date_reception,
+              statut:inv[r.statut] || r.statut, total:r.montant_ht, tva:r.montant_tva,
+              totalTTC:r.montant_ttc, paye:r.montant_regle, notes:r.notes, lignes:[]};
+    }
+  },
+  controles: {
+    table: 'controles_qualite',
+    vers: function(o){
+      return {
+        ref_externe: o.id,
+        reference: txt(o.ref) || String(o.id),
+        type: TYPE_CQ[String(o.type || '').toLowerCase()] || 'en_cours',
+        article_id: uuidArticle(o.artId || o.articleId),
+        date_controle: date(o.date) || new Date().toISOString().slice(0, 10),
+        resultat: RESULTAT_CQ[String(o.resultat || '').toLowerCase()] || 'en_attente',
+        observations: txt([o.anomalie, o.action].filter(Boolean).join(' \u2014 '))
+      };
+    },
+    depuis: function(r){
+      return {id:r.ref_externe || r.id, _uuid:r.id, ref:r.reference, type:r.type,
+              artId:refArticle(r.article_id), date:r.date_controle,
+              resultat:r.resultat, anomalie:r.observations};
+    }
   }
 };
 /* Un CDD sans date de fin est refusé par la base : on ne pousse pas la ligne. */
@@ -129263,6 +129474,12 @@ function recevable(nom, ligne){
   if (nom === 'employes' && ligne.type_contrat === 'CDD' && !ligne.date_fin_contrat) {
     ligne.type_contrat = 'CDI';
   }
+  /* Une cle etrangere obligatoire non resolue ferait echouer tout le lot :
+     la ligne attend que son article ou son tiers soit synchronise. */
+  if (nom === 'ofs' && !ligne.article_id) return false;
+  if (nom === 'achats' && !ligne.tiers_id) return false;
+  if (nom === 'ofs' && ligne.date_debut_prevue && ligne.date_fin_prevue &&
+      ligne.date_fin_prevue < ligne.date_debut_prevue) ligne.date_fin_prevue = ligne.date_debut_prevue;
   return true;
 }
 
@@ -129465,7 +129682,7 @@ window._finishLogin = function(){
   return r;
 };
 
-console.log('%c[SANIX OpusFab] Synchronisation active — tiers, articles, employés',
+console.log('%c[SANIX OpusFab] Synchronisation active — ' + Object.keys(PLAN).length + ' collections',
             'color:#1E5FAD;font-weight:700;');
 })();
 </script>
@@ -130376,11 +130593,70 @@ function goulot(stations){
   return pire;
 }
 
+/* ── Relevé serveur ─────────────────────────────────────────
+   PostgreSQL agrège la chaîne en une seule ligne : sommes, retards,
+   ruptures et sous-seuils. Rapatrier des milliers de lignes pour les
+   additionner dans le navigateur serait plus lent et moins juste — le
+   client ne voit que ce que la synchronisation lui a déjà transmis. */
+function releverServeur(){
+  if (!window.sb || !window.SESSION || !window.SESSION.entrepriseId) return Promise.resolve(null);
+  return window.sb.from('v_flux_production').select('*')
+    .eq('entreprise_id', window.SESSION.entrepriseId).maybeSingle()
+    .then(function(r){
+      if (r.error || !r.data) return null;
+      var d = r.data;
+      var pfSeuil = n(d.pf_sous_seuil), ofsRet = n(d.of_en_retard), achatsRet = n(d.achats_en_retard);
+      var nc = n(d.controles_non_conformes), ctrl = n(d.controles);
+      var charge = n(d.pic_charge), capacite = n(d.pic_capacite);
+      return [
+        {n:1, cle:'budget_vente', nom:'Budget de vente',  ico:'fa-coins', mesure:'argent',
+         v:n(d.budget_montant), u:'F CFA', court:true, sous:'Objectif commercial',
+         detail:'Montant budgété, toutes périodes confondues'},
+        {n:2, cle:'previsions',   nom:'Prévisions',        ico:'fa-chart-area', mesure:'piece',
+         v:n(d.prevision_qte), u:'unités', sous:'Volumes attendus',
+         detail:'Quantités prévues, toutes périodes confondues'},
+        {n:3, cle:'pic',          nom:'PIC',               ico:'fa-scale-balanced', mesure:'taux',
+         v:capacite ? Math.round(charge / capacite * 100) : 0, u:'% de charge',
+         sous:'Charge sur capacité',
+         detail: capacite ? mil(charge) + ' h demandées sur ' + mil(capacite) + ' h disponibles'
+                          : 'Capacité non renseignée'},
+        {n:4, cle:'pdp',          nom:'PDP',               ico:'fa-clipboard-list', mesure:'piece',
+         v:n(d.pdp_qte), u:'unités', sous:'Plan directeur',
+         detail: n(d.pdp_ruptures) ? n(d.pdp_ruptures) + ' période(s) en rupture annoncée'
+                                   : 'Aucune rupture annoncée'},
+        {n:5, cle:'mrp',          nom:'MRP',               ico:'fa-layer-group', mesure:'piece',
+         v:n(d.mrp_besoin_net), u:'unités', sous:'Besoins nets',
+         detail: n(d.mrp_sans_ordre) ? n(d.mrp_sans_ordre) + ' besoin(s) sans ordre proposé'
+                                     : 'Tous les besoins ont un ordre'},
+        {n:6, cle:'__achats',     nom:'Approvisionnement', ico:'fa-truck-ramp-box', mesure:'dossier',
+         v:n(d.achats_en_cours), u:'commandes', sous:'En attente de réception', retard:achatsRet,
+         detail:n(d.achats_en_cours) + ' commande(s) en cours'
+                + (achatsRet ? ' · ' + achatsRet + ' au-delà de la date annoncée' : '')},
+        {n:7, cle:'ofs',          nom:'Fabrication',       ico:'fa-industry', mesure:'dossier',
+         v:n(d.of_actifs), u:'OF actifs', sous:'Ordres en cours', retard:ofsRet,
+         detail:n(d.of_actifs) + ' en cours' + (ofsRet ? ' · ' + ofsRet + ' en retard' : '')},
+        {n:8, cle:'__qualite',    nom:'Contrôle qualité',  ico:'fa-circle-check', mesure:'dossier',
+         v:ctrl, u:'contrôles', sous:'Conformité des lots', nc:nc,
+         detail: ctrl ? (ctrl - nc) + ' conforme(s) · ' + nc + ' non conforme(s)'
+                      : 'Aucun contrôle enregistré'},
+        {n:9, cle:'__depot',      nom:'Dépôt produit fini',ico:'fa-warehouse', mesure:'piece',
+         v:n(d.stock_pf), u:'unités', sous:'Stock disponible', souSeuil:pfSeuil,
+         detail: pfSeuil ? pfSeuil + ' référence(s) sous le seuil' : 'Aucune référence sous le seuil'}
+      ];
+    })
+    .catch(function(){ return null; });
+}
+
 /* ── Rendu ─────────────────────────────────────────────────── */
 function rendre(){
   var hote = document.getElementById('gpao-flux-corps');
   if (!hote) return;
-  var st = relever();
+  releverServeur().then(function(serveur){
+    dessiner(hote, serveur || relever(), !!serveur);
+  });
+}
+
+function dessiner(hote, st, depuisServeur){
   st.forEach(function(s, i){ s.etat = etat(s, i ? st[i-1] : null); });
   var g = goulot(st);
   var vide = st.every(function(s){ return !s.v; });
@@ -130462,7 +130738,11 @@ function rendre(){
        + '<td style="text-align:right;font-variant-numeric:tabular-nums;">' + mil(s.v) + '</td>'
        + '<td>' + s.u + '</td><td>' + ETAT[s.etat].m + '</td><td>' + s.detail + '</td></tr>';
   });
-  h += '</tbody></table></details>';
+  h += '</tbody></table>'
+     + '<div class="flx-source">'
+     + (depuisServeur ? 'Chiffres agrégés par la base, à l\u2019instant.'
+                      : 'Chiffres calculés sur les données de ce poste — la base n\u2019a pas répondu.')
+     + '</div></details>';
 
   hote.innerHTML = h;
   hote.querySelectorAll('[data-onglet]').forEach(function(b){
@@ -130662,6 +130942,7 @@ setTimeout(installer, 2000);
   font-size:12.5px;color:var(--t2);cursor:pointer;padding:7px 0;user-select:none;
 }
 .flx-tableau summary:hover{color:var(--P);}
+.flx-source{font-size:11px;color:var(--t3);padding:8px 2px 0;}
 .flx-tableau table{width:100%;margin-top:8px;background:var(--wh);
   border:1px solid var(--bd);border-radius:10px;overflow:hidden;}
 

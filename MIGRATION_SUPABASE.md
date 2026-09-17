@@ -40,6 +40,7 @@ Clé publiable : `sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d`
 | 07 | `production_gmao_qualite` | OF, sessions, TRS, équipements, OT, NC, actions correctives |
 | 08 | `complements_referentiel_et_index_fk` | Comptes manquants + 38 index sur clés étrangères |
 | 09 | `durcissement_droits_et_extensions` | Révocation `anon`, extensions hors `public` |
+| 17 | `chaine_de_planification_sop` | Budget de vente, prévisions, PIC, PDP, MRP + vue `v_flux_production` |
 
 ---
 
@@ -232,6 +233,19 @@ vers Supabase.
 | `fournisseurs` | `tiers` (fournisseur) | ↔ |
 | `articles` | `articles` | ↔ |
 | `employes` | `employes` | ↔ |
+| `budget_vente` | `budget_vente` | ↔ |
+| `previsions` | `previsions` | ↔ |
+| `pic` | `pic_periodes` | ↔ |
+| `pdp_plans` | `pdp_lignes` | ↔ |
+| `mrp_besoins` | `mrp_besoins` | ↔ |
+| `ofs` | `ordres_fabrication` | ↔ |
+| `achats` | `documents_achat` (commande) | ↔ |
+| `controles` | `controles_qualite` | ↔ |
+
+L'ordre du tableau `PLAN` est l'ordre d'envoi : tiers et articles partent avant
+les lignes qui les référencent. Une ligne dont la clé étrangère obligatoire
+n'est pas encore résolue est écartée par `recevable()` plutôt que refusée par la
+base ; elle repart au cycle suivant.
 
 Les autres collections restent locales. Le mécanisme est en place : brancher une
 collection de plus revient à ajouter une entrée dans la table `PLAN`.
