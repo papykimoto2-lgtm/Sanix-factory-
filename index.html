@@ -130203,5 +130203,407 @@ window.sfDeplierTout = function(){
   border-radius:20px!important;
 }
 </style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — FLUX DE PRODUCTION
+   Du budget de vente au dépôt produit fini.
+
+   La GPAO comptait dix onglets ; personne ne voyait la chaîne comme une
+   chaîne. Cet écran la montre d'un seul tenant : neuf stations, des
+   liens dont l'épaisseur suit le volume, et le goulot nommé.
+
+   Le goulot n'est pas un ornement : c'est la station dont le débit
+   couvre le moins bien la demande qui lui arrive. Théorie des
+   contraintes — un seul point limite le débit de toute la chaîne, et
+   c'est le seul sur lequel il vaut la peine d'agir.
+
+   Couleurs d'état : palette réservée, toujours accompagnée d'une icône
+   et d'un mot. Jamais la couleur seule.
+═══════════════════════════════════════════════════════════════════ */
+(function fluxProduction(){
+'use strict';
+
+var ETAT = {
+  fluide:  {c:'#0ca30c', i:'fa-circle-check',            m:'Fluide'},
+  tendu:   {c:'#fab219', i:'fa-triangle-exclamation',    m:'Tendu'},
+  serre:   {c:'#ec835a', i:'fa-circle-exclamation',      m:'Sous tension'},
+  bloque:  {c:'#d03b3b', i:'fa-circle-xmark',            m:'Bloqué'},
+  vide:    {c:'#9CA3AF', i:'fa-circle-minus',            m:'Sans données'}
+};
+
+function n(v){ var x = parseFloat(v); return isFinite(x) ? x : 0; }
+function tab(k){ return Array.isArray(window.DB && DB[k]) ? DB[k] : []; }
+function mil(v){ return Math.round(v).toLocaleString('fr-FR'); }
+function court(v){
+  v = Math.round(v);
+  if (Math.abs(v) >= 1e9) return (v/1e9).toFixed(1).replace('.0','') + ' Md';
+  if (Math.abs(v) >= 1e6) return (v/1e6).toFixed(1).replace('.0','') + ' M';
+  if (Math.abs(v) >= 1e3) return (v/1e3).toFixed(1).replace('.0','') + ' k';
+  return String(v);
+}
+function somme(liste, champs){
+  return liste.reduce(function(s, o){
+    for (var i = 0; i < champs.length; i++) if (o[champs[i]] != null) return s + n(o[champs[i]]);
+    return s;
+  }, 0);
+}
+
+/* ── Relevé des neuf stations ──────────────────────────────── */
+function relever(){
+  var an = new Date().getFullYear();
+
+  var budget   = somme(tab('budget_vente'), ['montant','ca','objectif','valeur']);
+  var prev     = somme(tab('previsions'),   ['quantite','qte','volume','prevision']);
+  var picL     = tab('pic');
+  var charge   = somme(picL, ['charge','besoin','heures_besoin']);
+  var capacite = somme(picL, ['capacite','heures_capacite','dispo']);
+  var pdp      = somme(tab('pdp_plans'),   ['quantite','qte','volume']);
+  var mrp      = somme(tab('mrp_besoins'), ['quantite','qte','besoin','manquant']);
+
+  var auj      = new Date().toISOString().slice(0,10);
+  var achats   = tab('achats').filter(function(a){
+                   return ['en_cours','envoye','confirme','attente','brouillon'].indexOf(a.statut||a.status) >= 0; });
+  var achatsRet= achats.filter(function(a){
+                   var d = a.dateReception || a.date_reception || a.dateLivraison;
+                   return d && d < auj; }).length;
+  var ofs      = tab('ofs');
+  var ofsActifs= ofs.filter(function(o){ return ['lance','en_cours','planifie','suspendu'].indexOf(o.statut||o.status) >= 0; });
+  var ofsFinis = ofs.filter(function(o){ return ['termine','cloture'].indexOf(o.statut||o.status) >= 0; });
+  var ofsRet   = ofsActifs.filter(function(o){
+                   var d = o.dateFin || o.date_fin_prevue || o.echeance;
+                   return d && d < auj; }).length;
+
+  var ctrl     = tab('controles');
+  var nc       = ctrl.filter(function(c){ return (c.resultat||c.result) === 'non_conforme'; }).length;
+
+  var pf       = tab('articles').filter(function(a){ return (a.type||'') === 'pf'; });
+  var stockPF  = somme(pf, ['stockActuel','stock','quantite']);
+  var pfSeuil  = pf.filter(function(a){
+                   return n(a.stockMin) > 0 && n(a.stockActuel) <= n(a.stockMin); }).length;
+
+  return [
+    {n:1, cle:'budget_vente', nom:'Budget de vente',  ico:'fa-coins', mesure:'argent',
+     v:budget, u:'F CFA', court:true, sous:'Objectif commercial ' + an,
+     detail:tab('budget_vente').length + ' ligne(s) budgétaire(s)'},
+    {n:2, cle:'previsions',   nom:'Prévisions',        ico:'fa-chart-area', mesure:'piece',
+     v:prev, u:'unités', sous:'Volumes attendus',
+     detail:tab('previsions').length + ' prévision(s) par article'},
+    {n:3, cle:'pic',          nom:'PIC',               ico:'fa-scale-balanced', mesure:'taux',
+     v:capacite ? Math.round(charge / capacite * 100) : 0, u:'% de charge',
+     sous:'Charge sur capacité', ratio:true,
+     detail: capacite ? mil(charge) + ' h demandées sur ' + mil(capacite) + ' h disponibles'
+                      : 'Capacité non renseignée'},
+    {n:4, cle:'pdp',          nom:'PDP',               ico:'fa-clipboard-list', mesure:'piece',
+     v:pdp, u:'unités', sous:'Plan directeur',
+     detail:tab('pdp_plans').length + ' ligne(s) planifiée(s)'},
+    {n:5, cle:'mrp',          nom:'MRP',               ico:'fa-layer-group', mesure:'piece',
+     v:mrp, u:'unités', sous:'Besoins matières',
+     detail:tab('mrp_besoins').length + ' besoin(s) calculé(s)'},
+    {n:6, cle:'__achats',     nom:'Approvisionnement', ico:'fa-truck-ramp-box', mesure:'dossier',
+     v:achats.length, u:'commandes', sous:'En attente de réception', retard:achatsRet,
+     detail:achats.length + ' commande(s) en cours'
+            + (achatsRet ? ' · ' + achatsRet + ' au-delà de la date annoncée' : '')},
+    {n:7, cle:'ofs',          nom:'Fabrication',       ico:'fa-industry', mesure:'dossier',
+     v:ofsActifs.length, u:'OF actifs', sous:'Ordres en cours', retard:ofsRet,
+     detail:ofsActifs.length + ' en cours · ' + ofsFinis.length + ' terminé(s)'
+            + (ofsRet ? ' · ' + ofsRet + ' en retard' : '')},
+    {n:8, cle:'__qualite',    nom:'Contrôle qualité',  ico:'fa-circle-check', mesure:'dossier',
+     v:ctrl.length, u:'contrôles', sous:'Conformité des lots',
+     detail:ctrl.length ? (ctrl.length - nc) + ' conforme(s) · ' + nc + ' non conforme(s)'
+                        : 'Aucun contrôle enregistré', nc:nc},
+    {n:9, cle:'__depot',      nom:'Dépôt produit fini',ico:'fa-warehouse', mesure:'piece',
+     v:stockPF, u:'unités', sous:'Stock disponible', souSeuil:pfSeuil,
+     detail:pf.length + ' référence(s) de produit fini'
+            + (pfSeuil ? ' · ' + pfSeuil + ' sous le seuil' : '')}
+  ];
+}
+
+/* ── État d'une station ────────────────────────────────────── */
+/* L'état vient d'un signal propre à la station, jamais d'un rapport
+   entre deux grandeurs qui ne se comparent pas. Un budget en francs et
+   des prévisions en pièces n'ont pas de taux de passage. */
+function etat(s, precedent){
+  if (!s.v) return 'vide';
+  if (s.cle === 'pic')
+    return s.v > 100 ? 'bloque' : s.v > 90 ? 'serre' : 'fluide';
+  if (s.cle === '__qualite')
+    return s.nc === 0 ? 'fluide' : (s.nc / Math.max(s.v,1) > 0.05 ? 'bloque' : 'serre');
+  if (s.cle === '__depot')
+    return s.souSeuil > 0 ? 'serre' : 'fluide';
+  if (s.cle === 'ofs')
+    return s.retard > 0 ? (s.retard > s.v / 4 ? 'bloque' : 'serre') : 'fluide';
+  if (s.cle === '__achats')
+    return s.retard > 0 ? 'serre' : 'fluide';
+  /* Stations comparables entre elles : le rapport a un sens */
+  if (precedent && precedent.v && precedent.mesure === s.mesure) {
+    var passage = s.v / precedent.v;
+    if (passage < 0.5) return 'tendu';
+  }
+  return 'fluide';
+}
+
+/* ── Goulot : la station qui absorbe le moins de ce qui lui arrive ── */
+/* Un seul point limite le débit de la chaîne. On le désigne par la
+   gravité du signal observé, et on dit pourquoi en clair. */
+var GRAVITE = {bloque:3, serre:2, tendu:1, fluide:0, vide:0};
+function goulot(stations){
+  var pire = null;
+  stations.forEach(function(s, i){
+    var g = GRAVITE[s.etat] || 0;
+    if (!g) return;
+    if (!pire || g > pire.gravite) pire = {station:s, amont:i ? stations[i-1] : null, gravite:g};
+  });
+  if (!pire) return null;
+  var s = pire.station;
+  if (s.cle === 'pic')
+    pire.motif = 'La charge dépasse la capacité de ' + Math.round(s.v - 100) + '\u00a0%. '
+      + 'Tant que ce point n\u2019est pas desserré, ajouter du travail en amont ne fera qu\u2019allonger la file.';
+  else if (s.cle === '__qualite')
+    pire.motif = s.nc + ' lot(s) non conforme(s) sur ' + s.v + ' contrôlé(s), soit '
+      + Math.round(s.nc / s.v * 100) + '\u00a0%. Ce qui est rebuté ici a déjà consommé toute la chaîne amont.';
+  else if (s.cle === 'ofs')
+    pire.motif = s.retard + ' ordre(s) de fabrication en retard sur ' + s.v + ' en cours. '
+      + 'Le retard se propage aux livraisons promises.';
+  else if (s.cle === '__achats')
+    pire.motif = s.retard + ' commande(s) fournisseur au-delà de la date de réception annoncée. '
+      + 'La fabrication s\u2019arrêtera faute de matière.';
+  else if (s.cle === '__depot')
+    pire.motif = s.souSeuil + ' référence(s) de produit fini sous le seuil. '
+      + 'Une commande client peut déjà ne plus être servie.';
+  else
+    pire.motif = 'Le volume tombe à ' + Math.round(s.v / pire.amont.v * 100)
+      + '\u00a0% de ce que transmet \u00ab\u00a0' + pire.amont.nom + '\u00a0\u00bb.';
+  return pire;
+}
+
+/* ── Rendu ─────────────────────────────────────────────────── */
+function rendre(){
+  var hote = document.getElementById('gpao-flux-corps');
+  if (!hote) return;
+  var st = relever();
+  st.forEach(function(s, i){ s.etat = etat(s, i ? st[i-1] : null); });
+  var g = goulot(st);
+  var vide = st.every(function(s){ return !s.v; });
+  var maxi = Math.max.apply(null, st.map(function(s){ return s.mesure === 'piece' ? s.v : 0; })) || 1;
+
+  var h = '';
+
+  /* ── Bandeau : la réponse avant le détail ── */
+  if (vide) {
+    h += '<div class="flx-tete flx-tete-vide">'
+       +   '<div class="flx-tete-ico" style="background:rgba(124,58,237,.1);color:var(--P);">'
+       +     '<i class="fa fa-flag-checkered"></i></div>'
+       +   '<div><div class="flx-tete-t">La chaîne est à l’arrêt</div>'
+       +     '<div class="flx-tete-s">Rien ne circule encore. Tout part du budget de vente : '
+       +     'c’est lui qui déclenche les prévisions, puis le plan, puis les achats.</div></div>'
+       +   '<button class="flx-cta" data-onglet="budget_vente">Saisir le budget →</button>'
+       + '</div>';
+  } else if (g) {
+    var e = ETAT[g.station.etat] || ETAT.tendu;
+    h += '<div class="flx-tete" style="border-left:3px solid ' + e.c + ';">'
+       +   '<div class="flx-tete-ico" style="background:' + e.c + '1a;color:' + e.c + ';">'
+       +     '<i class="fa ' + e.i + '"></i></div>'
+       +   '<div><div class="flx-tete-t">Le débit est limité par « ' + g.station.nom + ' »</div>'
+       +     '<div class="flx-tete-s">' + g.motif + '</div></div>'
+       +   '<button class="flx-cta" data-onglet="' + g.station.cle + '">Ouvrir →</button>'
+       + '</div>';
+  } else {
+    h += '<div class="flx-tete" style="border-left:3px solid #0ca30c;">'
+       +   '<div class="flx-tete-ico" style="background:rgba(12,163,12,.1);color:#0ca30c;">'
+       +     '<i class="fa fa-circle-check"></i></div>'
+       +   '<div><div class="flx-tete-t">Aucun goulot détecté</div>'
+       +     '<div class="flx-tete-s">Chaque station absorbe ce que la précédente lui transmet.</div></div>'
+       + '</div>';
+  }
+
+  /* ── La chaîne ── */
+  h += '<div class="flx-chaine" role="list">';
+  st.forEach(function(s, i){
+    var e = ETAT[s.etat];
+    var estGoulot = g && g.station === s;
+
+    if (i) {
+      var prec = st[i-1];
+      /* Un taux de passage entre deux grandeurs incomparables — des francs
+         puis des pièces — ne veut rien dire. On ne le montre qu'entre deux
+         stations qui se mesurent de la même façon. */
+      var comparable = prec.mesure === s.mesure && s.mesure === 'piece' && prec.v > 0;
+      var ep = comparable ? Math.max(3, Math.round((s.v / maxi) * 16)) : 3;
+      var taux = comparable ? Math.round(s.v / prec.v * 100) : null;
+      h += '<div class="flx-lien" aria-hidden="true">'
+         +   '<div class="flx-lien-barre" style="height:' + ep + 'px;"></div>'
+         +   (taux !== null ? '<div class="flx-lien-taux' + (taux < 60 ? ' bas' : '') + '">' + taux + ' %</div>' : '')
+         + '</div>';
+    }
+
+    h += '<button class="flx-station' + (estGoulot ? ' goulot' : '') + '" role="listitem"'
+       + ' data-onglet="' + s.cle + '"'
+       + ' title="' + s.detail.replace(/"/g,'&quot;') + '">'
+       +   '<div class="flx-st-tete">'
+       +     '<span class="flx-st-num">' + s.n + '</span>'
+       +     '<i class="fa ' + s.ico + ' flx-st-ico"></i>'
+       +   '</div>'
+       +   '<div class="flx-st-nom">' + s.nom + '</div>'
+       +   '<div class="flx-st-val">' + (s.court ? court(s.v) : mil(s.v)) + '</div>'
+       +   '<div class="flx-st-unite">' + s.u + '</div>'
+       +   '<div class="flx-st-etat" style="color:' + e.c + ';">'
+       +     '<i class="fa ' + e.i + '"></i>' + e.m
+       +   '</div>'
+       + '</button>';
+  });
+  h += '</div>';
+
+  /* ── Vue tableau : lecture sans couleur, et copiable ── */
+  h += '<details class="flx-tableau"><summary>Voir les mêmes données en tableau</summary>'
+     + '<table><thead><tr><th>#</th><th>Station</th><th>Valeur</th><th>Unité</th>'
+     + '<th>État</th><th>Détail</th></tr></thead><tbody>';
+  st.forEach(function(s){
+    h += '<tr><td>' + s.n + '</td><td>' + s.nom + '</td>'
+       + '<td style="text-align:right;font-variant-numeric:tabular-nums;">' + mil(s.v) + '</td>'
+       + '<td>' + s.u + '</td><td>' + ETAT[s.etat].m + '</td><td>' + s.detail + '</td></tr>';
+  });
+  h += '</tbody></table></details>';
+
+  hote.innerHTML = h;
+  hote.querySelectorAll('[data-onglet]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var o = b.getAttribute('data-onglet');
+      if (o.charAt(0) === '_') {
+        var dest = {'__achats':'achats','__qualite':'qualite','__depot':'articles'}[o];
+        if (dest && window.goTo) window.goTo(dest, null, b.textContent.trim());
+      } else if (window.switchGPAOTab) {
+        window.switchGPAOTab(o, document.getElementById('gpao-stab-' + o));
+      }
+    });
+  });
+}
+window.renderFluxProduction = rendre;
+
+/* ── Insertion de l'onglet dans la GPAO ────────────────────── */
+function installer(){
+  var barre = document.querySelector('.gpao-stab');
+  if (!barre) return false;
+  barre = barre.parentNode;
+  if (document.getElementById('gpao-stab-flux')) return true;
+
+  var b = document.createElement('div');
+  b.className = 'gpao-stab tab';
+  b.id = 'gpao-stab-flux';
+  b.innerHTML = '<i class="fa fa-diagram-project"></i> Flux';
+  b.onclick = function(){ window.switchGPAOTab('flux', b); };
+  barre.insertBefore(b, barre.firstChild);
+
+  var pane = document.getElementById('gpao-tab-budget_vente');
+  var conteneur = pane ? pane.parentNode : barre.parentNode;
+  var d = document.createElement('div');
+  d.id = 'gpao-tab-flux';
+  d.className = 'gpao-tab';
+  d.style.display = 'none';
+  d.innerHTML = '<div id="gpao-flux-corps"></div>';
+  conteneur.insertBefore(d, conteneur.firstChild);
+  return true;
+}
+
+var _switch = window.switchGPAOTab;
+window.switchGPAOTab = function(onglet, btn){
+  if (onglet === 'flux') {
+    document.querySelectorAll('.gpao-stab').forEach(function(x){ x.classList.remove('on'); });
+    var b = btn || document.getElementById('gpao-stab-flux');
+    if (b) b.classList.add('on');
+    document.querySelectorAll('.gpao-tab').forEach(function(p){ p.style.display = 'none'; });
+    var p = document.getElementById('gpao-tab-flux');
+    if (p) p.style.display = 'block';
+    rendre();
+    return;
+  }
+  var p2 = document.getElementById('gpao-tab-flux');
+  if (p2) p2.style.display = 'none';
+  return (typeof _switch === 'function') ? _switch.apply(this, arguments) : undefined;
+};
+
+var _goTo = window.goTo;
+window.goTo = function(id){
+  var r = (typeof _goTo === 'function') ? _goTo.apply(this, arguments) : undefined;
+  if (id === 'gpao') setTimeout(function(){ if (installer()) rendre(); }, 120);
+  return r;
+};
+setTimeout(installer, 2000);
+})();
+</script>
+<style id="sf-flux">
+/* ── Flux de production ─────────────────────────────────────── */
+#gpao-flux-corps{padding:2px 0 8px;}
+
+.flx-tete{
+  display:flex;align-items:center;gap:14px;
+  background:var(--wh);border:1px solid var(--bd);border-radius:10px;
+  padding:16px 18px;margin-bottom:18px;
+}
+.flx-tete-vide{border-left:3px solid var(--P);}
+.flx-tete-ico{
+  width:38px;height:38px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.flx-tete-t{font-size:15px;font-weight:700;color:var(--t1);margin-bottom:3px;}
+.flx-tete-s{font-size:12.5px;color:var(--t2);line-height:1.6;max-width:70ch;}
+.flx-cta{
+  margin-left:auto;flex-shrink:0;background:var(--P);color:#fff;border:none;
+  border-radius:8px;padding:9px 15px;font:600 12.5px var(--f);cursor:pointer;white-space:nowrap;
+}
+.flx-cta:hover{background:var(--P-h);}
+
+/* La chaîne : elle s'enroule sans se casser sur un écran étroit */
+.flx-chaine{
+  display:flex;align-items:stretch;flex-wrap:wrap;gap:0;
+  background:var(--wh);border:1px solid var(--bd);border-radius:10px;padding:18px 16px;
+}
+.flx-station{
+  flex:1 1 128px;min-width:128px;
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  background:none;border:1px solid transparent;border-radius:10px;
+  padding:12px 11px;cursor:pointer;text-align:left;
+  font-family:var(--f);transition:background .13s,border-color .13s;
+}
+.flx-station:hover{background:#FAFBFC;border-color:var(--bd);}
+.flx-station:focus-visible{outline:2px solid var(--P);outline-offset:1px;}
+.flx-station.goulot{background:rgba(208,59,59,.04);border-color:rgba(208,59,59,.3);}
+
+.flx-st-tete{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
+.flx-st-num{
+  width:18px;height:18px;border-radius:5px;background:var(--bg);color:var(--t3);
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.flx-station.goulot .flx-st-num{background:#d03b3b;color:#fff;}
+.flx-st-ico{font-size:13px;color:var(--t3);}
+.flx-st-nom{font-size:12px;font-weight:600;color:var(--t2);line-height:1.35;}
+.flx-st-val{font-size:21px;font-weight:700;color:var(--t1);letter-spacing:-.5px;line-height:1.15;margin-top:3px;
+  font-variant-numeric:tabular-nums;}
+.flx-st-unite{font-size:11px;color:var(--t3);}
+.flx-st-etat{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;margin-top:7px;}
+
+/* Le lien : son épaisseur suit le volume, le chiffre dit le taux de passage */
+.flx-lien{
+  flex:0 0 42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  align-self:center;
+}
+.flx-lien-barre{width:100%;background:var(--bd2);border-radius:2px;min-height:2px;}
+.flx-lien-taux{font-size:11px;font-weight:600;color:var(--t3);font-variant-numeric:tabular-nums;}
+.flx-lien-taux.bas{color:#ec835a;}
+
+.flx-tableau{margin-top:14px;}
+.flx-tableau summary{
+  font-size:12.5px;color:var(--t2);cursor:pointer;padding:7px 0;user-select:none;
+}
+.flx-tableau summary:hover{color:var(--P);}
+.flx-tableau table{width:100%;margin-top:8px;background:var(--wh);
+  border:1px solid var(--bd);border-radius:10px;overflow:hidden;}
+
+@media(max-width:900px){
+  .flx-lien{flex-basis:24px;}
+  .flx-station{flex-basis:calc(50% - 24px);}
+  .flx-tete{flex-wrap:wrap;}
+  .flx-cta{margin-left:0;width:100%;}
+}
+</style>
 </body>
 </html>
