@@ -42,6 +42,8 @@ Clé publiable : `sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d`
 | 09 | `durcissement_droits_et_extensions` | Révocation `anon`, extensions hors `public` |
 | 17 | `chaine_de_planification_sop` | Budget de vente, prévisions, PIC, PDP, MRP + vue `v_flux_production` |
 | 18 | `vues_caisse_et_analytique` | `v_analytique_sections` (budget / charges / produits / écart) et `v_caisse_journal` |
+| 19 | `rls_moindre_privilege_ecriture` | 45 politiques `FOR ALL` scindées en INSERT / UPDATE / DELETE + index dupliqué supprimé |
+| 20 | `index_cles_etrangeres_metier` | 52 index sur les clés étrangères métier ; colonnes de traçabilité écartées |
 
 ---
 
@@ -372,6 +374,29 @@ Deux, corrigés avant livraison :
 11 tests passent : session unique, numérotation chaînée, plafond de validation,
 ventilation avec TVA, double ventilation refusée, solde de session, transfert,
 découvert refusé, écart justifié, lettrage, verrous.
+
+## 9 bis. Correction de moindre privilège — RLS
+
+Une politique `FOR ALL` couvre aussi `SELECT`. La permission d'**écriture**
+ouvrait donc la **lecture**, court-circuitant la permission de lecture prévue.
+
+```
+caisses — avant
+  c_lecture  SELECT  tresorerie.lire
+  c_ecriture ALL     parametres.gerer   ← donnait aussi la lecture
+```
+
+Un profil portant `parametres.gerer` sans `tresorerie.lire` lisait les caisses.
+Les 45 politiques concernées sont scindées en `INSERT` / `UPDATE` / `DELETE`
+à expression identique ; la lecture ne dépend plus que de la politique `SELECT`.
+
+| Contrôle | Avant | Après |
+|---|---|---|
+| Politiques `FOR ALL` | 45 | 0 |
+| Avertissements *multiple permissive policies* | 46 | 1 (voulu : `profiles`) |
+| Index identiques en double | 1 | 0 |
+| Clés étrangères métier sans index | 52 | 0 |
+| Suppression de mouvement de caisse | impossible | impossible |
 
 ## 10. Reste à faire
 
