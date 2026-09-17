@@ -34,6 +34,14 @@ Fichier unique `index.html`. Ouvrir directement dans un navigateur, ou servir :
 python3 -m http.server 8000
 ```
 
+## Livraison
+
+Le logiciel est livré **sans données**. Aucune identité client n'est codée dans
+le source : raison sociale, RCCM, compte contribuable, personnel, catalogue et
+tiers sont saisis par le client au premier démarrage.
+
+Un jeu de démonstration reste disponible à la demande, depuis Paramétrage.
+
 ## État
 
 Audit technique complet dans `AUDIT_v5.7.md`. La migration de l'authentification

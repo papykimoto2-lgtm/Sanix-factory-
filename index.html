@@ -2553,7 +2553,7 @@ window.onerror = function(msg, src, line, col, err) {
   </div>
   <div class="sb-user-badge">
     <div class="sb-av" id="sbAv">MK</div>
-    <div><div class="sb-uname" id="sbName">Marc Kader</div><div class="sb-urole" id="sbRole">Commercial</div></div>
+    <div><div class="sb-uname" id="sbName"></div><div class="sb-urole" id="sbRole">Commercial</div></div>
     <span class="sb-role-badge com" id="sbRoleBadge">COM</span>
   </div>
   <div class="sb-nav" id="sbNav">
@@ -11168,7 +11168,7 @@ app.post('/webhook/whatsapp', (req, res) => {
             <div class="frow"><label class="fl">Slogan / Accroche</label><input class="fi" id="param-slogan" type="text" placeholder="Ex: L'emballage, notre savoir-faire"/></div>
             <div class="fg2">
               <div class="frow"><label class="fl">Téléphone principal</label><input class="fi" id="param-phone" type="tel" placeholder="27 XX XX XX XX"/></div>
-              <div class="frow"><label class="fl">Email professionnel</label><input class="fi" id="param-email" type="email" placeholder="contact@ivopack.ci"/></div>
+              <div class="frow"><label class="fl">Email professionnel</label><input class="fi" id="param-email" type="email" placeholder="contact@entreprise.ci"/></div>
             </div>
             <div class="frow"><label class="fl">Adresse siège social</label><input class="fi" id="param-adresse" type="text" placeholder="Zone Industrielle de Yopougon, Abidjan"/></div>
             <div class="fg2">
@@ -11176,7 +11176,7 @@ app.post('/webhook/whatsapp', (req, res) => {
               <div class="frow"><label class="fl">Pays</label><input class="fi" id="param-pays" type="text" value="Côte d'Ivoire"/></div>
             </div>
             <div class="fg2">
-              <div class="frow"><label class="fl">Site web</label><input class="fi" id="param-web" type="url" placeholder="https://www.ivopack.ci"/></div>
+              <div class="frow"><label class="fl">Site web</label><input class="fi" id="param-web" type="url" placeholder="https://www.entreprise.ci"/></div>
               <div class="frow"><label class="fl">Capital social (F CFA)</label><input class="fi" id="param-capital" type="number" placeholder="10000000"/></div>
             </div>
             <div class="frow"><label class="fl">Activité principale</label><input class="fi" id="param-activite" type="text" placeholder="Fabrication et commercialisation d'emballages industriels"/></div>
@@ -11498,7 +11498,7 @@ app.post('/webhook/whatsapp', (req, res) => {
               <div class="frow"><label class="fl">Prénom *</label><input class="fi" id="u-prenom" type="text" placeholder="Prénom"/></div>
               <div class="frow"><label class="fl">Nom *</label><input class="fi" id="u-nom" type="text" placeholder="Nom"/></div>
               <div class="frow"><label class="fl">Login *</label><input class="fi" id="u-login" type="text" placeholder="login_unique" style="font-family:monospace;"/></div>
-              <div class="frow"><label class="fl">Email</label><input class="fi" id="u-email" type="email" placeholder="email@ivopack.ci"/></div>
+              <div class="frow"><label class="fl">Email</label><input class="fi" id="u-email" type="email" placeholder="prenom.nom@entreprise.ci"/></div>
               <div class="frow"><label class="fl">Téléphone</label><input class="fi" id="u-phone" type="tel" placeholder="07 XX XX XX XX"/></div>
               <div class="frow"><label class="fl">Mot de passe *</label><input class="fi" id="u-pass" type="password" placeholder="Min. 6 caractères"/></div>
             </div>
@@ -12144,7 +12144,7 @@ app.post('/webhook/whatsapp', (req, res) => {
               <div class="frow"><label class="fl">Nom</label><input class="fi" id="compte-nom" type="text" placeholder="Nom"/></div>
             </div>
             <div class="fg2">
-              <div class="frow"><label class="fl">Email</label><input class="fi" id="compte-email" type="email" placeholder="admin@ivopack.ci"/></div>
+              <div class="frow"><label class="fl">Email</label><input class="fi" id="compte-email" type="email" placeholder="prenom.nom@entreprise.ci"/></div>
               <div class="frow"><label class="fl">Téléphone</label><input class="fi" id="compte-phone" type="tel" placeholder="07 XX XX XX XX"/></div>
             </div>
             <button class="btn btn-r" onclick="saveCompte()"><i class="fa fa-floppy-disk"></i>Mettre à jour le profil</button>
@@ -14605,7 +14605,7 @@ app.post('/webhook/whatsapp', (req, res) => {
       </div>
       <div class="fg2">
         <div class="frow"><label class="fl">Téléphone *</label><input class="fi" id="fcom-phone" type="tel" placeholder="07 XX XX XX XX"/></div>
-        <div class="frow"><label class="fl">Email</label><input class="fi" id="fcom-email" type="email" placeholder="nom@ivopack.ci"/></div>
+        <div class="frow"><label class="fl">Email</label><input class="fi" id="fcom-email" type="email" placeholder="prenom.nom@entreprise.ci"/></div>
       </div>
       <div class="frow"><label class="fl">Zone géographique *</label><input class="fi" id="fcom-zone" type="text" placeholder="Ex: Zone Plateau / Cocody"/></div>
       <div class="fg2">
@@ -14824,7 +14824,7 @@ app.post('/webhook/whatsapp', (req, res) => {
               </select>
             </div>
             <div class="frow"><label class="fl">Lieu de travail</label>
-              <input class="fi" id="femp-lieu-travail" type="text" placeholder="Ex: Songon, Abidjan CI"/>
+              <input class="fi" id="femp-lieu-travail" type="text" placeholder="Ex : quartier, ville"/>
             </div>
           </div>
           <div class="fg2">
@@ -14892,7 +14892,7 @@ app.post('/webhook/whatsapp', (req, res) => {
           </div>
           <div class="fg2">
             <div class="frow"><label class="fl">Lieu de travail</label>
-              <input class="fi" id="femp-lieu-cdd" type="text" placeholder="Ex: Atelier principal, Songon"/>
+              <input class="fi" id="femp-lieu-cdd" type="text" placeholder="Ex: Atelier principal, "/>
             </div>
             <div class="frow" id="femp-cdd-precarite-row" style="display:none;">
               <label class="fl">Indemnité de précarité (5%)</label>
@@ -16264,22 +16264,10 @@ var ROLE_SECTIONS = {
 };
 
 // ── Utilisateurs (DB dynamique + utilisateurs système codés) ──
-var USERS = {
-  admin:   { role:'admin',      name:'Administrateur',  initials:'AD', id:'admin',  email:'admin@ivopack.ci',  actif:true,  created:today(), modules:null },
-  com:     { role:'commercial', name:'Marc Kader',      initials:'MK', id:'marc',   email:'marc@ivopack.ci',   actif:true,  created:today(), modules:null },
-  sophie:  { role:'commercial', name:'Sophie Diallo',   initials:'SD', id:'sophie', email:'sophie@ivopack.ci', actif:true,  created:today(), modules:null },
-  kofi:    { role:'commercial', name:'Kofi Mensah',     initials:'KM', id:'kofi',   email:'kofi@ivopack.ci',   actif:true,  created:today(), modules:null },
-  prod:    { role:'chef_prod',     name:'Chef Production', initials:'CP', id:'prod',   email:'prod@ivopack.ci',    actif:true,  created:today(), modules:null },
-  cs_prod: { role:'chef_service',  name:'Chef Serv. Production', initials:'CS', id:'cs_prod', email:'csprod@ivopack.ci',  actif:true,  created:today(), modules:null, service:'Production' },
-  cs_maint:{ role:'chef_service',  name:'Chef Serv. Maintenance', initials:'CM', id:'cs_maint',email:'csmaint@ivopack.ci', actif:true,  created:today(), modules:null, service:'Maintenance' },
-  cs_rh:   { role:'chef_service',  name:'Chef Serv. RH',          initials:'CR', id:'cs_rh',  email:'csrh@ivopack.ci',    actif:true,  created:today(), modules:null, service:'Ressources Humaines' },
-  cs_adm:  { role:'chef_service',  name:'Chef Serv. Admin',       initials:'CA', id:'cs_adm', email:'csadm@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Administration' },
-  cs_com:  { role:'chef_service',  name:'Chef Serv. Commercial',  initials:'CC', id:'cs_com', email:'cscom@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Commercial' },
-  cs_log:  { role:'chef_service',  name:'Chef Serv. Logistique',  initials:'CL', id:'cs_log', email:'cslog@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Logistique' },
-  rh_user: { role:'rh',         name:'Responsable RH',  initials:'RH', id:'rh',     email:'rh@ivopack.ci',     actif:true,  created:today(), modules:null },
-  compta:  { role:'comptable',  name:'Comptable',       initials:'CT', id:'compta', email:'compta@ivopack.ci', actif:true,  created:today(), modules:null },
-  qualite: { role:'qualite',    name:'Resp. Qualité',   initials:'QA', id:'qualite',email:'qualite@ivopack.ci',actif:true,  created:today(), modules:null },
-};
+var USERS = {};
+/* Les comptes sont créés dans Supabase Auth et chargés depuis la base après
+   connexion (vue v_annuaire). Aucune identité n'est codée dans ce fichier. */
+
 
 // Charger les utilisateurs personnalisés depuis la DB
 function _loadUsersFromDB(){
@@ -16466,7 +16454,7 @@ window.renderUsersList=function(){
   var bannerHtml='';
   var _hasDemoData = window._SF_DEMO_USERS_PENDING
     || (!DB._demo_cleared && DB.contacts && DB.contacts.length > 0
-        && DB.contacts.some(function(c){ return c.email && (c.email.indexOf('aquafruivit.ci')>=0 || c.email.indexOf('ivopack.ci')>=0); }));
+        && DB.contacts.some(function(c){ return c.email && (c.email.indexOf('@exemple.')>=0); }));
   if(_hasDemoData){
     bannerHtml='<div style="margin-bottom:14px;padding:12px 14px;border-radius:10px;'
       +'background:rgba(244,121,32,.08);border:1.5px solid rgba(244,121,32,.3);'
@@ -18780,372 +18768,76 @@ var DB = {
 };
 
 /* ══════════════════════════════════════════════════════
-   SEED DÉMO IVOPACK — Données réalistes
-   Injectées uniquement si la DB est vide
+/* ══════════════════════════════════════════════════════
+   AMORCE — base vierge
+   Le logiciel est livré sans données. L'identité de la société
+   et son contenu sont saisis par le client, jamais codés ici.
 ══════════════════════════════════════════════════════ */
-/* ── FOANI SERVICE — Reset forcé localStorage au premier chargement ──
-   Supprime les anciennes données AQUA SONGON / FRUIVIT pour injecter FOANI ──*/
-(function(){
+(function amorceVierge(){
+  var MARQUEUR = '_sf_initialise';
+
+  /* Purge unique des jeux de démonstration des versions antérieures */
   try{
-    var _raw=localStorage.getItem('sanixfactory_db');
-    if(_raw){
-      var _d=JSON.parse(_raw);
-      // Si l'ancienne DB ne contient pas le marqueur FOANI, on purge tout
-      if(!_d||!_d._foani_seeded){
+    var brut = localStorage.getItem('sanixfactory_db');
+    if (brut) {
+      var ancien = JSON.parse(brut);
+      if (ancien && (ancien._foani_seeded || ancien._ivopack_seeded) && !ancien[MARQUEUR]) {
         localStorage.removeItem('sanixfactory_db');
         localStorage.removeItem('sanixfactory_config');
-        console.log('%c[SANIX OpusFab] 🔄 Ancienne DB purgée — Migration vers FOANI SERVICE','color:#C8860A;font-weight:900;');
+        console.log('%c[SANIX OpusFab] Données de démonstration purgées', 'color:#F59E0B;font-weight:700;');
       }
     }
   }catch(e){}
-})();
 
-(function seedFOANI(){
-  // ── Config entreprise FOANI SERVICE ──
-  localStorage.setItem('sanixfactory_config', JSON.stringify({
-    nom:'FOANI SERVICE',
-    slogan:'De la ferme à votre table — Fraîcheur garantie',
-    adresse:'Zone Industrielle de Yopougon, Rue des Aviculteurs, Lot 7',
-    ville:"Yopougon, Abidjan, Côte d'Ivoire",
-    phone:'+225 27 22 58 00 10',
-    email:'contact@foaniservice.ci',
-    web:'www.foaniservice.ci',
-    rccm:'CI-ABJ-2021-B-18342',
-    dfe:'2021572345600',
-    regime:'Normal',
-    tva:18,
-    devise:'F CFA',
-    monnaie:'XOF',
-    dirigeant:'M. Ouédraogo Jean-Baptiste (DG)',
-    capital:'75 000 000',
-    logo:'',
-    couleurPrimaire:'#C8860A',
-    couleurSecondaire:'#2E7D32',
-    licenceKey:'',
-    licenceEmail:'',
-    licenceActive:false
-  }));
-
-  const saved=localStorage.getItem('sanixfactory_db');
-  if(saved){
+  /* Fiche société : vide, à compléter au premier démarrage */
+  if (!localStorage.getItem('sanixfactory_config')) {
     try{
-      const d=JSON.parse(saved);
-      const _DB_ARRAY_KEYS=['contacts','leads','cmds','opps','acts','factures',
-        'team','articles','ofs','nomenclatures','mouvements','devis','fournisseurs',
-        'achats','transactions','employes','pointages','lots','depots','transferts',
-        'inventaires','notifications','controles','reclamations','factures_fourn',
-        'paiements_fourn','journal','users_custom','connexions_log','colisages',
-        'workflows','wf_circuits','notes_frais','candidats','candidatures_int',
-        'candidatures_ext','lignes_budget','engagements','projets_fin','pf_facts',
-        'eval_fourn','wf_seuils','frais_cat','exercices'];
-      function _sanitizeDB(obj){
-        if(!obj||typeof obj!=='object') return;
-        _DB_ARRAY_KEYS.forEach(function(k){
-          if(obj[k]!==undefined && !Array.isArray(obj[k])) obj[k]=[];
-        });
-      }
-      if(d) _sanitizeDB(d);
-      if(d && d._foani_seeded){
-        Object.assign(DB,d);
-        if(!DB.users_custom)   DB.users_custom=[];
-        if(!DB.connexions_log) DB.connexions_log=[];
-        if(!DB.workflows)      DB.workflows=[];
-        if(!DB.wf_seuils)      DB.wf_seuils=[{id:'s1',niveau:1,plafond:500000,approbateur:'Chef de service',delai:24},{id:'s2',niveau:2,plafond:5000000,approbateur:'DAF',delai:48},{id:'s3',niveau:3,plafond:99999999,approbateur:'DG',delai:72}];
-        if(!DB.notes_frais)    DB.notes_frais=[];
-        if(!DB.frais_cat)      DB.frais_cat=[{id:'fc1',nom:'Transport',ico:'🚗',plafond:80000},{id:'fc2',nom:'Repas',ico:'🍽️',plafond:25000},{id:'fc3',nom:'Carburant',ico:'⛽',plafond:120000},{id:'fc4',nom:'Entretien véhicule',ico:'🔧',plafond:100000},{id:'fc5',nom:'Autre',ico:'📋',plafond:0}];
-        if(!DB.exercices)      DB.exercices=[{id:'ex2026',annee:2026,statut:'ouvert',dateOuv:'2026-01-01',dateClt:null}];
-        return;
-      }
-      if(d && d.contacts && d.contacts.length>0){
-        Object.assign(DB,d);
-        if(!DB.users_custom)   DB.users_custom=[];
-        if(!DB.connexions_log) DB.connexions_log=[];
-        return;
-      }
+      localStorage.setItem('sanixfactory_config', JSON.stringify({
+        nom:'', slogan:'', adresse:'', ville:'', phone:'', email:'', web:'',
+        rccm:'', dfe:'', regime:'Normal', tva:18, devise:'F CFA', monnaie:'XOF',
+        dirigeant:'', capital:'', logo:'',
+        couleurPrimaire:'#7c3aed', couleurSecondaire:'#191A2E',
+        licenceKey:'', licenceEmail:'', licenceActive:false,
+        _aConfigurer:true
+      }));
     }catch(e){}
   }
 
-  const _d=(n)=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);};
-  const _dp=(n)=>{const d=new Date();d.setDate(d.getDate()-n);return d.toISOString().slice(0,10);};
-  const y2=new Date().getFullYear();
+  /* Reprise des données déjà saisies, le cas échéant */
+  var CLES = ['contacts','leads','cmds','opps','acts','factures','team','articles',
+    'ofs','nomenclatures','mouvements','devis','fournisseurs','achats','transactions',
+    'employes','pointages','lots','depots','transferts','inventaires','notifications',
+    'controles','reclamations','factures_fourn','paiements_fourn','journal',
+    'users_custom','connexions_log','colisages','workflows','wf_circuits','notes_frais',
+    'candidats','candidatures_int','candidatures_ext','lignes_budget','engagements',
+    'projets_fin','pf_facts','eval_fourn'];
 
-  // ══════════════════════════════════════════
-  // ARTICLES — Catalogue FOANI SERVICE
-  // ══════════════════════════════════════════
-  DB.articles=[
-    // ── Produits finis / Revendus ──
-    {id:'art1', ref:'PF-001', nom:'Œuf de poule calibre Moyen (plateau 30)',      type:'pf',  categorie:'Œufs',       unite:'Plateau',  prixAchat:2200, prixVente:2800, stockActuel:420,  stockMin:100, tva:0,  description:'Plateau 30 œufs. Calibre M 53-63g. Élevage local CI.',        actif:true},
-    {id:'art2', ref:'PF-002', nom:'Œuf de poule calibre Grand (plateau 30)',       type:'pf',  categorie:'Œufs',       unite:'Plateau',  prixAchat:2600, prixVente:3200, stockActuel:280,  stockMin:80,  tva:0,  description:'Plateau 30 œufs. Calibre L 63-73g. Prime qualité.',           actif:true},
-    {id:'art3', ref:'PF-003', nom:'Œuf de caille (boîte 100)',                     type:'pf',  categorie:'Œufs',       unite:'Boîte',    prixAchat:3500, prixVente:5000, stockActuel:85,   stockMin:30,  tva:0,  description:'Boîte 100 œufs de caille. Produit premium restauration.',     actif:true},
-    {id:'art4', ref:'PF-004', nom:'Poulet de chair vif (kg)',                      type:'pf',  categorie:'Volaille',   unite:'Kg',       prixAchat:1400, prixVente:1900, stockActuel:0,    stockMin:0,   tva:0,  description:'Poulet vif sur commande. Poids moyen 2,2kg. Livraison ferme.',actif:true},
-    {id:'art5', ref:'PF-005', nom:'Poulet de chair vidé prêt à cuire (pièce)',     type:'pf',  categorie:'Volaille',   unite:'Pièce',    prixAchat:3200, prixVente:4500, stockActuel:56,   stockMin:20,  tva:0,  description:'Poulet entier éviscéré. Conservation 0-4°C. 48h max.',        actif:true},
-    {id:'art6', ref:'PF-006', nom:'Poulet fermier (demi)',                          type:'pf',  categorie:'Volaille',   unite:'Pièce',    prixAchat:2800, prixVente:4000, stockActuel:32,   stockMin:15,  tva:0,  description:'Demi-poulet fermier label rouge CI. Goût authentique.',       actif:true},
-    {id:'art7', ref:'PF-007', nom:'Pintade entière (pièce)',                       type:'pf',  categorie:'Volaille',   unite:'Pièce',    prixAchat:5500, prixVente:7500, stockActuel:18,   stockMin:10,  tva:0,  description:'Pintade locale. Poids 1,4-1,8kg. Sur commande préférable.',   actif:true},
-    {id:'art8', ref:'PF-008', nom:'Canard (pièce)',                                type:'pf',  categorie:'Volaille',   unite:'Pièce',    prixAchat:6000, prixVente:8500, stockActuel:12,   stockMin:5,   tva:0,  description:'Canard entier. Poids 1,8-2,5kg. Spécialité restaurants.',     actif:true},
-    {id:'art9', ref:'PF-009', nom:'Carcasse de poulet (kg)',                       type:'pf',  categorie:'Abats/Dérivés',unite:'Kg',     prixAchat:600,  prixVente:900,  stockActuel:78,   stockMin:20,  tva:0,  description:'Carcasse pour bouillon. Vendu au kg. Restauration collective.',actif:true},
-    {id:'art10',ref:'PF-010', nom:'Gésiers de poulet (kg)',                        type:'pf',  categorie:'Abats/Dérivés',unite:'Kg',     prixAchat:700,  prixVente:1100, stockActuel:62,   stockMin:15,  tva:0,  description:'Gésiers nettoyés. Conservation 0-4°C. Plat populaire CI.',    actif:true},
-    {id:'art11',ref:'PF-011', nom:'Foies de poulet (kg)',                          type:'pf',  categorie:'Abats/Dérivés',unite:'Kg',     prixAchat:800,  prixVente:1300, stockActuel:45,   stockMin:10,  tva:0,  description:'Foies frais. Riche en fer. Très demandé marchés locaux.',     actif:true},
-    {id:'art12',ref:'PF-012', nom:'Ailes de poulet marinées (kg)',                 type:'pf',  categorie:'Transformé',  unite:'Kg',     prixAchat:1200, prixVente:1900, stockActuel:34,   stockMin:10,  tva:0,  description:'Ailes marinées sauce locale. Produit semi-transformé.',        actif:true},
-    {id:'art13',ref:'PF-013', nom:'Œuf dur emballé individuel (unité)',            type:'pf',  categorie:'Transformé',  unite:'Unité',  prixAchat:120,  prixVente:200,  stockActuel:520,  stockMin:100, tva:0,  description:'Œuf cuit, pelé, emballé sous vide. Street food & snacking.',  actif:true},
-    {id:'art14',ref:'PF-014', nom:'Fumure de volaille séchée (sac 50kg)',          type:'pf',  categorie:'Dérivés/Engrais',unite:'Sac',  prixAchat:3000, prixVente:5000, stockActuel:28,   stockMin:10,  tva:0,  description:'Engrais organique volaille. Agriculture maraîchère CI.',      actif:true},
-    // ── Matières premières ──
-    {id:'mp1',  ref:'MP-001', nom:'Aliment poulet croissance (sac 50kg)',          type:'mp',  categorie:'Alimentation volaille',unite:'Sac',prixAchat:18500,prixVente:0,stockActuel:140,stockMin:50,tva:0,  description:'Provenderie SIPRA CI. Alimentation croissance 0-42j.',        actif:true},
-    {id:'mp2',  ref:'MP-002', nom:'Aliment poulet finition (sac 50kg)',            type:'mp',  categorie:'Alimentation volaille',unite:'Sac',prixAchat:17800,prixVente:0,stockActuel:95, stockMin:40,tva:0,  description:'Provenderie SIPRA CI. Finition 42j-abattage.',                actif:true},
-    {id:'mp3',  ref:'MP-003', nom:'Aliment poules pondeuses (sac 50kg)',           type:'mp',  categorie:'Alimentation volaille',unite:'Sac',prixAchat:19200,prixVente:0,stockActuel:110,stockMin:40,tva:0,  description:'Provenderie SIPRA CI. Enrichi calcium ponte.',                actif:true},
-    {id:'mp4',  ref:'MP-004', nom:'Poussin chair (boîte 100)',                     type:'mp',  categorie:'Intrants vifs',   unite:'Boîte',prixAchat:75000,prixVente:0,stockActuel:12, stockMin:5, tva:0,  description:'Poussin 1j. Race ROSS 308. Couvoir Abidjan.',                 actif:true},
-    {id:'mp5',  ref:'MP-005', nom:'Poulette démarrée 6 semaines',                 type:'mp',  categorie:'Intrants vifs',   unite:'Lot',  prixAchat:5500, prixVente:0,stockActuel:200,stockMin:50,tva:0,  description:'Poulette future pondeuse. Vaccinée Marek, Newcastle.',        actif:true},
-    {id:'mp6',  ref:'MP-006', nom:'Vaccin Newcastle (flacon 1000 doses)',          type:'mp',  categorie:'Vétérinaire',     unite:'Flacon',prixAchat:8500,prixVente:0,stockActuel:8,  stockMin:3, tva:0,  description:'Vaccin lyophilisé. Conservation 2-8°C. LAPROVET CI.',        actif:true},
-    {id:'mp7',  ref:'MP-007', nom:'Désinfectant bâtiment (bidon 5L)',             type:'mp',  categorie:'Vétérinaire',     unite:'Bidon',prixAchat:12000,prixVente:0,stockActuel:15, stockMin:5, tva:0,  description:'VIRKON S. Désinfection bâtiments inter-bandes.',              actif:true},
-    {id:'mp8',  ref:'MP-008', nom:'Emballage plateau carton 30 œufs',             type:'mp',  categorie:'Emballage',       unite:'Unité',prixAchat:180,  prixVente:0,stockActuel:2400,stockMin:500,tva:0,  description:'Plateau carton alvéolé 30 œufs. Impression FOANI SERVICE.',  actif:true},
-    {id:'mp9',  ref:'MP-009', nom:'Barquette transparente œufs caille (12)',      type:'mp',  categorie:'Emballage',       unite:'Unité',prixAchat:120,  prixVente:0,stockActuel:800,stockMin:200,tva:0,  description:'Barquette PVC 12 œufs de caille. Fermoir sécurisé.',         actif:true},
-    {id:'mp10', ref:'MP-010', nom:'Film étirable alimentaire (rouleau 500m)',      type:'mp',  categorie:'Emballage',       unite:'Rouleau',prixAchat:15000,prixVente:0,stockActuel:22,stockMin:8,tva:0,  description:'Film PVC alimentaire. Emballage viande fraîche.',             actif:true},
-    {id:'mp11', ref:'MP-011', nom:'Carburant gasoil (litre)',                     type:'mp',  categorie:'Énergie/Transport',unite:'Litre',prixAchat:850,  prixVente:0,stockActuel:180,stockMin:50,tva:0,  description:'Gasoil pour camion réfrigéré et tricycles.',                 actif:true},
-    {id:'mp12', ref:'MP-012', nom:'Litière paille de riz (botte)',                type:'mp',  categorie:'Élevage',         unite:'Botte',prixAchat:800,  prixVente:0,stockActuel:65, stockMin:20,tva:0,  description:'Litière volaille. Livraison agriculteurs Yamoussoukro.',      actif:true}
-  ];
+  try{
+    var enregistre = localStorage.getItem('sanixfactory_db');
+    if (enregistre) {
+      var d = JSON.parse(enregistre);
+      if (d && typeof d === 'object') {
+        CLES.forEach(function(k){ if (d[k] !== undefined && !Array.isArray(d[k])) d[k] = []; });
+        Object.assign(DB, d);
+      }
+    }
+  }catch(e){}
 
-  // ══════════════════════════════════════════
-  // CONTACTS — Clients & Prospects
-  // ══════════════════════════════════════════
-  DB.contacts=[
-    // ── Clients actifs ──
-    {id:'c1', name:'SODECI – Cantine Employés Abidjan', type:'client',  contact:'Mme Koné Adjoua',    phone:'+225 07 08 11 22', email:'cantine@sodeci.ci',     addr:'Plateau, Av. Christiani',       lat:5.3220, lng:-4.0210, sector:'Restauration collective', ca:8400000, init:'SC', actif:true, notes:'Commande hebdomadaire lundi 5h. Facture mensuelle. Fidèle depuis 2022.'},
-    {id:'c2', name:'CHU de Yopougon – Restauration',    type:'client',  contact:'M. Bamba Seydou',    phone:'+225 07 22 33 44', email:'restau@chu-yop.ci',    addr:'Yopougon, Route de Dabou km 12', lat:5.3400, lng:-4.0780, sector:'Santé/Restauration',     ca:6200000, init:'CY', actif:true, notes:'Protocole livraison zone hospitalière. Bon de commande obligatoire.'},
-    {id:'c3', name:'Groupe Scolaire Sainte-Marie',      type:'client',  contact:'Père Kouamé Alexis', phone:'+225 05 88 99 01', email:'economat@saintemarieabj.ci',addr:'Cocody, Rue des Écoles',     lat:5.3520, lng:-3.9720, sector:'Éducation',              ca:4850000, init:'SM', actif:true, notes:'Achats hebdomadaires. Contrat annuel. Paiement 15 jours.'},
-    {id:'c4', name:'Restaurant Le Palais du Goût',      type:'client',  contact:'M. Diallo Moussa',   phone:'+225 07 44 55 62', email:'palaisdugoût@gmail.com', addr:'Cocody-Angré, Bd des Hôtels',  lat:5.3590, lng:-3.9610, sector:'Restauration',           ca:3600000, init:'PG', actif:true, notes:'Commandes ponctuelles + mensuelles. Spécialisé volaille grillée.'},
-    {id:'c5', name:'Marché de Gros de Port-Bouët',      type:'client',  contact:'M. Kouassi Lambert', phone:'+225 07 55 66 77', email:'marcheportb@gmail.com',  addr:'Port-Bouët, Zone franche',      lat:5.2520, lng:-3.9340, sector:'Commerce de détail',     ca:5100000, init:'MP', actif:true, notes:'Grossiste. Achète plateau œufs en grande quantité. Prix négocié -8%.'},
-    {id:'c6', name:'Hôtel Ibis Plateau',                type:'client',  contact:'Chef Touré Ibrahim',  phone:'+225 27 22 40 10', email:'cuisine.ibis@accor.com', addr:'Plateau, Rue Booker Washington',lat:5.3210, lng:-4.0170, sector:'Hôtellerie',             ca:4200000, init:'HI', actif:true, notes:'Œufs + volaille. Livraison cuisine directe 6h-7h. Exigences sanitaires.'},
-    {id:'c7', name:'CFAO Supermarché Cocody',           type:'client',  contact:'M. Assi Rodrigue',   phone:'+225 07 66 77 88', email:'achat.cfao@cfao.ci',     addr:'Cocody, Bd. de France',         lat:5.3450, lng:-3.9810, sector:'Grande distribution',    ca:7800000, init:'CF', actif:true, notes:'Rayon frais. Exige traçabilité lot + étiquetage DLC. Paiement 45j.'},
-    {id:'c8', name:'Maquis Chez Tantine Lydie',         type:'client',  contact:'Mme Lydie Gnagne',   phone:'+225 07 11 44 55', email:'tantine.lydie@gmail.com', addr:'Yopougon, Quartier Niangon',   lat:5.3310, lng:-4.0560, sector:'Restauration populaire',  ca:1950000, init:'TL', actif:true, notes:'Commande 2x/semaine. Paiement cash à la livraison.'},
-    {id:'c9', name:'Sodexo CI – Sites Industriels',     type:'client',  contact:'Mme Soro Aminata',   phone:'+225 27 22 61 00', email:'aminata.soro@sodexo.ci', addr:'Zone Industrielle, Vridi',      lat:5.3000, lng:-3.9580, sector:'Restauration industrielle',ca:11200000,init:'SX', actif:true, notes:'Premier compte. Contrat 2024-2026. 8 sites industriels. Facturation mensuelle.'},
-    {id:'c10',name:'Prison Civile d\'Abidjan – Cuisine',type:'client',  contact:'Adj. Coulibaly K.',  phone:'+225 27 22 50 01', email:'cuisine.maca@justice.ci',addr:'Mairie MACA, Route de Sassandra', lat:5.2850, lng:-4.0210, sector:'Administration publique',ca:3800000, init:'PC', actif:true, notes:'Marché public. Bon de commande préfectoral. Œufs uniquement.'},
-    {id:'c11',name:'Leader Price Yopougon',              type:'client',  contact:'M. Konan Yves',      phone:'+225 07 33 22 11', email:'yves.konan@leaderprice.ci',addr:'Yopougon, carrefour Banco',   lat:5.3380, lng:-4.0650, sector:'Grande distribution',    ca:2900000, init:'LP', actif:true, notes:'Rayon frais. Commande hebdo mercredi. PLV fournie par FOANI.'},
-    {id:'c12',name:'Collège Technique CAFOP Abidjan',   type:'client',  contact:'M. N\'Goran Louis',  phone:'+225 05 77 88 99', email:'economat@cafop.ci',      addr:'Marcory, Rue du Bénin',         lat:5.2970, lng:-3.9700, sector:'Éducation',              ca:1800000, init:'CT', actif:true, notes:'Internat 800 élèves. Besoins constants. Appel d\'offres annuel.'},
-    // ── Prospects ──
-    {id:'p1', name:'Radisson Blu Hotel Abidjan',        type:'prospect', contact:'Chef exécutif',     phone:'+225 27 22 40 40', email:'food@radissonblu-abidjan.com',addr:'Plateau, Av. Houdaille',  lat:5.3190, lng:-4.0140, sector:'Hôtellerie luxe',        ca:0,       init:'RB', actif:true, notes:'RDV prévu 25/04/2026. Intéressé œufs caille + poulet fermier.'},
-    {id:'p2', name:'KFC Côte d\'Ivoire – Direction',   type:'prospect', contact:'Dir. Approvisionnement',phone:'+225 27 22 33 00',email:'supply.kfc@ci.kfc.com',  addr:'Marcory, Bd. Valery Giscard', lat:5.3050, lng:-3.9720, sector:'Fast-food',              ca:0,       init:'KF', actif:true, notes:'Demande 500+ poulets/semaine vidés. À qualifier standard HACCP.'},
-    {id:'p3', name:'Université Houphouët-Boigny – RU', type:'prospect', contact:'M. Bah Mamadou',     phone:'+225 07 89 00 11', email:'ru@univ-hb.ci',           addr:'Cocody, Campus universitaire', lat:5.3470, lng:-3.9780, sector:'Éducation publique',     ca:0,       init:'UH', actif:true, notes:'RU 2000 couverts/jour. Appel offres prévu juin 2026.'},
-    {id:'p4', name:'Chaîne Snackeries Délice & Co',    type:'prospect', contact:'M. Touré Karim',     phone:'+225 07 12 34 56', email:'karim@deliceco.ci',       addr:'Adjamé, Marché Attié',          lat:5.3700, lng:-4.0100, sector:'Street food',            ca:0,       init:'DC', actif:true, notes:'10 snackeries. Intéressé œuf dur emballé + ailes marinées.'},
-    {id:'p5', name:'Supermarché Carrefour Abidjan',    type:'prospect', contact:'Acheteur rayon frais',phone:'+225 27 22 20 00',email:'fresh@carrefour.ci',      addr:'Plateau, Centre commercial',    lat:5.3230, lng:-4.0150, sector:'Grande distribution',    ca:0,       init:'CAR',actif:true, notes:'Négociation en cours. Exige certification ISO 22000.'}
-  ];
-
-  // ══════════════════════════════════════════
-  // LEADS
-  // ══════════════════════════════════════════
-  DB.leads=[
-    {id:'l1',nom:'Club Ivoire Golf – Restaurant',      contact:'Chef de cuisine',phone:'+225 27 22 40 20',email:'resto@clubivoire.ci',      source:'Recommandation',statut:'qualifié',   valeur:2500000,commercialId:'kofi',  date:_dp(8), notes:'Référencé par Hôtel Ibis. Intérêt fort poulet fermier + pintade.'},
-    {id:'l2',nom:'Armée de Terre CI – Mess Officers',  contact:'Intendance',     phone:'+225 27 22 44 00',email:'mess@armee.ci',           source:'Appel entrant',  statut:'nouveau',    valeur:8000000,commercialId:'kofi',  date:_dp(3), notes:'Besoin œufs + volaille pour 3 mess. À qualifier.'},
-    {id:'l3',nom:'Groupe NSIA – Cantines',             contact:'DRH',            phone:'+225 27 22 55 00',email:'drh@nsia.ci',             source:'Prospection',    statut:'proposition', valeur:6000000,commercialId:'aminata',date:_dp(15),notes:'Devis envoyé. Décision comité 30/04.'},
-    {id:'l4',nom:'Maquis Palace Cocody',               contact:'Propriétaire',   phone:'+225 07 55 44 33',email:'palace@maquis.ci',         source:'Salon agri',     statut:'converti',   valeur:1800000,commercialId:'aminata',date:_dp(30),notes:'Converti — devient client c4 analogue.'},
-    {id:'l5',nom:'École Internationale Sainte-Croix',  contact:'Économe',        phone:'+225 27 22 66 00',email:'economat@sainte-croix.ci', source:'Réseaux sociaux',statut:'qualifié',   valeur:3200000,commercialId:'kofi',  date:_dp(6), notes:'200 élèves demi-pension. Besoin régulier œufs + poulet.'}
-  ];
-
-  // ══════════════════════════════════════════
-  // OPPORTUNITÉS (PIPELINE)
-  // ══════════════════════════════════════════
-  DB.opps=[
-    {id:'op1',nom:'Contrat annuel Sodexo CI 2026-2027',cid:'c9',etape:'negociation',statut:'negociation',valeur:134400000,prob:75,commercialId:'kofi',  dateCreation:_dp(20),dateCloture:_d(15),notes:'Renouvellement contrat. +3 nouveaux sites Vridi.'},
-    {id:'op2',nom:'Référencement Carrefour rayon frais', cid:'p5',etape:'proposition',statut:'proposition',valeur:45000000,prob:40,commercialId:'aminata',dateCreation:_dp(10),dateCloture:_d(45),notes:'Dossier technique ISO en cours. Délai 6 semaines.'},
-    {id:'op3',nom:'Appel d\'offres Université HB',      cid:'p3',etape:'qualification',statut:'qualification',valeur:28000000,prob:30,commercialId:'kofi',dateCreation:_dp(5), dateCloture:_d(60),notes:'Cahier des charges reçu. Réponse 15 juin.'},
-    {id:'op4',nom:'KFC – Poulet vidé standard HACCP',  cid:'p2',etape:'proposition',statut:'proposition',valeur:52000000,prob:55,commercialId:'aminata',dateCreation:_dp(12),dateCloture:_d(30),notes:'Audit usine prévu 02/05. Certification en cours.'},
-    {id:'op5',nom:'Club Ivoire – Contrat volaille premium',cid:'l1',etape:'nouveau',statut:'nouveau',valeur:12000000,prob:20,commercialId:'kofi',dateCreation:_dp(8),dateCloture:_d(30),notes:'Premier contact positif. Proposer dégustation.'}
-  ];
-
-  // ══════════════════════════════════════════
-  // FOURNISSEURS
-  // ══════════════════════════════════════════
-  DB.fournisseurs=[
-    {id:'f1',nom:'SIPRA CI – Provenderie',         contact:'M. Sylla Bakary',    phone:'+225 27 22 42 10',email:'ventes@sipra.ci',          adresse:'Zone Industrielle Yopougon',ville:'Abidjan',pays:"Côte d'Ivoire",categorie:'Alimentation volaille',delai:3, tva:0, status:'actif',notes:'Aliment croissance + finition + ponte. Livraison 3j. Contrat 2024-2026.'},
-    {id:'f2',nom:'Couvoir National de Côte d\'Ivoire',contact:'Dir. Commerciale',phone:'+225 27 22 30 00',email:'ventes@couvoir-ci.ci',      adresse:'Route d\'Adzopé km 8',   ville:'Abidjan',pays:"Côte d'Ivoire",categorie:'Intrants vifs / Poussins',delai:5,tva:0, status:'actif',notes:'Poussins ROSS 308 et poulettes. Commande J-14 minimum.'},
-    {id:'f3',nom:'LAPROVET CI – Vétérinaire',      contact:'Dr. Koné Aminata',   phone:'+225 27 22 35 50',email:'info@laprovet.ci',          adresse:'Cocody, Cité des Arts',  ville:'Abidjan',pays:"Côte d'Ivoire",categorie:'Médicaments & Vaccins',delai:2, tva:18,status:'actif',notes:'Vaccins Newcastle, Gumboro, Antibiotiques. Ordonnance vétérinaire requise.'},
-    {id:'f4',nom:'EMACO – Emballages',             contact:'M. Traoré Lassina',  phone:'+225 27 22 48 00',email:'commercial@emaco.ci',        adresse:'ZI Vridi Port',          ville:'Abidjan',pays:"Côte d'Ivoire",categorie:'Emballages & Packaging',delai:7, tva:18,status:'actif',notes:'Plateaux carton + barquettes. Impression personnalisée FOANI SERVICE.'},
-    {id:'f5',nom:'AGRIFERME SARL – Éleveurs partenaires',contact:'M. Ouattara Drissa',phone:'+225 07 88 99 00',email:'agriferme@gmail.com',  adresse:'Bingerville km 14',      ville:'Abidjan',pays:"Côte d'Ivoire",categorie:'Approvisionnement volaille',delai:2,tva:0, status:'actif',notes:'5 éleveurs partenaires. Poulets + pintades + canards sur commande.'},
-    {id:'f6',nom:'PETROCI – Carburant',            contact:'Gérant station',     phone:'+225 27 22 70 00',email:'station.yop@petroci.ci',      adresse:'Yopougon, Rte de Dabou', ville:'Abidjan',pays:"Côte d'Ivoire",categorie:'Énergie/Transport',   delai:0, tva:18,status:'actif',notes:'Gasoil camion réfrigéré + tricycles. Carte carburant FOANI.'}
-  ];
-
-  // ══════════════════════════════════════════
-  // EMPLOYÉS
-  // ══════════════════════════════════════════
-  DB.employes=[
-    {id:'e1', nom:'OUÉDRAOGO Jean-Baptiste', poste:'Directeur Général',        dept:'Direction',      salaire:750000, dateEntree:'2021-03-01',contrat:'CDI',phone:'+225 07 11 00 01',email:'dg@foaniservice.ci',    actif:true},
-    {id:'e2', nom:'KONÉ Fatoumata',           poste:'Directrice Administrative',dept:'Administration', salaire:450000, dateEntree:'2021-04-15',contrat:'CDI',phone:'+225 07 11 00 02',email:'daf@foaniservice.ci',   actif:true},
-    {id:'e3', nom:'YOBOUÉ Kofi Arsène',       poste:'Responsable Commercial',   dept:'Commercial',     salaire:380000, dateEntree:'2021-06-01',contrat:'CDI',phone:'+225 07 11 00 03',email:'kofi@foaniservice.ci',  actif:true},
-    {id:'e4', nom:'TOURÉ Aminata',            poste:'Commerciale terrain',       dept:'Commercial',     salaire:280000, dateEntree:'2022-01-10',contrat:'CDI',phone:'+225 07 11 00 04',email:'aminata@foaniservice.ci',actif:true},
-    {id:'e5', nom:'DIOMANDÉ Lacina',          poste:'Chauffeur Camion Frigorifique',dept:'Logistique', salaire:250000, dateEntree:'2021-09-01',contrat:'CDI',phone:'+225 07 11 00 05',email:'',actif:true,permis:'C'},
-    {id:'e6', nom:'COULIBALY Ibrahima',       poste:'Livreur Tricycle',          dept:'Logistique',    salaire:180000, dateEntree:'2022-03-01',contrat:'CDD',phone:'+225 07 11 00 06',email:'',actif:true},
-    {id:'e7', nom:'GNAGNON Philomène',        poste:'Ouvrière conditionnement',  dept:'Production',    salaire:160000, dateEntree:'2022-06-15',contrat:'CDI',phone:'+225 07 11 00 07',email:'',actif:true},
-    {id:'e8', nom:'KOUAMÉ Sylvestre',         poste:'Ouvrier conditionnement',   dept:'Production',    salaire:160000, dateEntree:'2023-01-09',contrat:'CDI',phone:'+225 07 11 00 08',email:'',actif:true},
-    {id:'e9', nom:'BAMBA Mariam',             poste:'Responsable Qualité/HACCP', dept:'Qualité',       salaire:320000, dateEntree:'2022-09-01',contrat:'CDI',phone:'+225 07 11 00 09',email:'qualite@foaniservice.ci',actif:true},
-    {id:'e10',nom:'KOFFI Edmond',             poste:'Technicien Maintenance',    dept:'Maintenance',   salaire:220000, dateEntree:'2023-04-01',contrat:'CDI',phone:'+225 07 11 00 10',email:'',actif:true},
-    {id:'e11',nom:'ASSI Roseline',            poste:'Comptable',                 dept:'Finance',       salaire:300000, dateEntree:'2022-02-01',contrat:'CDI',phone:'+225 07 11 00 11',email:'compta@foaniservice.ci',actif:true},
-    {id:'e12',nom:'N\'GORAN Pascal',          poste:'Livreur Tricycle',          dept:'Logistique',    salaire:180000, dateEntree:'2023-06-01',contrat:'CDD',phone:'+225 07 11 00 12',email:'',actif:true}
-  ];
-
-  // ══════════════════════════════════════════
-  // COMMANDES
-  // ══════════════════════════════════════════
-  DB.cmds=[
-    {id:'cm1',ref:'CMD-2026-0041',cid:'c9',date:_dp(1),  statut:'ship',status:'ship',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:150,pu:2800},{artId:'art5',nom:'Poulet vidé',qte:80,pu:4500}],note:'Livraison Vridi 7h. 3 sites.',delivStep:1,  montant:150*2800+80*4500,total:150*2800+80*4500},
-    {id:'cm2',ref:'CMD-2026-0042',cid:'c7',date:_dp(2),  statut:'wait',status:'wait',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:80,pu:2800},{artId:'art2',nom:'Œuf plateau L (30)',qte:40,pu:3200}],note:'Rayon frais. Étiquetage DLC requis.',delivStep:0,montant:80*2800+40*3200,total:80*2800+40*3200},
-    {id:'cm3',ref:'CMD-2026-0043',cid:'c1',date:_dp(3),  statut:'done',status:'done',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:200,pu:2800},{artId:'art10',nom:'Gésiers kg',qte:30,pu:1100}],note:'Livraison cantine SODECI OK.',delivStep:3,montant:200*2800+30*1100,total:200*2800+30*1100},
-    {id:'cm4',ref:'CMD-2026-0044',cid:'c3',date:_dp(3),  statut:'done',status:'done',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:120,pu:2800},{artId:'art5',nom:'Poulet vidé',qte:40,pu:4500}],note:'Livraison école Ste-Marie. OK.',delivStep:3,montant:120*2800+40*4500,total:120*2800+40*4500},
-    {id:'cm5',ref:'CMD-2026-0045',cid:'c5',date:_dp(4),  statut:'done',status:'done',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:500,pu:2580},{artId:'art2',nom:'Œuf plateau L (30)',qte:200,pu:2950}],note:'Grossiste Port-Bouët. Tarif -8%.',delivStep:3,montant:500*2580+200*2950,total:500*2580+200*2950},
-    {id:'cm6',ref:'CMD-2026-0046',cid:'c6',date:_dp(5),  statut:'done',status:'done',  lignes:[{artId:'art2',nom:'Œuf plateau L (30)',qte:30,pu:3200},{artId:'art7',nom:'Pintade entière',qte:8,pu:7500}],note:'Cuisine Ibis 6h30. Réceptionné.',delivStep:3,montant:30*3200+8*7500,total:30*3200+8*7500},
-    {id:'cm7',ref:'CMD-2026-0047',cid:'c4',date:_dp(1),  statut:'ship',status:'ship',  lignes:[{artId:'art5',nom:'Poulet vidé',qte:25,pu:4500},{artId:'art12',nom:'Ailes marinées kg',qte:15,pu:1900}],note:'Livraison cuisine Palais du Goût 10h.',delivStep:1,montant:25*4500+15*1900,total:25*4500+15*1900},
-    {id:'cm8',ref:'CMD-2026-0048',cid:'c2',date:_dp(2),  statut:'wait',status:'wait',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:100,pu:2800},{artId:'art9',nom:'Carcasse kg',qte:40,pu:900}],note:'CHU Yopougon — Bon de commande BC-2026-118.',delivStep:0,montant:100*2800+40*900,total:100*2800+40*900},
-    {id:'cm9',ref:'CMD-2026-0049',cid:'c8',date:_dp(1),  statut:'ship',status:'ship',  lignes:[{artId:'art11',nom:'Foies kg',qte:10,pu:1300},{artId:'art10',nom:'Gésiers kg',qte:10,pu:1100}],note:'Maquis Niangon. Cash à livraison.',delivStep:2,montant:10*1300+10*1100,total:10*1300+10*1100},
-    {id:'cm10',ref:'CMD-2026-0050',cid:'c9',date:_d(1),  statut:'wait',status:'wait',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:200,pu:2800},{artId:'art5',nom:'Poulet vidé',qte:100,pu:4500},{artId:'art13',nom:'Œuf dur emballé',qte:500,pu:200}],note:'Commande prévisionnelle Sodexo S+1.',delivStep:0,montant:200*2800+100*4500+500*200,total:200*2800+100*4500+500*200},
-    {id:'cm11',ref:'CMD-2026-0051',cid:'c10',date:_dp(7),statut:'done',status:'done',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:300,pu:2800}],note:'Prison MACA. Bon préfectoral.',delivStep:3,montant:300*2800,total:300*2800},
-    {id:'cm12',ref:'CMD-2026-0052',cid:'c11',date:_dp(5),statut:'done',status:'done',  lignes:[{artId:'art1',nom:'Œuf plateau M (30)',qte:80,pu:2800},{artId:'art2',nom:'Œuf plateau L (30)',qte:20,pu:3200}],note:'Leader Price Yopougon. Mercredi.',delivStep:3,montant:80*2800+20*3200,total:80*2800+20*3200}
-  ];
-
-  // ══════════════════════════════════════════
-  // DÉPÔTS / ENTREPÔTS
-  // ══════════════════════════════════════════
-  DB.depots=[
-    {id:'dp1',nom:'Entrepôt principal Yopougon',         type:'mp', capacite:500, unite:'m²', resp:'Gnagnon Philomène',  actif:true, temp:'Ambiante 18-25°C'},
-    {id:'dp2',nom:'Chambre froide positive (0-4°C)',      type:'pf', capacite:80,  unite:'m²', resp:'Bamba Mariam',       actif:true, temp:'0 à +4°C'},
-    {id:'dp3',nom:'Zone Conditionnement & Emballage',     type:'pf', capacite:120, unite:'m²', resp:'Kouamé Sylvestre',   actif:true, temp:'Ambiante'},
-    {id:'dp4',nom:'Aire d\'expédition chargement',        type:'expedition',capacite:200,unite:'m²',resp:'Diomandé Lacina',actif:true,temp:'Ambiante'}
-  ];
-
-  // ══════════════════════════════════════════
-  // LOTS & TRAÇABILITÉ
-  // ══════════════════════════════════════════
-  DB.lots=[
-    {id:'lt1',numero:'LOT-FOANI-'+y2+'-001',artId:'art1',depotId:'dp2',qteInitiale:600,qteDispo:420,dateFab:_dp(2),dateExp:_d(10),fournId:'f5',coutUnitaire:2200,ref:'BC-'+y2+'-041',statut:'actif',created:new Date(_dp(2)).toISOString()},
-    {id:'lt2',numero:'LOT-FOANI-'+y2+'-002',artId:'art2',depotId:'dp2',qteInitiale:350,qteDispo:280,dateFab:_dp(2),dateExp:_d(10),fournId:'f5',coutUnitaire:2600,ref:'BC-'+y2+'-042',statut:'actif',created:new Date(_dp(2)).toISOString()},
-    {id:'lt3',numero:'LOT-FOANI-'+y2+'-003',artId:'art5',depotId:'dp2',qteInitiale:120,qteDispo:56, dateFab:_dp(1),dateExp:_d(2), fournId:'f5',coutUnitaire:3200,ref:'BC-'+y2+'-043',statut:'actif',created:new Date(_dp(1)).toISOString()},
-    {id:'lt4',numero:'LOT-FOANI-'+y2+'-004',artId:'art3',depotId:'dp2',qteInitiale:100,qteDispo:85, dateFab:_dp(3),dateExp:_d(12),fournId:'f5',coutUnitaire:3500,ref:'BC-'+y2+'-044',statut:'actif',created:new Date(_dp(3)).toISOString()},
-    {id:'lt5',numero:'LOT-FOANI-'+y2+'-005',artId:'mp1', depotId:'dp1',qteInitiale:200,qteDispo:140,dateFab:_dp(30),dateExp:_d(60),fournId:'f1',coutUnitaire:18500,ref:'BC-'+y2+'-020',statut:'actif',created:new Date(_dp(30)).toISOString()},
-    {id:'lt6',numero:'LOT-FOANI-'+y2+'-006',artId:'mp3', depotId:'dp1',qteInitiale:150,qteDispo:110,dateFab:_dp(25),dateExp:_d(65),fournId:'f1',coutUnitaire:19200,ref:'BC-'+y2+'-021',statut:'actif',created:new Date(_dp(25)).toISOString()},
-    {id:'lt7',numero:'LOT-FOANI-'+y2+'-007',artId:'mp8', depotId:'dp1',qteInitiale:5000,qteDispo:2400,dateFab:_dp(60),dateExp:_d(300),fournId:'f4',coutUnitaire:180,ref:'BC-'+y2+'-022',statut:'actif',created:new Date(_dp(60)).toISOString()}
-  ];
-
-  // ══════════════════════════════════════════
-  // ORDRES DE FABRICATION / CONDITIONNEMENT
-  // ══════════════════════════════════════════
-  DB.ofs=[
-    {id:'of1',ref:'OF-'+y2+'-001',artId:'art1',articleId:'art1',qte:2000,qteProd:1800,qteLivree:1380,dureePrevue:5,dureeReelle:5,avancement:90,statut:'en_cours',priorite:'haute',dateDebut:_dp(4),dateFin:_d(1),dateReelleDebut:_dp(4),note:'Conditionnement plateau M — commandes Sodexo+SODECI'},
-    {id:'of2',ref:'OF-'+y2+'-002',artId:'art13',articleId:'art13',qte:2000,qteProd:2000,qteLivree:1500,dureePrevue:3,dureeReelle:3,avancement:100,statut:'termine',priorite:'normale',dateDebut:_dp(10),dateFin:_dp(7),dateReelleDebut:_dp(10),dateReelleFin:_dp(7),note:'Œuf dur emballé — commande Sodexo livrée'},
-    {id:'of3',ref:'OF-'+y2+'-003',artId:'art12',articleId:'art12',qte:200,qteProd:120,qteLivree:60,dureePrevue:2,dureeReelle:3,avancement:60,statut:'en_cours',priorite:'normale',dateDebut:_dp(2),dateFin:_d(1),dateReelleDebut:_dp(2),note:'Ailes marinées — restaurants Cocody'},
-    {id:'of4',ref:'OF-'+y2+'-004',artId:'art1',articleId:'art1',qte:3000,qteProd:0,qteLivree:0,dureePrevue:7,avancement:0,statut:'planifie',priorite:'haute',dateDebut:_d(2),dateFin:_d(8),note:'Conditionnement préventif — contrat Sodexo S+1'},
-    {id:'of5',ref:'OF-'+y2+'-005',artId:'art5',articleId:'art5',qte:300,qteProd:0,qteLivree:0,dureePrevue:3,avancement:0,statut:'planifie',priorite:'normale',dateDebut:_d(3),dateFin:_d(5),note:'Poulet vidé — commandes hôtels et maquis S+1'}
-  ];
-
-  // ══════════════════════════════════════════
-  // FACTURES
-  // ══════════════════════════════════════════
-  DB.factures=[
-    {id:'fac1',ref:'FAC-'+y2+'-0031',cid:'c9', cmdId:'cm3', lignes:[{artId:'art1',nom:'Œuf plateau M',qte:200,pu:2800},{artId:'art10',nom:'Gésiers',qte:30,pu:1100}],ht:Math.round((200*2800+30*1100)/1.18),tauxTVA:0,ttc:200*2800+30*1100,total:200*2800+30*1100,date:_dp(3),echeance:_d(27),statut:'emise',note:'Facturation mensuelle Sodexo — mars 2026.'},
-    {id:'fac2',ref:'FAC-'+y2+'-0032',cid:'c1', cmdId:'cm3', lignes:[{artId:'art1',nom:'Œuf plateau M',qte:200,pu:2800}],ht:200*2800,tauxTVA:0,ttc:200*2800,total:200*2800,date:_dp(5),echeance:_d(10),statut:'payee',datePaiement:_dp(1),note:'Payée Wave — cantine SODECI.'},
-    {id:'fac3',ref:'FAC-'+y2+'-0033',cid:'c3', cmdId:'cm4', lignes:[{artId:'art1',nom:'Œuf plateau M',qte:120,pu:2800},{artId:'art5',nom:'Poulet vidé',qte:40,pu:4500}],ht:120*2800+40*4500,tauxTVA:0,ttc:120*2800+40*4500,total:120*2800+40*4500,date:_dp(3),echeance:_d(12),statut:'emise',note:'École Ste-Marie — règlement 15j.'},
-    {id:'fac4',ref:'FAC-'+y2+'-0034',cid:'c5', cmdId:'cm5', lignes:[{artId:'art1',nom:'Œuf plateau M',qte:500,pu:2580},{artId:'art2',nom:'Œuf plateau L',qte:200,pu:2950}],ht:500*2580+200*2950,tauxTVA:0,ttc:500*2580+200*2950,total:500*2580+200*2950,date:_dp(4),echeance:_d(26),statut:'retard',note:'Grossiste Port-Bouët. Retard 4 jours — relance envoyée.'},
-    {id:'fac5',ref:'FAC-'+y2+'-0035',cid:'c10',cmdId:'cm11',lignes:[{artId:'art1',nom:'Œuf plateau M',qte:300,pu:2800}],ht:300*2800,tauxTVA:0,ttc:300*2800,total:300*2800,date:_dp(7),echeance:_d(53),statut:'emise',note:'Prison MACA — délai paiement public 60j.'},
-    {id:'fac6',ref:'FAC-'+y2+'-0036',cid:'c7', cmdId:'cm2', lignes:[{artId:'art1',nom:'Œuf plateau M',qte:80,pu:2800},{artId:'art2',nom:'Œuf plateau L',qte:40,pu:3200}],ht:80*2800+40*3200,tauxTVA:0,ttc:80*2800+40*3200,total:80*2800+40*3200,date:_dp(2),echeance:_d(43),statut:'brouillon',note:'CFAO — 45j net. En attente validation réception.'}
-  ];
-
-  // ══════════════════════════════════════════
-  // TRANSACTIONS FINANCIÈRES
-  // ══════════════════════════════════════════
-  DB.transactions=[
-    {id:'tr1', type:'entree',categorie:'Vente',      montant:200*2800,          date:_dp(1), ref:'FAC-'+y2+'-0032',  note:'Règlement SODECI cantine — Wave',         mode:'wave'},
-    {id:'tr2', type:'entree',categorie:'Vente',      montant:10*1300+10*1100,   date:_dp(1), ref:'CMD-2026-0049',    note:'Cash maquis Chez Tantine Lydie',           mode:'especes'},
-    {id:'tr3', type:'sortie',categorie:'Achat MP',   montant:50*18500,          date:_dp(3), ref:'BC-'+y2+'-051',    note:'Aliment croissance SIPRA — 50 sacs',       mode:'virement'},
-    {id:'tr4', type:'sortie',categorie:'Transport',  montant:85000,             date:_dp(2), ref:'NOTE-TRANS-22',    note:'Gasoil camion réfrigéré — livraisons semaine', mode:'especes'},
-    {id:'tr5', type:'entree',categorie:'Vente',      montant:120*2800+40*4500,  date:_dp(3), ref:'FAC-'+y2+'-0033',  note:'Acompte 50% Groupe Scolaire Ste-Marie — Orange Money', mode:'orange_money'},
-    {id:'tr6', type:'sortie',categorie:'Salaires',   montant:3478000,           date:_dp(5), ref:'PAIE-MARS-2026',   note:'Paie mars 2026 — 12 employés',            mode:'virement'},
-    {id:'tr7', type:'sortie',categorie:'Achat MP',   montant:8*8500,            date:_dp(7), ref:'BC-'+y2+'-048',    note:'Vaccins Newcastle LAPROVET — 8 flacons',   mode:'mobile_money'},
-    {id:'tr8', type:'entree',categorie:'Vente',      montant:500*2580+200*2950, date:_dp(4), ref:'FAC-'+y2+'-0034',  note:'Acompte Port-Bouët — virement partiel',    mode:'virement'},
-    {id:'tr9', type:'sortie',categorie:'Maintenance',montant:45000,             date:_dp(6), ref:'BON-MAI-014',      note:'Réparation chambre froide — joint porte',  mode:'especes'},
-    {id:'tr10',type:'entree',categorie:'Vente',      montant:30*3200+8*7500,    date:_dp(5), ref:'FAC-IBM-028',      note:'Règlement Hôtel Ibis — MTN MoMo',         mode:'mtn'}
-  ];
-
-  // ══════════════════════════════════════════
-  // CONTRÔLES QUALITÉ
-  // ══════════════════════════════════════════
-  DB.controles=[
-    {id:'cq1',type:'reception',lotId:'lt1',date:_dp(2),agent:'Bamba Mariam',statut:'conforme',   parametres:{temperature:'3°C',aspect:'Normal',dlc:'OK',rupture:0},note:'LOT-001 œufs M — Conforme. Température chaîne froide respectée.'},
-    {id:'cq2',type:'reception',lotId:'lt3',date:_dp(1),agent:'Bamba Mariam',statut:'conforme',   parametres:{temperature:'2°C',aspect:'Normal',poids:'2.18kg moy.',evisceration:'Complète'},note:'Poulet vidé AGRIFERME — Conforme HACCP.'},
-    {id:'cq3',type:'production',ofId:'of1', date:_dp(3),agent:'Bamba Mariam',statut:'conforme',  parametres:{cassés:12,sales:4,tauxRej:'0.9%'},note:'Conditionnement plateau M — Taux casse 0.9% (seuil 2%). OK.'},
-    {id:'cq4',type:'reception',lotId:'lt4',date:_dp(3),agent:'N\'Goran Pascal',statut:'conforme',parametres:{temperature:'2°C',aspect:'Normal',tauxFertile:'N/A'},note:'Œufs de caille — Aspect et fraîcheur conformes.'},
-    {id:'cq5',type:'hygiene',  lotId:'',   date:_dp(7),agent:'Bamba Mariam',statut:'non_conforme',parametres:{zoneTest:'Chambre froide',coliformes:'>10',entero:'Absent'},note:'NC-007 — Nettoyage insuffisant chambre froide. Action corrective : nettoyage renforcé Virkon. Clôturée.'}
-  ];
-
-  // ══════════════════════════════════════════
-  // ACTIVITÉS CRM
-  // ══════════════════════════════════════════
-  DB.acts=[
-    {id:'ac1',type:'appel',   titre:'Relance facture retard Port-Bouët',         cid:'c5', date:_dp(1),statut:'fait',    commercialId:'aminata',notes:'M. Kouassi promet virement avant vendredi.'},
-    {id:'ac2',type:'rdv',     titre:'Présentation gamme Radisson Blu',           cid:'p1', date:_d(4), statut:'planifie', commercialId:'kofi',   notes:'Apporter échantillons œufs caille + pintade. Préparer brochure HACCP.'},
-    {id:'ac3',type:'email',   titre:'Envoi dossier technique HACCP — KFC CI',   cid:'p2', date:_dp(2),statut:'fait',    commercialId:'kofi',   notes:'Dossier complet envoyé. Attente date audit.'},
-    {id:'ac4',type:'commande',titre:'Commande Sodexo S+1 confirmée',             cid:'c9', date:_dp(1),statut:'fait',    commercialId:'aminata',notes:'CMD-2026-0050 enregistrée. Préparer OF conditionnement.'},
-    {id:'ac5',type:'rdv',     titre:'Visite site NSIA — présentation offre',     cid:'l3', date:_d(2), statut:'planifie', commercialId:'aminata',notes:'Réunion DRH + DAF. Amener échantillons et grille tarifaire.'},
-    {id:'ac6',type:'appel',   titre:'Qualification lead Armée de Terre',         cid:'l2', date:_dp(1),statut:'fait',    commercialId:'kofi',   notes:'Contact obtenu. RDV intendance le 28/04.'}
-  ];
-
-  // ══════════════════════════════════════════
-  // DEVIS
-  // ══════════════════════════════════════════
-  DB.devis=[
-    {id:'dv1',ref:'DV-'+y2+'-0011',cid:'c9', objet:'Contrat cadre Sodexo 2026-2027 — Œufs + Volaille',
-     lignes:[{artId:'art1',nom:'Œuf plateau M',qte:7200,pu:2800},{artId:'art5',nom:'Poulet vidé',qte:4800,pu:4500}],
-     remise:7,total:Math.round((7200*2800+4800*4500)*0.93),validite:_d(30),statut:'envoye',
-     notes:'Tarif contrat annuel -7%. Révision possible selon cours matières premières.',commercialId:'kofi',date:_dp(8)},
-    {id:'dv2',ref:'DV-'+y2+'-0012',cid:'p2', objet:'Fourniture poulet vidé standard KFC — 500 pièces/semaine',
-     lignes:[{artId:'art5',nom:'Poulet vidé',qte:2000,pu:4200}],
-     remise:5,total:Math.round(2000*4200*0.95),validite:_d(21),statut:'envoye',
-     notes:'Prix conditionné à certification HACCP. Audit 02/05.',commercialId:'kofi',date:_dp(5)},
-    {id:'dv3',ref:'DV-'+y2+'-0013',cid:'l3', objet:'Fourniture œufs + volaille Cantines NSIA',
-     lignes:[{artId:'art1',nom:'Œuf plateau M',qte:1200,pu:2800},{artId:'art5',nom:'Poulet vidé',qte:600,pu:4500}],
-     remise:5,total:Math.round((1200*2800+600*4500)*0.95),validite:_d(14),statut:'brouillon',
-     notes:'En attente accord DRH NSIA.',commercialId:'aminata',date:_dp(3)},
-    {id:'dv4',ref:'DV-'+y2+'-0014',cid:'p1', objet:'Fourniture Radisson Blu — Œufs caille + Pintade',
-     lignes:[{artId:'art3',nom:'Œuf caille boîte 100',qte:50,pu:5000},{artId:'art7',nom:'Pintade entière',qte:20,pu:7500}],
-     remise:0,total:50*5000+20*7500,validite:_d(30),statut:'brouillon',
-     notes:'À préparer pour RDV 25/04.',commercialId:'kofi',date:_dp(1)}
-  ];
-
-  // ══════════════════════════════════════════
-  // JOURNAL (audit trail)
-  // ══════════════════════════════════════════
-  DB.journal=[
-    {ts:new Date(_dp(1)).toISOString(),action:'livraison',type:'cmd',ref:'CMD-2026-0041',user:'diomande',detail:'Camion frigorifique parti — 3 sites Sodexo Vridi'},
-    {ts:new Date(_dp(2)).toISOString(),action:'create',type:'cmd', ref:'CMD-2026-0042',user:'aminata',  detail:'Commande CFAO créée — 120 plateaux'},
-    {ts:new Date(_dp(2)).toISOString(),action:'paiement',type:'facture',ref:'FAC-'+y2+'-0032',user:'assi',detail:'Règlement SODECI reçu — 560 000 F Wave'},
-    {ts:new Date(_dp(3)).toISOString(),action:'nc',type:'qualite',ref:'NC-FOANI-007',user:'bamba',detail:'Non-conformité chambre froide — action corrective déclenchée'},
-    {ts:new Date(_dp(4)).toISOString(),action:'reception',type:'stock',ref:'BC-'+y2+'-041',user:'gnagnon',detail:'Réception 600 plateaux œufs M — AGRIFERME'},
-    {ts:new Date(_dp(5)).toISOString(),action:'create',type:'of',ref:'OF-'+y2+'-001',user:'admin',detail:'OF conditionnement plateau M lancé — 2000 unités'}
-  ];
-
-  // ══════════════════════════════════════════
-  // NOTIFICATIONS
-  // ══════════════════════════════════════════
-  DB.notifications=[
-    {id:'n1',type:'alert',  titre:'DLC critique — Poulet vidé',       message:'LOT-FOANI-003 expire dans 2 jours ('+_d(2)+'). 56 pièces en stock.',   date:new Date().toISOString(),lu:false,priorite:'haute'},
-    {id:'n2',type:'alert',  titre:'Facture en retard — Port-Bouët',   message:'FAC-'+y2+'-0034 échue depuis 4 jours. Montant: 2 480 000 F. Relancer.', date:new Date().toISOString(),lu:false,priorite:'haute'},
-    {id:'n3',type:'info',   titre:'Commande Sodexo S+1 reçue',        message:'CMD-2026-0050 enregistrée — 900 000 F. Préparer conditionnement.',      date:new Date().toISOString(),lu:false,priorite:'normale'},
-    {id:'n4',type:'warning',titre:'Stock œufs caille sous seuil',     message:'Art PF-003 : 85 boîtes en stock. Seuil min: 30. Commander AGRIFERME.', date:new Date().toISOString(),lu:false,priorite:'normale'},
-    {id:'n5',type:'success',titre:'Paiement reçu — SODECI',          message:'FAC-'+y2+'-0032 soldée. 560 000 F encaissés via Wave.',                 date:new Date().toISOString(),lu:true, priorite:'normale'}
-  ];
-
-  // ══════════════════════════════════════════
-  // MARQUEUR — ne pas re-seeder
-  // ══════════════════════════════════════════
-  DB._foani_seeded = true;
-  DB._demo_cleared = false;
-
-  try{localStorage.setItem('sanixfactory_db', JSON.stringify(DB));}catch(e){}
-
-  console.log('%c[SANIX OpusFab] ✅ BASE FOANI SERVICE chargée — '
-    +DB.contacts.length+' contacts · '
-    +DB.articles.length+' articles · '
-    +DB.cmds.length+' commandes · '
-    +DB.employes.length+' employés · '
-    +DB.factures.length+' factures · '
-    +DB.ofs.length+' OF',
-    'color:#C8860A;font-weight:900;font-size:13px;background:#fff7e6;padding:4px 8px;border-radius:4px;');
-
-})(); // fin seedFOANI
+  CLES.forEach(function(k){ if (!Array.isArray(DB[k])) DB[k] = []; });
+  if (!DB.wf_seuils || !DB.wf_seuils.length) DB.wf_seuils = [
+    {id:'s1',niveau:1,plafond:500000,approbateur:'Chef de service',delai:24},
+    {id:'s2',niveau:2,plafond:5000000,approbateur:'Direction financière',delai:48},
+    {id:'s3',niveau:3,plafond:99999999,approbateur:'Direction générale',delai:72}];
+  if (!DB.frais_cat || !DB.frais_cat.length) DB.frais_cat = [
+    {id:'fc1',nom:'Transport',ico:'🚗',plafond:0},{id:'fc2',nom:'Repas',ico:'🍽️',plafond:0},
+    {id:'fc3',nom:'Hébergement',ico:'🏨',plafond:0},{id:'fc4',nom:'Carburant',ico:'⛽',plafond:0},
+    {id:'fc5',nom:'Autre',ico:'📋',plafond:0}];
+  if (!DB.exercices || !DB.exercices.length) {
+    var an = new Date().getFullYear();
+    DB.exercices = [{id:'ex'+an,annee:an,statut:'ouvert',dateOuv:an+'-01-01',dateClt:null}];
+  }
+  DB[MARQUEUR] = true;
+})();
 
 
 /* ── Init critique — doit être APRÈS la définition de DB ── */
@@ -20209,7 +19901,7 @@ function renderMap(filter){
   const toY = lat => H - ((lat-latMin)/(latMax-latMin))*H;
   const depotX = toX(-4.030), depotY = toY(5.355);
 
-  let html = `<div class="map-pin" style="left:${depotX}px;top:${depotY}px;z-index:20;" onclick="showMapInfo('Dépôt principal','🏭 Zone Industrielle, Songon · Point de départ',null,'depot')">
+  let html = `<div class="map-pin" style="left:${depotX}px;top:${depotY}px;z-index:20;" onclick="showMapInfo('Dépôt principal','🏭 Adresse du dépôt à renseigner',null,'depot')">
     <div class="pin-marker depot"><i class="fa fa-warehouse" style="font-size:12px;"></i></div>
     <div class="pin-spike" style="background:var(--R);"></div>
     <div class="pin-label">Dépôt principal</div>
@@ -20593,7 +20285,7 @@ window.reoptimize = function(){
   if(useGps){
     depot = {id:'userpos', name:'Ma position', addr:'Position GPS actuelle', lat:_circuitUserPos.lat, lng:_circuitUserPos.lng, status:'depot', ca:0};
   } else {
-    depot = {id:'depot', name:'Dépôt principal', addr:'Zone Industrielle, Songon', lat:5.355, lng:-4.030, status:'depot', ca:0};
+    depot = {id:'depot', name:'Dépôt principal', addr:'', lat:5.355, lng:-4.030, status:'depot', ca:0};
   }
 
   // Sélectionner les commandes selon le mode
@@ -20685,7 +20377,7 @@ window.reoptimize = function(){
 
   var etapes = [];
   var depotLabel = useGps ? '📍 Votre position' : 'Dépôt principal';
-  var depotAddr  = useGps ? (_circuitUserPos.lat.toFixed(4)+', '+_circuitUserPos.lng.toFixed(4)) : 'Zone Industrielle, Songon';
+  var depotAddr  = useGps ? (_circuitUserPos.lat.toFixed(4)+', '+_circuitUserPos.lng.toFixed(4)) : '';
   etapes.push({name:depotLabel, addr:depotAddr, dist:'—', time:hdRef, status:'depot', col: useGps?'#3AAA35':'var(--B)', amt:0, note:''});
 
   var cumDist = 0;
@@ -20824,7 +20516,7 @@ function _renderCircuitSvg(route, depotOverride, useGps){
   _lcDepotMarker.bindPopup(
     '<div class="circ-popup-inner">'
     +'<div class="circ-popup-name">'+(useGps?'📍 Départ GPS':'🏭 Dépôt principal')+'</div>'
-    +'<div class="circ-popup-addr">'+(useGps?depotLat.toFixed(4)+', '+depotLng.toFixed(4):'Zone Industrielle, Songon')+'</div>'
+    +'<div class="circ-popup-addr">'+(useGps?depotLat.toFixed(4)+', '+depotLng.toFixed(4):'')+'</div>'
     +'<span class="circ-popup-badge '+(useGps?'done':'wait')+'">'+(useGps?'Position GPS':'Point de départ')+'</span>'
     +'</div>',
     { className:'circ-leaflet-popup', maxWidth:200 }
@@ -25287,8 +24979,8 @@ function applyCompanyConfig(){
   if(loginTag) loginTag.textContent=slogan||'Votre logiciel de gestion';
   var loginBrand=document.getElementById('login-brand-txt');
   if(loginBrand) loginBrand.textContent=nom;
-  // Titre page
-  document.title=nom+' — SANIX OpusFab';
+  // Titre page — sans doublon tant que la société n'est pas renseignée
+  document.title = (c.nom && c.nom.trim()) ? (c.nom.trim()+' — SANIX OpusFab') : 'SANIX OpusFab ERP 2026';
   // Autres éléments dynamiques
   document.querySelectorAll('.sb-logo-name,.company-name').forEach(el=>el.textContent=nom);
   // Logo initiales
@@ -28301,31 +27993,7 @@ if(!DB.conges) DB.conges=[];
 if(!DB.evaluations) DB.evaluations=[];
 
 /* ── Données de démo ── */
-(function seedRH(){
-  if(DB.employes.length>0) return;
-  const y=new Date().getFullYear();
-  DB.employes=[
-    {id:'em1',prenom:'Kouamé',nom:'Konan',matricule:'EMP-001',phone:'07 11 22 33 44',email:'k.konan@ivopack.ci',poste:'Chef de production',dept:'production',entree:(y-3)+'-01-15',contrat:'cdi',salaire:380000,cnps:3.2,its:2.5,statut:'actif',notes:'Responsable atelier A',competences:'Gestion production, ISO 9001, Excel',langues:'Français, Dioula',niveau:'bts',photo:'',congesDroit:26,congesSolde:18,paieMode:'virement',skillTech:4,skillPonc:5,skillTeam:4},
-    {id:'em2',prenom:'Adjoua',nom:'Yao',matricule:'EMP-002',phone:'05 22 33 44 55',email:'a.yao@ivopack.ci',poste:'Opératrice machine',dept:'production',entree:(y-2)+'-03-01',contrat:'cdi',salaire:185000,cnps:3.2,its:1.5,statut:'actif',notes:'',competences:'Conduite presse, contrôle qualité',langues:'Français, Baoulé',niveau:'cap',photo:'',congesDroit:26,congesSolde:22,paieMode:'mobile',skillTech:3,skillPonc:4,skillTeam:5},
-    {id:'em3',prenom:'Bakary',nom:'Diallo',matricule:'EMP-003',phone:'01 33 44 55 66',email:'b.diallo@ivopack.ci',poste:'Chauffeur-livreur',dept:'logistique',entree:(y-1)+'-06-01',contrat:'cdi',salaire:155000,cnps:3.2,its:1.5,statut:'actif',notes:'Permis PL',competences:'Conduite PL, gestion livraisons',langues:'Français, Dioula, Malinké',niveau:'bac',photo:'',congesDroit:26,congesSolde:20,paieMode:'especes',skillTech:3,skillPonc:3,skillTeam:4},
-    {id:'em4',prenom:'Aminata',nom:'Coulibaly',matricule:'EMP-004',phone:'07 44 55 66 77',email:'a.coulibaly@ivopack.ci',poste:'Comptable',dept:'administration',entree:(y-4)+'-03-01',contrat:'cdi',salaire:290000,cnps:3.2,its:3.5,statut:'conge',notes:'Congé annuel en cours',competences:'Comptabilité SYSCOA, OHADA, Sage',langues:'Français, Anglais',niveau:'licence',photo:'',congesDroit:26,congesSolde:5,paieMode:'virement',skillTech:5,skillPonc:4,skillTeam:4}
-  ];
-  // Pointages démo
-  const t=today();
-  DB.pointages=[
-    {id:'pt1',empId:'em1',date:t,arrivee:'07:45',depart:'17:30',notes:''},
-    {id:'pt2',empId:'em2',date:t,arrivee:'08:02',depart:'17:15',notes:''},
-    {id:'pt3',empId:'em3',date:t,arrivee:'07:30',depart:'18:45',notes:'Livraisons tardives'},
-  ];
-  // Congés démo
-  DB.conges=[
-    {id:'cg1',empId:'em4',type:'conge_annuel',debut:y+'-03-10',fin:y+'-03-25',jours:12,statut:'approuve',motif:'Congé annuel planifié'},
-  ];
-  // Évaluations démo
-  DB.evaluations=[
-    {id:'ev1',empId:'em1',periode:'Annuel '+(y-1),evaluateur:'Direction',noteTech:4,notePonc:5,noteTeam:4,total:4.3,pointsForts:'Très bonne maîtrise technique, leadership naturel',axes:'Améliorer la communication écrite',objectifs:'Former 2 nouveaux opérateurs sur le semestre',date:(y-1)+'-12-15'},
-  ];
-})();
+/* Aucun employé de démonstration : le personnel est saisi par le client. */
 
 /* ── filterRH ── */
 window.filterRH=function(v,el){
@@ -33065,7 +32733,7 @@ if(!DB.contrats) DB.contrats = [];
       partieNom:'Dupont & Fils', objet:'Fourniture annuelle emballages alimentaires',
       categorie:'cadre', statut:'actif',
       debut:y+'-01-01', fin:y+'-12-31', valeur:2400000, freq:'mensuel',
-      renouvellement:'oui', preavis:30, resp:'Marc Kader',
+      renouvellement:'oui', preavis:30, resp:'',
       notes:'Engagement minimum 200 000 F/mois. Pénalité 5% si rupture anticipée.',
       created:y+'-01-01'
     },
@@ -33074,7 +32742,7 @@ if(!DB.contrats) DB.contrats = [];
       partieNom:'Hôtel Le Central', objet:'Approvisionnement emballages hôteliers personnalisés',
       categorie:'fourniture', statut:'actif',
       debut:y+'-02-01', fin:y+'-07-31', valeur:900000, freq:'trimestriel',
-      renouvellement:'negociation', preavis:45, resp:'Sophie Diallo',
+      renouvellement:'negociation', preavis:45, resp:'',
       notes:'Livraison sous 7 jours. Emballages aux couleurs de l\'hôtel.',
       created:y+'-02-01'
     },
@@ -33092,7 +32760,7 @@ if(!DB.contrats) DB.contrats = [];
       partieNom:'Boulangerie Martin', objet:'Boîtes carton standard — contrat annuel',
       categorie:'fourniture', statut:'expire',
       debut:(y-1)+'-01-01', fin:(y-1)+'-12-31', valeur:540000, freq:'mensuel',
-      renouvellement:'oui', preavis:30, resp:'Marc Kader',
+      renouvellement:'oui', preavis:30, resp:'',
       notes:'À renouveler avant fin janvier '+y+'.',
       created:(y-1)+'-01-01'
     }
@@ -34288,7 +33956,7 @@ var IMPORT_TYPES = {
     desc:'Liste du personnel pour le module RH',
     dbKey:'employes', artType:null,
     cols:['Prénom*','Nom*','Téléphone','Email','Poste / Fonction*','Département','Statut contrat (cdi/cdd/journalier)','Salaire brut (F CFA)','Date entrée (JJ/MM/AAAA)','Matricule','N° CNPS'],
-    exemple:'Kouamé;Diallo;07 07 07 07 07;k.diallo@ivopack.ci;Chef de production;production;cdi;350000;01/03/2023;EMP-001;1234567890',
+    exemple:'Prénom;Nom;07 00 00 00 00;prenom.nom@exemple.ci;Chef de production;production;cdi;350000;01/03/2023;EMP-001;1234567890',
     mandatoryIdx:[0,1,4]
   },
   nomenclatures: {
@@ -35554,8 +35222,8 @@ if(!DB.campagnes) DB.campagnes=[];
   if(DB.campagnes.length>0) return;
   var y=new Date().getFullYear();
   DB.campagnes=[
-    {id:'cp1',nom:'Promo emballages Q1 '+y,type:'whatsapp',statut:'terminee',debut:y+'-01-10',fin:y+'-01-31',budget:50000,cible:'clients',objectif:'50 commandes',message:'Bonne année ! Profitez de -10% sur nos emballages ce mois-ci.',resp:'Marc Kader',envoyes:48,reponses:12,conversions:8,created:y+'-01-05'},
-    {id:'cp2',nom:'Relance prospects inactifs',type:'email',statut:'active',debut:y+'-02-01',fin:y+'-03-31',budget:20000,cible:'inactifs',objectif:'Réactiver 10 clients',message:'Nous avons de nouvelles gammes d\'emballages. Revenez nous voir !',resp:'Sophie Diallo',envoyes:32,reponses:6,conversions:2,created:y+'-01-28'},
+    {id:'cp1',nom:'Promo emballages Q1 '+y,type:'whatsapp',statut:'terminee',debut:y+'-01-10',fin:y+'-01-31',budget:50000,cible:'clients',objectif:'50 commandes',message:'Bonne année ! Profitez de -10% sur nos emballages ce mois-ci.',resp:'',envoyes:48,reponses:12,conversions:8,created:y+'-01-05'},
+    {id:'cp2',nom:'Relance prospects inactifs',type:'email',statut:'active',debut:y+'-02-01',fin:y+'-03-31',budget:20000,cible:'inactifs',objectif:'Réactiver 10 clients',message:'Nous avons de nouvelles gammes d\'emballages. Revenez nous voir !',resp:'',envoyes:32,reponses:6,conversions:2,created:y+'-01-28'},
     {id:'cp3',nom:'Lancement nouveaux produits Q2',type:'evenement',statut:'planifiee',debut:y+'-04-15',fin:y+'-04-15',budget:150000,cible:'tous',objectif:'100 participants',message:'Journée portes ouvertes IVOPACK — Découvrez nos nouvelles gammes.',resp:'Administrateur',envoyes:0,reponses:0,conversions:0,created:y+'-02-10'},
   ];
 })();
@@ -44198,7 +43866,7 @@ window.renderSoldeChart=function(){
        action:'Vérification avec le client, remplacement en cours'},
       {id:'rec2',reference:'SAV-2026-0002',clientId:'c2',objet:'Retard de livraison — 3 jours de décalage',
        date:_dp(5),priorite:'normale',statut:'resolue',
-       cmdRef:'#CMD-4425',resp:'Marc Kader',
+       cmdRef:'#CMD-4425',resp:'',
        action:'Livraison effectuée, avoir de 10% accordé'},
     ];
   }
@@ -47256,13 +46924,13 @@ window.exportToExcel = function(type){
   var data = [], filename = '', headers = [];
 
   if(type === 'contacts'){
-    filename = 'contacts_ivopack_'+_todayStr()+'.csv';
+    filename = ((typeof getCfg==='function'&&(getCfg().nom||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'))||'export')+'_contacts_'+_todayStr()+'.csv';
     headers = ['Entreprise','Contact','Téléphone','Email','Type','Secteur','CA Potentiel','Adresse'];
     data = (DB.contacts||[]).map(function(c){
       return [c.name,c.contact,c.phone,c.email||'',c.type,c.sector||'',c.ca||0,c.addr||''];
     });
   } else if(type === 'commandes'){
-    filename = 'commandes_ivopack_'+_todayStr()+'.csv';
+    filename = ((typeof getCfg==='function'&&(getCfg().nom||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'))||'export')+'_commandes_'+_todayStr()+'.csv';
     headers = ['Référence','Client','Date','Statut','Montant TTC','Commercial'];
     data = (DB.cmds||[]).map(function(c){
       var cl = (DB.contacts||[]).find(function(x){return x.id===c.cid;})||{name:'—'};
@@ -47271,26 +46939,26 @@ window.exportToExcel = function(type){
       return [c.ref,cl.name,c.date,stmap[c.status]||c.status,mt,c.commercialId||''];
     });
   } else if(type === 'leads'){
-    filename = 'leads_ivopack_'+_todayStr()+'.csv';
+    filename = ((typeof getCfg==='function'&&(getCfg().nom||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'))||'export')+'_leads_'+_todayStr()+'.csv';
     headers = ['Titre','Contact','Statut','Priorité','Montant','Date clôture','Source'];
     data = (DB.leads||[]).map(function(l){
       var cl = (DB.contacts||[]).find(function(x){return x.id===l.contactId;})||{name:'—'};
       return [l.name,cl.name,l.status,l.prio,l.amt||0,l.date||'',l.source||''];
     });
   } else if(type === 'articles'){
-    filename = 'articles_ivopack_'+_todayStr()+'.csv';
+    filename = ((typeof getCfg==='function'&&(getCfg().nom||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'))||'export')+'_articles_'+_todayStr()+'.csv';
     headers = ['Référence','Désignation','Type','Catégorie','Prix (F CFA)','Stock','Unité','Statut'];
     data = (DB.articles||[]).map(function(a){
       return [a.ref,a.name,a.type||'',a.cat||'',a.prix||0,a.stock||0,a.unit||'',a.status||''];
     });
   } else if(type === 'employes'){
-    filename = 'employes_ivopack_'+_todayStr()+'.csv';
+    filename = ((typeof getCfg==='function'&&(getCfg().nom||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'))||'export')+'_employes_'+_todayStr()+'.csv';
     headers = ['Matricule','Prénom','Nom','Poste','Département','Salaire','Statut'];
     data = (DB.employes||[]).map(function(e){
       return [e.matricule||'',e.prenom||'',e.nom||'',e.poste||'',e.dept||'',e.salaire||0,e.statut||''];
     });
   } else if(type === 'transactions'){
-    filename = 'transactions_ivopack_'+_todayStr()+'.csv';
+    filename = ((typeof getCfg==='function'&&(getCfg().nom||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_'))||'export')+'_transactions_'+_todayStr()+'.csv';
     headers = ['Date','Type','Libellé','Catégorie','Montant (F CFA)','Mode','Réf.'];
     data = (DB.transactions||[]).map(function(t){
       return [t.date||'',t.type||'',t.libelle||'',t.cat||'',t.montant||0,t.mode||'',t.ref||''];
@@ -56208,7 +55876,7 @@ window.diffUpdatePreview = function(){
   var contacts = DB.contacts||[];
   var ex = contacts.find(function(c){ return c.phone; });
   if(!ex) ex = { name:'Koné Aminata', init:'KA', phone:'07 09 08 07 06', type:'client' };
-  var commercial = (window.SESSION&&window.SESSION.name)||'Marc Kader';
+  var commercial = (window.SESSION&&window.SESSION.name)||'';
 
   var bubble = document.getElementById('diffBubblePreview');
   var exLabel = document.getElementById('diffPreviewExLabel');
@@ -61636,7 +61304,7 @@ console.log('%cSANIX OpusFab ✅ Module Déclarations & Fiscalité — ITS · 30
     DB.accidents_travail=[
       {id:'at1',employe_id:'em1',employe_nom:'Kouamé Affi Bernard',date_accident:(y)+'-02-14',heure:'09h30',lieu:'Atelier découpe',nature:'Coupure main droite',circonstances:'Contact avec lame de découpe lors du changement de rouleau',temoins:'Jean Konan',arret_travail:true,nb_jours_arret:5,soins_externes:true,etablissement_soins:'Clinique Sainte-Famille Abidjan',medecin:'Dr. Coulibaly',declaration_cnps:true,ref_cnps:'CNPS/AT/2024/0142',statut:'reconnu',gravite:'moyen',consolidation_date:(y)+'-02-25',taux_ip:0,notes:'Cicatrisation complète. Reprise effective.',created:(y)+'-02-14T10:15:00'},
       {id:'at2',employe_id:'em3',employe_nom:'Adjoua Konan Marie',date_accident:(y)+'-04-03',heure:'14h15',lieu:'Entrepôt stockage',nature:'Chute de plain-pied',circonstances:'Glissade sur sol humide suite à une fuite d\'eau non signalée',temoins:'',arret_travail:true,nb_jours_arret:3,soins_externes:false,etablissement_soins:'Infirmerie interne',medecin:'',declaration_cnps:true,ref_cnps:'CNPS/AT/2024/0187',statut:'clos',gravite:'leger',consolidation_date:(y)+'-04-07',taux_ip:0,notes:'Sans suite. Sol réparé.',created:(y)+'-04-03T15:00:00'},
-      {id:'at3',employe_id:'em2',employe_nom:'Diallo Ibrahim Moussa',date_accident:(y)+'-06-20',heure:'11h00',lieu:'Zone expédition',nature:'Lombalgies aiguës',circonstances:'Manutention manuelle de charges lourdes (palettes 80 kg) sans aide mécanique',temoins:'Kofi Mensah',arret_travail:true,nb_jours_arret:14,soins_externes:true,etablissement_soins:'CHU de Cocody',medecin:'Dr. Bamba Seydou',declaration_cnps:true,ref_cnps:'CNPS/AT/2024/0231',statut:'en_cours',gravite:'grave',consolidation_date:'',taux_ip:null,notes:'En attente avis médecin conseil CNPS.',created:(y)+'-06-20T11:45:00'}
+      {id:'at3',employe_id:'em2',employe_nom:'Diallo Ibrahim Moussa',date_accident:(y)+'-06-20',heure:'11h00',lieu:'Zone expédition',nature:'Lombalgies aiguës',circonstances:'Manutention manuelle de charges lourdes (palettes 80 kg) sans aide mécanique',temoins:'',arret_travail:true,nb_jours_arret:14,soins_externes:true,etablissement_soins:'CHU de Cocody',medecin:'Dr. Bamba Seydou',declaration_cnps:true,ref_cnps:'CNPS/AT/2024/0231',statut:'en_cours',gravite:'grave',consolidation_date:'',taux_ip:null,notes:'En attente avis médecin conseil CNPS.',created:(y)+'-06-20T11:45:00'}
     ];
   }
 })();
@@ -63090,7 +62758,7 @@ window.genererContratType = function(){
   var cfg = {};
   try{ cfg = typeof getCfg==='function' ? getCfg() : JSON.parse(localStorage.getItem('sanixfactory_config')||'{}'); }catch(e){}
   var entreprise = cfg.nom || 'SANIX Africa';
-  var adresseEnt = cfg.adresse || 'Songon, Abidjan, Côte d\'Ivoire';
+  var adresseEnt = cfg.adresse || '';
   var rccm       = cfg.rccm || '—';
   var ncc        = cfg.ncc  || '—';
 
@@ -66704,7 +66372,7 @@ console.log('%cSANIX OpusFab ✅ Module Évaluation & Carrière chargé (Entreti
 window.SANIX_POSTES = [
   { code:'P-00', titre:'Directeur Général', division:'Groupe SANIX', vague:'Fondateur', mois:0,
     salMin:0, salMax:0, formation:'INP-HB Agro + HEC Paris', contrat:'Gérant SARL',
-    zone:'Songon — Abidjan', avantages:'Dividendes + Avantages en nature',
+    zone:'', avantages:'Dividendes + Avantages en nature',
     mission:"Définir et mettre en œuvre la vision stratégique de SANIX Africa. Piloter les 6 divisions.",
     objectifs:[
       {an:1, indicateur:'CA global groupe', cible:'100M FCFA'},
@@ -66718,7 +66386,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-01', titre:'Commercial Animal Health', division:'Animal Health VIMAR', vague:'AN1', mois:2,
     salMin:250000, salMax:350000, formation:'BTS/Licence Élevage ou Commerce', contrat:'CDI · PE 2 mois',
-    zone:'Grand Abidjan lagunaire (Songon, Dabou, Jacqueville, Yopougon, Abobo)',
+    zone:'Grand Abidjan lagunaire (zones de livraison à définir, Abobo)',
     avantages:'Frais déplacement + Téléphone pro + Formation VIMAR Turquie An1 (5j)',
     mission:"Développer et fidéliser 30 éleveurs actifs. CA 14,5M FCFA An1.",
     objectifs:[
@@ -66731,7 +66399,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-02', titre:'Formateur SANIX Academy', division:'Formation & Consulting', vague:'AN1', mois:1,
     salMin:300000, salMax:450000, formation:'Bac+3/5 Agro + Pédagogie', contrat:'CDI ou Prestation · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'Prime par session + Formation AGEFOP + Accès ressources SANIX',
+    zone:'', avantages:'Prime par session + Formation AGEFOP + Accès ressources SANIX',
     mission:"Concevoir, animer et évaluer les programmes SANIX Academy. CA 6,5M FCFA An1.",
     objectifs:[
       {an:1, indicateur:'Nb sessions réalisées', cible:'12'},
@@ -66743,7 +66411,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-03', titre:'Responsable Production', division:'Savonnerie & Ensachage', vague:'AN1', mois:4,
     salMin:280000, salMax:400000, formation:'BTS Industrie Agro-alimentaire', contrat:'CDI · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'Prime qualité 20 000 FCFA/trim si NC lot <2% + Formation ISO 9001',
+    zone:'', avantages:'Prime qualité 20 000 FCFA/trim si NC lot <2% + Formation ISO 9001',
     mission:"Piloter la production savonnerie (SAF) + ensachage B2B. Conformité ISO 9001.",
     objectifs:[
       {an:1, indicateur:'Taux lots conformes', cible:'>97%'},
@@ -66753,7 +66421,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-04', titre:'Opérateur Eau CRISTAL', division:'Eau CRISTAL SONGON', vague:'AN1', mois:5,
     salMin:180000, salMax:250000, formation:'BEP/CAP Traitement eau ou équivalent', contrat:'CDI · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'Formation interne + EPI complets',
+    zone:'', avantages:'Formation interne + EPI complets',
     mission:"Opérer l'unité de traitement d'eau selon gamme MO-EAU-001. 50 cartons/jour An1.",
     objectifs:[
       {an:1, indicateur:'Volume quotidien', cible:'50 cartons/jour'},
@@ -66762,7 +66430,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-05', titre:'Secrétaire Administrative', division:'Groupe SANIX', vague:'AN1', mois:6,
     salMin:200000, salMax:280000, formation:'BTS Secrétariat / Gestion', contrat:'CDI · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'Formation ERP interne',
+    zone:'', avantages:'Formation ERP interne',
     mission:"Gestion administrative quotidienne, BL, factures, devis. Interface DGI/CNPS/banques.",
     objectifs:[
       {an:1, indicateur:'BL/Factures émis sans erreur', cible:'>99%'},
@@ -66779,7 +66447,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-07', titre:'Responsable Qualité (RQ)', division:'SMQ / Groupe', vague:'AN1', mois:10,
     salMin:400000, salMax:550000, formation:'Bac+4/5 + Certification ISO 9001', contrat:'CDI · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'Formation audit interne ISO + Accès SMQ complet',
+    zone:'', avantages:'Formation audit interne ISO + Accès SMQ complet',
     mission:"Piloter le SMQ ISO 9001:2015. Audits internes. Conformité réglementaire CI.",
     objectifs:[
       {an:1, indicateur:'Exigences ISO couvertes', cible:'>80%'},
@@ -66789,7 +66457,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-08', titre:'DAF (Dir. Adm. & Financier)', division:'Finance / Groupe', vague:'AN1', mois:10,
     salMin:450000, salMax:600000, formation:'Bac+4/5 Comptabilité / Finance', contrat:'CDI · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'Prime annuelle + Véhicule de fonction An2',
+    zone:'', avantages:'Prime annuelle + Véhicule de fonction An2',
     mission:"Piloter la trésorerie, bilan, relations bancaires, déclarations DGI/CNPS.",
     objectifs:[
       {an:1, indicateur:'Déclarations DGI/CNPS', cible:'Zéro retard'},
@@ -66798,7 +66466,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-09', titre:'Technicien Maintenance', division:'Transversal', vague:'AN2', mois:14,
     salMin:250000, salMax:350000, formation:'BTS Électromécanique / Maintenance', contrat:'CDI · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'Formation machine ensacheuse + EPI spécialisé',
+    zone:'', avantages:'Formation machine ensacheuse + EPI spécialisé',
     mission:"Plan de maintenance préventive et curative sur tous équipements SANIX.",
     objectifs:[
       {an:2, indicateur:'MTTR (temps réparation moyen)', cible:'<4h'},
@@ -66816,7 +66484,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-11', titre:'Opérateur Production Savon', division:'Savonnerie', vague:'AN2', mois:18,
     salMin:160000, salMax:220000, formation:'CAP/BEP Industrie alimentaire', contrat:'CDI · PE 2 mois',
-    zone:'Songon — Abidjan', avantages:'EPI complets + Formation process SAF',
+    zone:'', avantages:'EPI complets + Formation process SAF',
     mission:"Produire les lots savon selon MO-SAV-001. Contrôle qualité FCQ-SAV. Zéro NC lot.",
     objectifs:[
       {an:2, indicateur:'Lots non conformes', cible:'<2%'},
@@ -66833,7 +66501,7 @@ window.SANIX_POSTES = [
   },
   { code:'P-13', titre:'Ingénieur Qualité Stérilex', division:'Seringues Stériles', vague:'AN3', mois:28,
     salMin:600000, salMax:850000, formation:'Bac+5 Génie Biomédical ou Pharma', contrat:'CDI · PE 3 mois',
-    zone:'Songon — Abidjan', avantages:'Logement de fonction + Prime expertise + Véhicule',
+    zone:'', avantages:'Logement de fonction + Prime expertise + Véhicule',
     mission:"Assurer la conformité ISO 7886 pour la production de seringues stériles.",
     objectifs:[
       {an:3, indicateur:'Conformité ISO 7886', cible:'Certification obtenue'},
@@ -70547,7 +70215,7 @@ window.HK_SIGS     = HK_SIGS;
 var ZONES_ABIDJAN = {
   plateau:    {label:'Plateau / Adjamé',     lats:[5.32,5.36], lngs:[-4.02,-3.98]},
   cocody:     {label:'Cocody / Riviera',     lats:[5.34,5.40], lngs:[-3.99,-3.95]},
-  yopougon:   {label:'Yopougon / Songon',    lats:[5.30,5.37], lngs:[-4.10,-4.04]},
+  yopougon:   {label:'Zone 1',    lats:[5.30,5.37], lngs:[-4.10,-4.04]},
   marcory:    {label:'Marcory / Zone 4',     lats:[5.28,5.32], lngs:[-4.02,-3.96]},
   treichville:{label:'Treichville / Port',   lats:[5.28,5.31], lngs:[-4.04,-4.00]},
   abobo:      {label:'Abobo / Nord',         lats:[5.37,5.42], lngs:[-4.05,-3.97]},
@@ -73545,7 +73213,7 @@ window.renderMap = function(filter){
   else if(mf!=='all'){filtered=contacts.filter(function(c){return c.type===mf;});}
   if(mq) filtered=filtered.filter(function(c){return (c.name||'').toLowerCase().includes(mq)||(c.addr||'').toLowerCase().includes(mq);});
   var dm=L.marker([5.355,-4.030],{icon:_mkIcon('D','#1E5FAD',32),zIndexOffset:1000});
-  dm.bindPopup(_makePopup('Dépôt principal','Zone Industrielle, Songon','depot',''),{className:'circ-leaflet-popup'});
+  dm.bindPopup(_makePopup('Dépôt principal','','depot',''),{className:'circ-leaflet-popup'});
   dm.addTo(_geoMap); _geoMarkers.push(dm);
   filtered.forEach(function(c,i){
     if(!c.lat||!c.lng) return;
@@ -80469,7 +80137,7 @@ window.soumettreWF=function(){var t=($('wf-ftitre')||{}).value||'';if(!t){TT('Ti
 window.exportCSVWF=function(){var r=['Type;Titre;Montant;Statut;Validé par'];(DB.workflows||[]).forEach(function(w){r.push([w.t,w.titre,w.montant||0,w.s,w.vp||''].join(';'));});var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(r.join('\n'));a.download='workflow.csv';a.click();};
 
 /* Démo WF */
-if(!DB.workflows.length){DB.workflows=[{id:ID(),t:'achat',titre:'Achat granulés PE 500 Kg — PLASTITECH',montant:600000,u:'normal',notes:'Réappro mensuel',s:'attente',niv:'s1',dem:'Kouamé Konan',cr:new Date().toISOString()},{id:ID(),t:'depense',titre:'Déplacement commercial zone nord',montant:85000,u:'basse',notes:'Visite prospects',s:'attente',niv:'s1',dem:'Sophie Diallo',cr:new Date().toISOString()},{id:ID(),t:'remise',titre:'Remise 12% commande Hôtel Le Central',montant:3500000,u:'urgent',notes:'Accord verbal DG',s:'attente',niv:'s2',dem:'Marc Kouadio',cr:new Date().toISOString()},{id:ID(),t:'achat',titre:'Encres flexo urgence',montant:150000,u:'urgent',notes:'Arrêt prod si non approuvé',s:'approuve',niv:'s1',dem:'Traoré Moussa',vp:'Aminata Coulibaly',dv:T(),cr:new Date().toISOString()}];SV();}
+if(!DB.workflows.length){DB.workflows=[{id:ID(),t:'achat',titre:'Achat granulés PE 500 Kg — PLASTITECH',montant:600000,u:'normal',notes:'Réappro mensuel',s:'attente',niv:'s1',dem:'Kouamé Konan',cr:new Date().toISOString()},{id:ID(),t:'depense',titre:'Déplacement commercial zone nord',montant:85000,u:'basse',notes:'Visite prospects',s:'attente',niv:'s1',dem:'',cr:new Date().toISOString()},{id:ID(),t:'remise',titre:'Remise 12% commande Hôtel Le Central',montant:3500000,u:'urgent',notes:'Accord verbal DG',s:'attente',niv:'s2',dem:'Marc Kouadio',cr:new Date().toISOString()},{id:ID(),t:'achat',titre:'Encres flexo urgence',montant:150000,u:'urgent',notes:'Arrêt prod si non approuvé',s:'approuve',niv:'s1',dem:'Traoré Moussa',vp:'Aminata Coulibaly',dv:T(),cr:new Date().toISOString()}];SV();}
 
 /* ══ NOTES DE FRAIS ══ */
 var _frt='mes';
@@ -91410,7 +91078,8 @@ window.renderGMAOGantt = function(){
 };
 
 // Init
-if(!gg(GK_EQ).length||!gg(GK_PLAN).length) seedDemoGantt();
+/* Ré-amorçage automatique retiré : une base vide doit le rester.
+   Le jeu de démonstration reste accessible par ggDemoData(). */
 
 console.log('%cGMAO Gantt v3 OK','color:#1E5FAD;font-weight:900;');
 })();</script>
@@ -105201,7 +104870,7 @@ window.SANIX_FVE = [
     code:'EQ-01', nom:'Unité de traitement d\'eau', division:'Eau CRISTAL SONGON',
     marque:'TECHNI-WATER CI ou équivalent', serie:'[À renseigner à réception]',
     fournisseur:'Fournisseur équipement eau CI', acquisition:'[M1]', mise_en_service:'[M1]',
-    localisation:'Atelier eau — Zone production SANIX Songon',
+    localisation:'',
     puissance:'0,75 kW (pompe) + 40W (UV)', capacite:'15 L/min — 1 500 cartons/mois',
     garantie:'12 mois — prestataire UV CI', valeur:22000000,
     criticite:'CRITIQUE', criticite_detail:'Arrêt total production eau',
@@ -105220,7 +104889,7 @@ window.SANIX_FVE = [
     code:'EQ-02', nom:'Ensacheuse eau 50cl automatique', division:'Eau CRISTAL SONGON',
     marque:'YB-W800 ou équivalent', serie:'[À renseigner à réception]',
     fournisseur:'Importateur machines CI', acquisition:'[M2]', mise_en_service:'[M2]',
-    localisation:'Atelier eau — Zone ensachage SANIX Songon',
+    localisation:'Atelier eau — Zone ensachage SANIX ',
     puissance:'2,2 kW', capacite:'800–1 200 sachets/heure',
     garantie:'12 mois constructeur', valeur:15000000,
     criticite:'CRITIQUE', criticite_detail:'Arrêt total production eau',
@@ -105238,7 +104907,7 @@ window.SANIX_FVE = [
     code:'EQ-03', nom:'Pompe de forage 0,75 kW', division:'Eau CRISTAL SONGON',
     marque:'GRUNDFOS ou équivalent', serie:'[À renseigner]',
     fournisseur:'GRUNDFOS CI / distributeur agréé', acquisition:'[M1]', mise_en_service:'[M1]',
-    localisation:'Forage — Site SANIX Songon',
+    localisation:'Forage — Site SANIX ',
     puissance:'0,75 kW — 230V monophasé', capacite:'Débit 10–15 L/min',
     garantie:'12 mois', valeur:3500000,
     criticite:'MAJEUR', criticite_detail:'Production partielle en cas de panne',
@@ -105253,7 +104922,7 @@ window.SANIX_FVE = [
     code:'EQ-04', nom:'Balance de laboratoire ±0,1g', division:'Multi-divisions',
     marque:'OHAUS Scout ou équivalent', serie:'[À renseigner]',
     fournisseur:'Importateur matériel laboratoire CI', acquisition:'[M1]', mise_en_service:'[M1]',
-    localisation:'Laboratoire contrôle qualité — SANIX Songon',
+    localisation:'Laboratoire contrôle qualité — SANIX ',
     puissance:'Électronique — alimentation secteur', capacite:'Portée max selon modèle (ex. 2 000g) · Résolution 0,1g',
     garantie:'12 mois', valeur:450000,
     criticite:'MAJEUR', criticite_detail:'Contrôle qualité compromis',
@@ -105268,7 +104937,7 @@ window.SANIX_FVE = [
     code:'EQ-05', nom:'Ensacheuse multi-format SANIX PACK', division:'Ensachage SANIX PACK',
     marque:'VFFS 100 ou équivalent', serie:'[À renseigner]',
     fournisseur:'Importateur machines d\'ensachage CI', acquisition:'[M3]', mise_en_service:'[M3]',
-    localisation:'Atelier ensachage — Zone B2B SANIX Songon',
+    localisation:'Atelier ensachage — Zone B2B SANIX ',
     puissance:'4 kW', capacite:'50–200 sachets/min · Formats 50g à 1 kg réglable',
     garantie:'12 mois constructeur', valeur:35000000,
     criticite:'CRITIQUE', criticite_detail:'Arrêt activité B2B ensachage',
@@ -105286,7 +104955,7 @@ window.SANIX_FVE = [
     code:'EQ-06', nom:'Mixeur plongeant industriel 2kW', division:'Savonnerie',
     marque:'ROBOT-COUPE ou équivalent', serie:'[À renseigner]',
     fournisseur:'Distributeur matériel HoReCa / industrie CI', acquisition:'[M2]', mise_en_service:'[M2]',
-    localisation:'Atelier savonnerie — SANIX Songon',
+    localisation:'Atelier savonnerie — SANIX ',
     puissance:'2 kW', capacite:'10–50 L cuve de travail · Vitesse variable',
     garantie:'12 mois', valeur:1200000,
     criticite:'MINEUR', criticite_detail:'Production savon ralentie',
@@ -105301,7 +104970,7 @@ window.SANIX_FVE = [
     code:'EQ-08', nom:'Groupe électrogène 10 kVA', division:'Infrastructure — Toutes divisions',
     marque:'SDMO 10000TES ou équivalent', serie:'[À renseigner]',
     fournisseur:'SDMO CI / distributeur agréé', acquisition:'[M1]', mise_en_service:'[M1]',
-    localisation:'Local groupe électrogène — SANIX Songon',
+    localisation:'Local groupe électrogène — SANIX ',
     puissance:'10 kVA / 8 kW — 230V / 50Hz · Diesel', capacite:'Autonomie 8h à pleine charge',
     garantie:'12 mois constructeur', valeur:4500000,
     criticite:'CRITIQUE', criticite_detail:'Alimentation électrique de secours',
@@ -105350,7 +105019,7 @@ window.SANIX_FVE = [
     code:'EQ-11', nom:'Véhicule de livraison — Pick-Up', division:'Distribution',
     marque:'Toyota HiLux ou équivalent', serie:'[Immatriculation à renseigner]',
     fournisseur:'Toyota CI ou concessionnaire agréé', acquisition:'[M3]', mise_en_service:'[M3]',
-    localisation:'Parking SANIX — Songon',
+    localisation:'Parking SANIX — ',
     puissance:'Diesel', capacite:'Charge utile selon modèle (ex. 800 kg)',
     garantie:'24 mois constructeur ou 50 000 km', valeur:8500000,
     criticite:'MAJEUR', criticite_detail:'Livraisons bloquées',
@@ -105367,7 +105036,7 @@ window.SANIX_FVE = [
     code:'EQ-12', nom:'Climatiseur entrepôt médicaments', division:'Animal Health VIMAR',
     marque:'SAMSUNG 18 000 BTU ou équivalent', serie:'[À renseigner]',
     fournisseur:'Distributeur climatisation CI', acquisition:'[M2]', mise_en_service:'[M2]',
-    localisation:'Entrepôt stock VIMAR — SANIX Songon',
+    localisation:'Entrepôt stock VIMAR — SANIX ',
     puissance:'18 000 BTU/h — ~5,3 kW · Gaz R32', capacite:'Température consigne 15–25°C (conservation médicaments vétérinaires)',
     garantie:'12 mois', valeur:750000,
     criticite:'MAJEUR', criticite_detail:'Dégradation stock VIMAR',
@@ -107236,7 +106905,7 @@ window.renderGMAOGantt = function(){
   var eqs   = _g(GK_EQ);
   var plans = _g(GK_PLAN);
   var ots   = _g(GK_OT);
-  if(!plans.length && typeof seedDemoGantt === 'function'){ seedDemoGantt(); eqs=_g(GK_EQ);plans=_g(GK_PLAN);ots=_g(GK_OT); }
+  /* Idem : pas de ré-amorçage implicite à la lecture. */
 
   // Peupler select équipement
   var eqSel = document.getElementById('gg-eq');
@@ -115188,7 +114857,7 @@ var EQ_SEED=[
    marque:'YB-W800',modele:'ou equiv.',emplacement:'Division Eau CRISTAL',
    mise_en_service:'2026-02-01',duree_vie:8,valeur:15000000,
    criticite:'critique',statut:'actif',
-   mtbf:720,observations:'Production eau CRISTAL Songon. Arrêt total production si HS.',
+   mtbf:720,observations:'Arrêt de production si HS.',
    barcode:'EQ-02-SANIX'},
   {id:'EQ-03',code:'EQ-03',nom:'Pompe de forage 0,75 kW',categorie:'machine',
    marque:'GRUNDFOS',modele:'ou equiv.',emplacement:'Division Eau CRISTAL',
@@ -116896,7 +116565,7 @@ function _openOEModal(o){
   document.getElementById('oe-f-contrat').value     = o.contrat||'CDI';
   document.getElementById('oe-f-salaire').value     = o.salaire||'';
   document.getElementById('oe-f-dispo').value       = o.dispo||'';
-  document.getElementById('oe-f-lieu').value        = o.lieu||'Songon — Abidjan, CI';
+  document.getElementById('oe-f-lieu').value        = o.lieu||'';
   document.getElementById('oe-f-statut').value      = o.statut||'ouvert';
   document.getElementById('oe-f-qui').value         = o.qui_sommes_nous||'';
   document.getElementById('oe-f-evolution').value   = o.evolution||o.avantages||'';
@@ -117151,7 +116820,7 @@ function _injectModals(){
           '<div class="refh-field"><label class="refh-lbl">Type de contrat</label><input id="oe-f-contrat" type="text" class="fi" placeholder="ex: CDI · Période d\'essai 3 mois"/></div>'+
           '<div class="refh-field"><label class="refh-lbl">Salaire</label><input id="oe-f-salaire" type="text" class="fi" placeholder="ex: 250 000 – 350 000 FCFA/mois"/></div>'+
           '<div class="refh-field"><label class="refh-lbl">Disponibilité</label><input id="oe-f-dispo" type="text" class="fi" placeholder="ex: Immédiatement — M2"/></div>'+
-          '<div class="refh-field"><label class="refh-lbl">Lieu</label><input id="oe-f-lieu" type="text" class="fi" placeholder="ex: Songon — Abidjan, CI"/></div>'+
+          '<div class="refh-field"><label class="refh-lbl">Lieu</label><input id="oe-f-lieu" type="text" class="fi" placeholder="ex : quartier, ville"/></div>'+
           '<div class="refh-field"><label class="refh-lbl">Statut de l\'offre</label>'+
             '<select id="oe-f-statut" class="fi">'+
               '<option value="ouvert">Ouvert</option><option value="urgent">Urgent</option>'+
@@ -130028,5 +129697,128 @@ table thead th{font-weight:600;}
 /* Filet décoratif sous la barre supérieure : BEDA ALU s'en passe. */
 #app .stripe,.main>.stripe{display:none!important;}
 </style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — LIVRAISON SANS DONNÉES
+   Une quinzaine de modules injectent encore leur propre jeu de
+   démonstration à l'initialisation. Plutôt que de les retirer un à un
+   au risque d'en manquer, on vide les collections une seule fois, au
+   tout premier démarrage, après que tous ont fini de s'exécuter.
+   Une fois le marqueur posé, ce bloc ne touche plus à rien.
+═══════════════════════════════════════════════════════════════════ */
+(function livraisonVierge(){
+'use strict';
+var MARQUEUR = 'sf_livraison_vierge_v1';
+
+function dejaFait(){ try { return localStorage.getItem(MARQUEUR) === '1'; } catch(e){ return false; } }
+function marquer(){ try { localStorage.setItem(MARQUEUR, '1'); } catch(e){} }
+
+if (dejaFait()) return;
+
+/* Toute collection de données métier. Les référentiels de paramétrage
+   (barèmes, catégories, exercices) ne sont pas concernés. */
+
+function vider(definitif){
+  /* L'application possède déjà un nettoyage exhaustif et maintenu :
+     viderDemoData() connaît les 60 collections et la centaine de clés
+     localStorage des modules. Dupliquer cette liste ici l'aurait laissée
+     se périmer au premier module ajouté. On l'appelle donc, en neutralisant
+     la confirmation et la redirection, qui n'ont pas lieu d'être à la
+     première ouverture d'un logiciel neuf. */
+  if (typeof window.viderDemoData !== 'function') return;
+
+  var _confirm = window.confirm, _goTo = window.goTo;
+  window.confirm = function(){ return true; };
+  window.goTo = function(){};
+  try { window.viderDemoData(); }
+  catch(e){ console.warn('[livraison]', e && e.message); }
+  finally {
+    window.confirm = _confirm;
+    setTimeout(function(){ window.goTo = _goTo; }, 600);
+  }
+
+  if (definitif) {
+    marquer();
+    console.log('%c[SANIX OpusFab] Livraison sans données — base vierge',
+                'color:#F59E0B;font-weight:700;');
+    setTimeout(function(){
+      ['refresh','refreshDash','renderDashUnifie','_genererNotifs'].forEach(function(fn){
+        if (typeof window[fn] === 'function') { try { window[fn](); } catch(e){} }
+      });
+    }, 800);
+  }
+}
+
+/* Les seeds s'exécutent à l'initialisation et sur des minuteries courtes.
+   On vide après leur passage, puis une seconde fois par sécurité. */
+/* Deux balayages : le premier juste après les seeds, le second après les
+   modules qui se réveillent sur minuterie. Le marqueur n'est posé qu'au
+   second, sinon le premier clôt la séquence trop tôt. */
+function sequence(){ setTimeout(function(){ vider(false); }, 400);
+                     setTimeout(function(){ vider(true);  }, 3200); }
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', sequence);
+else sequence();
+
+/* ── Fiche société : demandée une fois, jamais devinée ───────── */
+window.sfConfigurerSociete = function(){
+  var c = {};
+  try { c = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}'); } catch(e){}
+  var nom = prompt('Raison sociale de votre entreprise :', c.nom || '');
+  if (!nom) return;
+  c.nom      = nom.trim();
+  c.ville    = (prompt('Ville :', c.ville || '') || '').trim();
+  c.phone    = (prompt('Téléphone :', c.phone || '') || '').trim();
+  c.email    = (prompt('E-mail de contact :', c.email || '') || '').trim();
+  c.rccm     = (prompt('Numéro RCCM :', c.rccm || '') || '').trim();
+  c.dfe      = (prompt('Compte contribuable (DFE) :', c.dfe || '') || '').trim();
+  c._aConfigurer = false;
+  try { localStorage.setItem('sanixfactory_config', JSON.stringify(c)); } catch(e){}
+
+  /* Report vers la base : la fiche société y fait foi */
+  if (window.sb && window.SESSION && window.SESSION.entrepriseId) {
+    window.sb.from('entreprises').update({
+      raison_sociale: c.nom, ville: c.ville, telephone: c.phone,
+      email: c.email || null, rccm: c.rccm || null, compte_contribuable: c.dfe || null
+    }).eq('id', window.SESSION.entrepriseId).then(function(r){
+      if (r.error) console.warn('[société]', r.error.message);
+    });
+  }
+  if (typeof window.showToast === 'function') window.showToast('✅ Société enregistrée', c.nom, 'ok');
+  setTimeout(function(){ location.reload(); }, 900);
+};
+
+/* Invite discrète tant que la fiche est vide */
+function inviter(){
+  var c = {};
+  try { c = JSON.parse(localStorage.getItem('sanixfactory_config') || '{}'); } catch(e){}
+  if (c.nom || document.getElementById('sf-invite-societe')) return;
+  if (!window.SESSION || !window.SESSION.userId) return;
+  var d = document.createElement('div');
+  d.id = 'sf-invite-societe';
+  d.style.cssText = 'position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:700;'
+    + 'background:#fff;border:1px solid #E8EAEE;border-radius:10px;padding:14px 16px;max-width:290px;'
+    + "box-shadow:0 6px 24px rgba(17,24,39,.12);font-family:'Outfit',system-ui,sans-serif;";
+  var t = document.createElement('div');
+  t.style.cssText = 'font-size:13px;font-weight:700;color:#111827;margin-bottom:5px;';
+  t.textContent = 'Fiche société à compléter';
+  var p = document.createElement('div');
+  p.style.cssText = 'font-size:12px;color:#6B7280;line-height:1.6;margin-bottom:11px;';
+  p.textContent = 'Raison sociale, RCCM et compte contribuable sont obligatoires sur vos factures.';
+  var b = document.createElement('button');
+  b.style.cssText = 'width:100%;padding:8px;border:none;border-radius:8px;background:#7c3aed;color:#fff;'
+    + 'font:700 12px inherit;cursor:pointer;';
+  b.textContent = 'Renseigner maintenant';
+  b.onclick = function(){ d.remove(); window.sfConfigurerSociete(); };
+  d.appendChild(t); d.appendChild(p); d.appendChild(b);
+  document.body.appendChild(d);
+}
+var _f = window._finishLogin;
+window._finishLogin = function(){
+  var r = (typeof _f === 'function') ? _f.apply(this, arguments) : undefined;
+  setTimeout(inviter, 2200);
+  return r;
+};
+})();
+</script>
 </body>
 </html>

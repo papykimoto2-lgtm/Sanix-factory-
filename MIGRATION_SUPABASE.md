@@ -288,10 +288,29 @@ de doublon.
 7. Table de correspondance ancien compte → nouveau compte pour retraiter
    l'historique comptable saisi sous le mapping erroné.
 
-## 10. Société amorcée
+## 10. État de livraison
 
-`SANIX OpusFab` · code `SANIX` · id `d5884279-1d5a-4b84-80dd-df3a99758253`
-270 comptes · 9 journaux · exercice 2026 · paramètres de paie 2026 · dépôt principal
+La base est **vide de toute donnée client**. Seuls subsistent les référentiels,
+qui ne sont pas des données client :
 
-Complétez RCCM, compte contribuable et NIF dans `entreprises` avant la première
-facture : ces mentions sont obligatoires sur une facture en Côte d'Ivoire.
+| Conservé | Volume |
+|---|---|
+| Plan comptable OHADA (référentiel) | 270 comptes |
+| Plan comptable de la société | 270 comptes |
+| Journaux | 9 |
+| Exercice ouvert | 2026 |
+| Paramètres de paie (taux légaux CI) | 1 jeu |
+| Dépôt principal | 1 |
+| Rôles / permissions | 13 / 37 |
+
+| Vidé | |
+|---|---|
+| Tiers, articles, employés | 0 |
+| Écritures, ventes, achats, règlements | 0 |
+| Mouvements de stock, lots, inventaires | 0 |
+| Production, GMAO, qualité | 0 |
+| Journal d'audit | 0 |
+
+La société est une coquille nommée « Société à configurer ». Le client renseigne
+raison sociale, RCCM et compte contribuable au premier démarrage — ces mentions
+sont obligatoires sur une facture en Côte d'Ivoire.
