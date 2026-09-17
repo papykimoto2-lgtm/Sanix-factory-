@@ -1,6 +1,9 @@
-# Base de données — sanix-factory-erp
+# Base de données — SANIX OpusFab ERP 2026
 
-Projet Supabase : `mglosevjadbvwurdrlsz` · région eu-west-3 (Paris) · PostgreSQL 17
+Projet Supabase : **sanix-opusfab** · ref `mglosevjadbvwurdrlsz` · eu-west-3 (Paris) · PostgreSQL 17
+
+> Le nom du projet est une étiquette d'affichage. La référence `mglosevjadbvwurdrlsz`
+> et l'URL d'API sont **permanentes** : renommer le projet ne casse aucune connexion.
 URL API : `https://mglosevjadbvwurdrlsz.supabase.co`
 Clé publiable : `sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d`
 

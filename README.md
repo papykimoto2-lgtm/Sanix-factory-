@@ -20,7 +20,7 @@ Comptabilité · Trésorerie · RH & Paie · Logistique · Tableaux de bord
 | Couche | Technologie |
 |---|---|
 | Frontend | HTML5 · CSS3 · JavaScript ES2025 · PWA · mobile-first |
-| Backend | Supabase · PostgreSQL 17 · RLS · Auth |
+| Backend | Supabase `sanix-opusfab` · PostgreSQL 17 · RLS · Auth |
 | Hébergement | Vercel (frontend) · AWS eu-west-3 Paris (base) |
 
 Base de données : voir `MIGRATION_SUPABASE.md` — 46 tables, 103 politiques RLS,
