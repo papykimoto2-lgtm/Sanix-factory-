@@ -130953,5 +130953,588 @@ setTimeout(installer, 2000);
   .flx-cta{margin-left:0;width:100%;}
 }
 </style>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — CAISSE & ANALYTIQUE
+   Deux écrans branchés directement sur PostgreSQL. Aucune copie locale :
+   la base porte la numérotation chaînée, les plafonds, l'écart de caisse
+   et la ventilation SYSCOHADA. L'écran ne fait que présenter et demander.
+═══════════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+var TYPES = ['vente','achat','salaire','avance','remboursement','approvisionnement','frais','taxe','divers'];
+var TYPES_SECTION = ['centre_cout','centre_profit','projet','programme','division','vehicule','chantier'];
+var LIB_TYPE_SECTION = {centre_cout:'Centre de coût', centre_profit:'Centre de profit', projet:'Projet',
+  programme:'Programme', division:'Division', vehicule:'Véhicule', chantier:'Chantier'};
+var ETATS = {
+  saisi:      {l:'Saisi',        i:'fa-pen',              c:'neutre'},
+  a_valider:  {l:'À valider',    i:'fa-hourglass-half',   c:'attente'},
+  valide:     {l:'Validé',       i:'fa-circle-check',     c:'ok'},
+  rejete:     {l:'Rejeté',       i:'fa-circle-xmark',     c:'ko'},
+  annule:     {l:'Annulé',       i:'fa-ban',              c:'neutre'}
+};
+
+/* Rien n'est injecté en HTML : le texte de la base passe par textContent. */
+function el(tag, cls, txt){
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (txt != null) n.textContent = String(txt);
+  return n;
+}
+function vide(n){ while (n && n.firstChild) n.removeChild(n.firstChild); return n; }
+function fr(n){ return new Intl.NumberFormat('fr-FR').format(Math.round(Number(n) || 0)); }
+function jour(d){ return String(d || '').slice(0, 10); }
+function aujourdhui(){ return new Date().toISOString().slice(0, 10); }
+function ent(){ return window.SESSION && window.SESSION.entrepriseId; }
+function base(){ return window.sb && ent() ? window.sb : null; }
+function dire(t, s, k){ if (typeof showToast === 'function') showToast(t, s || '', k || 'ok'); }
+function plainte(e){
+  var m = (e && (e.message || e.hint || e.details)) || 'Opération refusée';
+  /* Les messages des triggers sont déjà rédigés pour l'utilisateur. */
+  dire('Refusé par la base', String(m).slice(0, 220), 'err');
+}
+
+/* ── État d'écran ─────────────────────────────────────────────── */
+var ETAT = {caisses: [], caisseId: null, session: null, mouvements: [], sections: [], analytique: []};
+
+/* ── Lecture ──────────────────────────────────────────────────── */
+function chargerCaisse(){
+  var b = base(); if (!b) return Promise.resolve(false);
+  var e = ent();
+  return Promise.all([
+    b.from('v_caisse_soldes').select('*').eq('entreprise_id', e).order('code'),
+    b.from('sections_analytiques').select('id,code,libelle,type').eq('entreprise_id', e).eq('actif', true).order('code')
+  ]).then(function(r){
+    if (r[0].error) throw r[0].error;
+    ETAT.caisses = r[0].data || [];
+    ETAT.sections = (r[1].data) || [];
+    if (!ETAT.caisseId || !ETAT.caisses.some(function(c){ return c.caisse_id === ETAT.caisseId; }))
+      ETAT.caisseId = ETAT.caisses.length ? ETAT.caisses[0].caisse_id : null;
+    if (!ETAT.caisseId) { ETAT.session = null; ETAT.mouvements = []; return true; }
+    return Promise.all([
+      b.from('caisse_sessions').select('*').eq('entreprise_id', e).eq('caisse_id', ETAT.caisseId)
+        .eq('statut', 'ouverte').maybeSingle(),
+      b.from('v_caisse_journal').select('*').eq('entreprise_id', e).eq('caisse_id', ETAT.caisseId)
+        .order('numero', {ascending: false}).limit(80)
+    ]).then(function(q){
+      ETAT.session = (q[0] && q[0].data) || null;
+      ETAT.mouvements = (q[1] && q[1].data) || [];
+      return true;
+    });
+  }).catch(function(e2){ plainte(e2); return false; });
+}
+function chargerAnalytique(){
+  var b = base(); if (!b) return Promise.resolve(false);
+  return b.from('v_analytique_sections').select('*').eq('entreprise_id', ent()).order('code')
+    .then(function(r){ if (r.error) throw r.error; ETAT.analytique = r.data || []; return true; })
+    .catch(function(e){ plainte(e); return false; });
+}
+
+/* ── Écritures ────────────────────────────────────────────────── */
+function ouvrirSession(fond){
+  var b = base(); if (!b || !ETAT.caisseId) return;
+  b.from('caisse_sessions').insert({
+    entreprise_id: ent(), caisse_id: ETAT.caisseId, date_session: aujourdhui(),
+    fond_ouverture: fond, fond_cloture_theorique: fond, statut: 'ouverte'
+  }).then(function(r){
+    if (r.error) return plainte(r.error);
+    dire('Caisse ouverte', 'Fond de caisse ' + fr(fond) + ' F CFA');
+    rendreCaisse();
+  });
+}
+function cloturerSession(reel, note){
+  var b = base(); if (!b || !ETAT.session) return;
+  var maj = {statut: 'cloturee', fond_cloture_reel: reel, cloturee_le: new Date().toISOString()};
+  if (note) maj.note_ecart = note;
+  b.from('caisse_sessions').update(maj).eq('id', ETAT.session.id).then(function(r){
+    if (r.error) return plainte(r.error);
+    dire('Caisse clôturée', 'Fond compté ' + fr(reel) + ' F CFA');
+    rendreCaisse();
+  });
+}
+function saisirMouvement(m){
+  var b = base(); if (!b) return;
+  m.entreprise_id = ent(); m.caisse_id = ETAT.caisseId;
+  m.session_id = ETAT.session ? ETAT.session.id : null;
+  b.from('caisse_mouvements').insert(m).then(function(r){
+    if (r.error) return plainte(r.error);
+    dire('Mouvement enregistré', (m.sens === 'entree' ? '+' : '−') + fr(m.montant) + ' F CFA');
+    rendreCaisse();
+  });
+}
+function statuer(id, statut, motif){
+  var b = base(); if (!b) return;
+  var maj = {statut: statut, valide_le: new Date().toISOString()};
+  if (motif) maj.motif_rejet = motif;
+  b.from('caisse_mouvements').update(maj).eq('id', id).then(function(r){
+    if (r.error) return plainte(r.error);
+    dire(statut === 'valide' ? 'Mouvement validé' : 'Mouvement rejeté', '', statut === 'valide' ? 'ok' : 'warn');
+    rendreCaisse();
+  });
+}
+function ventiler(id){
+  var b = base(); if (!b) return;
+  b.rpc('ventiler_mouvement_caisse', {p_mouvement_id: id}).then(function(r){
+    if (r.error) return plainte(r.error);
+    dire('Écriture générée', 'Ventilée au journal de caisse');
+    rendreCaisse();
+  });
+}
+function creerSection(s){
+  var b = base(); if (!b) return;
+  s.entreprise_id = ent();
+  b.from('sections_analytiques').insert(s).then(function(r){
+    if (r.error) return plainte(r.error);
+    dire('Section créée', s.code + ' · ' + s.libelle);
+    rendreAnalytique();
+  });
+}
+
+/* ── Fabrique d'éléments de formulaire ───────────────────────── */
+function champ(parent, etiquette, noeud){
+  var l = el('label', 'cai-champ');
+  l.appendChild(el('span', 'cai-etiq', etiquette));
+  l.appendChild(noeud);
+  parent.appendChild(l);
+  return noeud;
+}
+function saisie(type, ph){
+  var i = document.createElement('input');
+  i.type = type; i.className = 'cai-in'; if (ph) i.placeholder = ph;
+  if (type === 'number') { i.min = '0'; i.step = '1'; }
+  return i;
+}
+function liste(options, valeurs){
+  var s = document.createElement('select'); s.className = 'cai-in';
+  options.forEach(function(o, i){
+    var op = document.createElement('option');
+    op.value = valeurs ? valeurs[i] : o; op.textContent = o;
+    s.appendChild(op);
+  });
+  return s;
+}
+function bouton(txt, ico, cls, action){
+  var b = el('button', 'cai-btn ' + (cls || ''));
+  if (ico) { var i = el('i'); i.className = 'fa ' + ico; b.appendChild(i); }
+  b.appendChild(document.createTextNode(' ' + txt));
+  b.type = 'button';
+  b.addEventListener('click', action);
+  return b;
+}
+function carte(titre, ico){
+  var c = el('section', 'cai-carte');
+  var t = el('div', 'cai-carte-t');
+  if (ico) { var i = el('i'); i.className = 'fa ' + ico; t.appendChild(i); }
+  t.appendChild(el('span', null, titre));
+  c.appendChild(t);
+  var corps = el('div', 'cai-carte-b');
+  c.appendChild(corps);
+  c._corps = corps;
+  return c;
+}
+function pastille(etat){
+  var d = ETATS[etat] || ETATS.saisi;
+  var p = el('span', 'cai-etat cai-etat--' + d.c);
+  var i = el('i'); i.className = 'fa ' + d.i; p.appendChild(i);
+  p.appendChild(document.createTextNode(' ' + d.l));
+  return p;
+}
+
+/* ── Écran caisse ─────────────────────────────────────────────── */
+function dessinerCaisse(hote){
+  vide(hote);
+  if (!base()) { hote.appendChild(el('p', 'cai-rien', 'Connexion à la base requise pour la caisse.')); return; }
+  if (!ETAT.caisses.length) {
+    var v = carte('Aucune caisse déclarée', 'fa-cash-register');
+    v._corps.appendChild(el('p', 'cai-rien',
+      'Créez une caisse dans Paramétrage pour ouvrir une session, saisir les mouvements et les ventiler au journal.'));
+    hote.appendChild(v); return;
+  }
+
+  /* Soldes */
+  var tuiles = el('div', 'cai-tuiles');
+  ETAT.caisses.forEach(function(c){
+    var t = el('button', 'cai-tuile' + (c.caisse_id === ETAT.caisseId ? ' on' : ''));
+    t.type = 'button';
+    t.appendChild(el('div', 'cai-tuile-code', c.code));
+    t.appendChild(el('div', 'cai-tuile-lib', c.libelle));
+    t.appendChild(el('div', 'cai-tuile-solde', fr(c.solde) + ' F'));
+    var bas = el('div', 'cai-tuile-bas');
+    bas.appendChild(el('span', null, 'Compte ' + (c.compte || '—')));
+    if (Number(c.plafond_encaisse) > 0 && Number(c.solde) > Number(c.plafond_encaisse)) {
+      var al = el('span', 'cai-alerte');
+      var ia = el('i'); ia.className = 'fa fa-triangle-exclamation'; al.appendChild(ia);
+      al.appendChild(document.createTextNode(' Plafond dépassé'));
+      bas.appendChild(al);
+    }
+    if (Number(c.en_attente_validation) > 0)
+      bas.appendChild(el('span', 'cai-attente', c.en_attente_validation + ' à valider'));
+    t.appendChild(bas);
+    t.addEventListener('click', function(){ ETAT.caisseId = c.caisse_id; rendreCaisse(); });
+    tuiles.appendChild(t);
+  });
+  hote.appendChild(tuiles);
+
+  var grille = el('div', 'cai-grille');
+  hote.appendChild(grille);
+
+  /* Session */
+  var cs = carte('Session', 'fa-clock');
+  if (!ETAT.session) {
+    cs._corps.appendChild(el('p', 'cai-rien', 'Aucune session ouverte sur cette caisse.'));
+    var f = el('div', 'cai-form');
+    var fond = champ(f, 'Fond d’ouverture (F CFA)', saisie('number', '0'));
+    f.appendChild(bouton('Ouvrir la caisse', 'fa-lock-open', 'cai-btn--p', function(){
+      var v = Number(fond.value || 0);
+      if (!(v >= 0)) return dire('Montant invalide', '', 'err');
+      ouvrirSession(v);
+    }));
+    cs._corps.appendChild(f);
+  } else {
+    var s = ETAT.session;
+    var theo = Number(s.fond_cloture_theorique || 0);
+    var det = el('dl', 'cai-det');
+    [['Ouverte le', jour(s.date_session)], ['Fond d’ouverture', fr(s.fond_ouverture) + ' F'],
+     ['Fond théorique', fr(theo) + ' F']].forEach(function(p){
+      det.appendChild(el('dt', null, p[0])); det.appendChild(el('dd', null, p[1]));
+    });
+    cs._corps.appendChild(det);
+    var fc = el('div', 'cai-form');
+    var reel = champ(fc, 'Fond réellement compté (F CFA)', saisie('number', String(theo)));
+    var note = champ(fc, 'Justification de l’écart', saisie('text', 'Obligatoire si écart'));
+    var ecart = el('p', 'cai-ecart', 'Écart : 0 F');
+    fc.appendChild(ecart);
+    reel.addEventListener('input', function(){
+      var d = Number(reel.value || 0) - theo;
+      ecart.textContent = 'Écart : ' + (d > 0 ? '+' : '') + fr(d) + ' F';
+      ecart.className = 'cai-ecart' + (d === 0 ? '' : (d < 0 ? ' ko' : ' warn'));
+    });
+    fc.appendChild(bouton('Clôturer la caisse', 'fa-lock', 'cai-btn--p', function(){
+      if (reel.value === '') return dire('Comptez le fond de caisse', '', 'err');
+      var v = Number(reel.value);
+      if (v !== theo && !note.value.trim())
+        return dire('Écart non justifié', 'La base refuse une clôture avec écart sans note.', 'err');
+      cloturerSession(v, note.value.trim());
+    }));
+    cs._corps.appendChild(fc);
+  }
+  grille.appendChild(cs);
+
+  /* Saisie */
+  var cm = carte('Nouveau mouvement', 'fa-plus');
+  if (!ETAT.session) {
+    cm._corps.appendChild(el('p', 'cai-rien', 'Ouvrez une session pour saisir un mouvement.'));
+  } else {
+    var fm = el('div', 'cai-form');
+    var sens = champ(fm, 'Sens', liste(['Entrée', 'Sortie'], ['entree', 'sortie']));
+    var type = champ(fm, 'Nature', liste(TYPES.map(function(t){ return t.charAt(0).toUpperCase() + t.slice(1).replace('_', ' '); }), TYPES));
+    var mont = champ(fm, 'Montant (F CFA)', saisie('number', '0'));
+    var benef = champ(fm, 'Bénéficiaire / Payeur', saisie('text', 'Nom'));
+    var motif = champ(fm, 'Motif', saisie('text', 'Deux caractères au minimum'));
+    var piece = champ(fm, 'Pièce justificative', saisie('text', 'N° reçu, facture…'));
+    var sect = champ(fm, 'Section analytique',
+      liste(['— Aucune —'].concat(ETAT.sections.map(function(x){ return x.code + ' · ' + x.libelle; })),
+            [''].concat(ETAT.sections.map(function(x){ return x.id; }))));
+    fm.appendChild(bouton('Enregistrer', 'fa-check', 'cai-btn--p', function(){
+      var v = Number(mont.value || 0);
+      if (!(v > 0)) return dire('Montant invalide', '', 'err');
+      if (motif.value.trim().length < 2) return dire('Motif requis', 'Deux caractères au minimum.', 'err');
+      saisirMouvement({
+        sens: sens.value, type: type.value, montant: v,
+        date_mouvement: aujourdhui(),
+        beneficiaire: benef.value.trim() || null,
+        motif: motif.value.trim(),
+        piece_ref: piece.value.trim() || null,
+        section_id: sect.value || null,
+        statut: 'saisi'
+      });
+    }));
+    cm._corps.appendChild(fm);
+  }
+  grille.appendChild(cm);
+
+  /* Journal */
+  var cj = carte('Journal de caisse', 'fa-list');
+  if (!ETAT.mouvements.length) {
+    cj._corps.appendChild(el('p', 'cai-rien', 'Aucun mouvement sur cette caisse.'));
+  } else {
+    var tb = el('table', 'cai-table');
+    var th = el('thead'), tr = el('tr');
+    ['N°', 'Date', 'Nature', 'Motif', 'Montant', 'État', 'Compte', ''].forEach(function(h){ tr.appendChild(el('th', null, h)); });
+    th.appendChild(tr); tb.appendChild(th);
+    var tc = el('tbody');
+    ETAT.mouvements.forEach(function(m){
+      var l = el('tr');
+      l.appendChild(el('td', 'cai-num', m.numero));
+      l.appendChild(el('td', null, jour(m.date_mouvement)));
+      l.appendChild(el('td', null, m.type));
+      var tdm = el('td', 'cai-motif', m.motif);
+      if (m.beneficiaire) tdm.appendChild(el('span', 'cai-benef', ' — ' + m.beneficiaire));
+      l.appendChild(tdm);
+      l.appendChild(el('td', 'cai-mt ' + (m.sens === 'entree' ? 'e' : 's'),
+        (m.sens === 'entree' ? '+' : '−') + fr(m.montant)));
+      var tde = el('td'); tde.appendChild(pastille(m.statut)); l.appendChild(tde);
+      var tdc = el('td', 'cai-cpt', m.compte_ventile || m.compte_suggere || '—');
+      if (m.ventile) { var iv = el('i', 'cai-ok'); iv.className = 'fa fa-link cai-ok'; tdc.appendChild(iv); }
+      l.appendChild(tdc);
+      var act = el('td', 'cai-act');
+      if (m.statut === 'a_valider')
+        act.appendChild(bouton('Valider', 'fa-check', 'cai-btn--sm', function(){ statuer(m.id, 'valide'); }));
+      if (m.statut === 'valide' && !m.ventile)
+        act.appendChild(bouton('Ventiler', 'fa-book', 'cai-btn--sm', function(){ ventiler(m.id); }));
+      l.appendChild(act);
+      tc.appendChild(l);
+    });
+    tb.appendChild(tc);
+    var env = el('div', 'cai-scroll'); env.appendChild(tb);
+    cj._corps.appendChild(env);
+  }
+  cj.className += ' cai-large';
+  grille.appendChild(cj);
+}
+
+/* ── Écran analytique ─────────────────────────────────────────── */
+function dessinerAnalytique(hote){
+  vide(hote);
+  if (!base()) { hote.appendChild(el('p', 'cai-rien', 'Connexion à la base requise pour l’analytique.')); return; }
+
+  var grille = el('div', 'cai-grille');
+  hote.appendChild(grille);
+
+  var cl = carte('Sections analytiques', 'fa-diagram-project');
+  cl.className += ' cai-large';
+  if (!ETAT.analytique.length) {
+    cl._corps.appendChild(el('p', 'cai-rien',
+      'Aucune section. Une section rattache chaque écriture à un centre de coût, un projet ou un chantier.'));
+  } else {
+    var tb = el('table', 'cai-table');
+    var th = el('thead'), tr = el('tr');
+    ['Code', 'Libellé', 'Type', 'Budget', 'Charges', 'Produits', 'Marge', 'Consommation'].forEach(function(h){ tr.appendChild(el('th', null, h)); });
+    th.appendChild(tr); tb.appendChild(th);
+    var tc = el('tbody');
+    ETAT.analytique.forEach(function(s){
+      var l = el('tr');
+      l.appendChild(el('td', 'cai-num', s.code));
+      l.appendChild(el('td', null, s.libelle));
+      l.appendChild(el('td', 'cai-type', LIB_TYPE_SECTION[s.type] || s.type));
+      l.appendChild(el('td', 'cai-mt', fr(s.budget_annuel)));
+      l.appendChild(el('td', 'cai-mt s', fr(s.charges)));
+      l.appendChild(el('td', 'cai-mt e', fr(s.produits)));
+      l.appendChild(el('td', 'cai-mt ' + (Number(s.marge) < 0 ? 's' : 'e'), fr(s.marge)));
+      var td = el('td', 'cai-jauge-c');
+      if (s.taux_consommation == null) { td.textContent = '—'; }
+      else {
+        var t = Number(s.taux_consommation);
+        var j = el('div', 'cai-jauge');
+        var r = el('div', 'cai-jauge-r' + (t > 100 ? ' ko' : (t > 85 ? ' warn' : '')));
+        r.style.width = Math.min(100, Math.max(0, t)) + '%';
+        j.appendChild(r);
+        td.appendChild(j);
+        var lb = el('span', 'cai-jauge-l' + (t > 100 ? ' ko' : ''), t + ' %');
+        if (t > 100) { var iw = el('i'); iw.className = 'fa fa-triangle-exclamation'; lb.insertBefore(iw, lb.firstChild); }
+        td.appendChild(lb);
+      }
+      l.appendChild(td);
+      tc.appendChild(l);
+    });
+    tb.appendChild(tc);
+    var env = el('div', 'cai-scroll'); env.appendChild(tb);
+    cl._corps.appendChild(env);
+  }
+  grille.appendChild(cl);
+
+  var cn = carte('Nouvelle section', 'fa-plus');
+  var f = el('div', 'cai-form');
+  var code = champ(f, 'Code', saisie('text', 'MAJUSCULES, chiffres, - et _'));
+  var lib = champ(f, 'Libellé', saisie('text', 'Atelier extrusion'));
+  var typ = champ(f, 'Type', liste(TYPES_SECTION.map(function(t){ return LIB_TYPE_SECTION[t]; }), TYPES_SECTION));
+  var par = champ(f, 'Rattachée à',
+    liste(['— Racine —'].concat(ETAT.analytique.map(function(x){ return x.code + ' · ' + x.libelle; })),
+          [''].concat(ETAT.analytique.map(function(x){ return x.section_id; }))));
+  var bud = champ(f, 'Budget annuel (F CFA)', saisie('number', '0'));
+  f.appendChild(bouton('Créer la section', 'fa-check', 'cai-btn--p', function(){
+    var c = code.value.trim().toUpperCase();
+    if (!/^[A-Z0-9_-]{1,20}$/.test(c))
+      return dire('Code invalide', 'Majuscules, chiffres, tiret ou souligné, 20 caractères au plus.', 'err');
+    if (!lib.value.trim()) return dire('Libellé requis', '', 'err');
+    creerSection({code: c, libelle: lib.value.trim(), type: typ.value,
+                  parent_id: par.value || null, budget_annuel: Number(bud.value || 0), actif: true});
+  }));
+  cn._corps.appendChild(f);
+  grille.appendChild(cn);
+}
+
+/* ── Montage des écrans ───────────────────────────────────────── */
+function hote(id, titre, sousTitre){
+  var sec = document.getElementById('sec-' + id);
+  if (sec) return sec.querySelector('.cai-corps');
+  var ref = document.getElementById('sec-tresorerie');
+  if (!ref || !ref.parentNode) return null;
+  sec = el('div', 'sec admin-only');
+  sec.id = 'sec-' + id;
+  var tete = el('div', 'cai-tete');
+  tete.appendChild(el('h2', 'cai-titre', titre));
+  tete.appendChild(el('p', 'cai-st', sousTitre));
+  sec.appendChild(tete);
+  var corps = el('div', 'cai-corps');
+  sec.appendChild(corps);
+  ref.parentNode.insertBefore(sec, ref.nextSibling);
+  return corps;
+}
+function rendreCaisse(){
+  var h = hote('caisse', 'Caisse',
+    'Sessions, mouvements et ventilation SYSCOHADA. Plafonds, numérotation et écarts sont tenus par la base.');
+  if (!h) return;
+  chargerCaisse().then(function(){ dessinerCaisse(h); });
+}
+function rendreAnalytique(){
+  var h = hote('analytique', 'Comptabilité analytique',
+    'Budget, charges et produits par section, sur l’exercice ouvert.');
+  if (!h) return;
+  chargerAnalytique().then(function(){ dessinerAnalytique(h); });
+}
+
+/* ── Entrées de navigation ────────────────────────────────────── */
+function entree(id, libelle, ico, couleur){
+  var ancre = document.getElementById('ni-compta-main');
+  if (!ancre || !ancre.parentNode || document.getElementById('ni-' + id)) return;
+  var n = el('div', 'ni admin-only');
+  n.id = 'ni-' + id;
+  n.style.paddingLeft = '28px';
+  var d = el('div', 'ni-ico');
+  if (couleur) d.style.color = couleur;
+  var i = el('i'); i.className = 'fa ' + ico; d.appendChild(i);
+  n.appendChild(d);
+  n.appendChild(document.createTextNode(libelle));
+  n.setAttribute('onclick', "goTo('" + id + "',this,'" + libelle + "')");
+  ancre.parentNode.insertBefore(n, ancre);
+}
+
+/* La section doit exister avant que goTo ne cherche à l'afficher. */
+var _goTo = window.goTo;
+window.goTo = function(id, e2, t){
+  if (id === 'caisse') rendreCaisse();
+  if (id === 'analytique') rendreAnalytique();
+  return _goTo ? _goTo.apply(this, arguments) : undefined;
+};
+
+function demarrer(){
+  entree('caisse', 'Caisse', 'fa-cash-register', '#059669');
+  entree('analytique', 'Analytique', 'fa-diagram-project', '#7c3aed');
+  /* Les deux sections rejoignent le module Trésorerie et le rôle comptable. */
+  try {
+    if (window._MODULES && _MODULES.TR && _MODULES.TR.sections.indexOf('caisse') < 0)
+      _MODULES.TR.sections.push('caisse', 'analytique');
+    if (window.ROLES && ROLES.comptable && ROLES.comptable.sections.indexOf('caisse') < 0)
+      ROLES.comptable.sections.push('caisse', 'analytique');
+  } catch(e){}
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer);
+else demarrer();
+
+window.sfCaisse = rendreCaisse;
+window.sfAnalytique = rendreAnalytique;
+})();
+</script>
+<style id="sf-caisse">
+/* ═══════════════════════════════════════════════════════════════════
+   CAISSE & ANALYTIQUE — présentation
+   Reprend les variables du thème : aucune couleur en dur hormis les
+   états, qui doivent rester lisibles quel que soit le thème.
+═══════════════════════════════════════════════════════════════════ */
+.cai-tete{padding:2px 0 14px;}
+.cai-titre{font-size:19px;font-weight:700;color:var(--t1);margin:0;letter-spacing:-.2px;}
+.cai-st{font-size:12.5px;color:var(--t2);margin:4px 0 0;max-width:72ch;line-height:1.5;}
+
+.cai-tuiles{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+.cai-tuile{flex:1 1 200px;max-width:280px;text-align:left;padding:12px 13px;cursor:pointer;
+  background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);
+  font-family:inherit;transition:border-color .12s,box-shadow .12s;}
+.cai-tuile:hover{border-color:var(--bd2);}
+.cai-tuile.on{border-color:var(--P);box-shadow:inset 0 0 0 1px var(--P);}
+.cai-tuile-code{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--t3);text-transform:uppercase;}
+.cai-tuile-lib{font-size:13px;font-weight:600;color:var(--t1);margin-top:1px;}
+.cai-tuile-solde{font-size:19px;font-weight:700;color:var(--t1);margin-top:6px;
+  font-variant-numeric:tabular-nums;letter-spacing:-.4px;}
+.cai-tuile-bas{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;
+  font-size:11px;color:var(--t3);}
+.cai-alerte{color:#b45309;font-weight:600;}
+.cai-attente{color:#1d4ed8;font-weight:600;}
+
+.cai-grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;align-items:start;}
+.cai-large{grid-column:1/-1;}
+
+.cai-carte{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;}
+.cai-carte-t{display:flex;align-items:center;gap:8px;padding:11px 14px;
+  border-bottom:1px solid var(--bd);font-size:12.5px;font-weight:700;color:var(--t1);}
+.cai-carte-t i{color:var(--P);font-size:12px;}
+.cai-carte-b{padding:14px;}
+
+.cai-rien{font-size:12.5px;color:var(--t2);line-height:1.55;margin:0;}
+
+.cai-form{display:flex;flex-direction:column;gap:9px;margin-top:10px;}
+.cai-champ{display:flex;flex-direction:column;gap:3px;}
+.cai-etiq{font-size:11px;font-weight:600;color:var(--t2);}
+.cai-in{width:100%;padding:8px 10px;font-family:inherit;font-size:13px;color:var(--t1);
+  background:var(--wh);border:1px solid var(--bd2);border-radius:var(--r-sm);}
+.cai-in:focus{outline:2px solid var(--P);outline-offset:-1px;border-color:var(--P);}
+
+.cai-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 13px;cursor:pointer;
+  font-family:inherit;font-size:12.5px;font-weight:600;color:var(--t1);
+  background:var(--wh);border:1px solid var(--bd2);border-radius:var(--r-sm);transition:.12s;}
+.cai-btn:hover{border-color:var(--P);color:var(--P);}
+.cai-btn--p{background:var(--P);border-color:var(--P);color:#fff;justify-content:center;}
+.cai-btn--p:hover{background:var(--P-h);border-color:var(--P-h);color:#fff;}
+.cai-btn--sm{padding:4px 9px;font-size:11.5px;}
+
+.cai-det{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:12.5px;}
+.cai-det dt{color:var(--t2);}
+.cai-det dd{margin:0;text-align:right;font-weight:600;color:var(--t1);font-variant-numeric:tabular-nums;}
+
+.cai-ecart{margin:2px 0 0;font-size:12px;font-weight:600;color:var(--t2);font-variant-numeric:tabular-nums;}
+.cai-ecart.warn{color:#b45309;}
+.cai-ecart.ko{color:#b91c1c;}
+
+.cai-scroll{overflow-x:auto;margin:0 -14px -14px;padding:0 14px 14px;}
+.cai-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.cai-table th{text-align:left;padding:7px 9px;font-size:10.5px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--bd);white-space:nowrap;}
+.cai-table td{padding:8px 9px;border-bottom:1px solid var(--bd);color:var(--t1);vertical-align:middle;}
+.cai-table tr:last-child td{border-bottom:none;}
+.cai-num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--t2);}
+.cai-motif{max-width:34ch;}
+.cai-benef{color:var(--t3);}
+.cai-type{color:var(--t2);}
+.cai-mt{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap;}
+.cai-mt.e{color:#15803d;}
+.cai-mt.s{color:#b91c1c;}
+.cai-cpt{font-variant-numeric:tabular-nums;color:var(--t2);white-space:nowrap;}
+.cai-ok{margin-left:5px;color:var(--P);}
+.cai-act{white-space:nowrap;text-align:right;}
+
+/* L'état se lit par l'icône et le mot : la couleur ne porte jamais seule le sens. */
+.cai-etat{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;
+  font-size:11px;font-weight:600;white-space:nowrap;border:1px solid transparent;}
+.cai-etat i{font-size:10px;}
+.cai-etat--neutre{background:#F1F2F4;color:#4B5563;border-color:#E2E4E8;}
+.cai-etat--attente{background:#EFF6FF;color:#1D4ED8;border-color:#DBEAFE;}
+.cai-etat--ok{background:#ECFDF3;color:#15803D;border-color:#D1FAE0;}
+.cai-etat--ko{background:#FEF2F2;color:#B91C1C;border-color:#FEE2E2;}
+
+.cai-jauge-c{min-width:150px;}
+.cai-jauge{height:6px;border-radius:999px;background:#EDEFF3;overflow:hidden;}
+.cai-jauge-r{height:100%;background:var(--P);border-radius:999px;}
+.cai-jauge-r.warn{background:#D97706;}
+.cai-jauge-r.ko{background:#B91C1C;}
+.cai-jauge-l{display:inline-flex;align-items:center;gap:4px;margin-top:3px;
+  font-size:11px;font-weight:600;color:var(--t2);font-variant-numeric:tabular-nums;}
+.cai-jauge-l.ko{color:#B91C1C;}
+
+@media(max-width:700px){
+  .cai-grille{grid-template-columns:1fr;}
+  .cai-tuile{max-width:none;}
+}
+</style>
 </body>
 </html>

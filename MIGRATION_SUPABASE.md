@@ -41,6 +41,7 @@ Clé publiable : `sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d`
 | 08 | `complements_referentiel_et_index_fk` | Comptes manquants + 38 index sur clés étrangères |
 | 09 | `durcissement_droits_et_extensions` | Révocation `anon`, extensions hors `public` |
 | 17 | `chaine_de_planification_sop` | Budget de vente, prévisions, PIC, PDP, MRP + vue `v_flux_production` |
+| 18 | `vues_caisse_et_analytique` | `v_analytique_sections` (budget / charges / produits / écart) et `v_caisse_journal` |
 
 ---
 
@@ -327,6 +328,20 @@ D 571 Caisse                1 180 000
     C 4431 TVA facturée             180 000
 ```
 
+### Écrans livrés
+
+Deux sections dans **Finance** de la barre latérale, branchées directement sur
+PostgreSQL — aucune copie locale, la base reste seule juge.
+
+| Écran | Contenu |
+|---|---|
+| **Caisse** | Soldes par caisse avec alerte de plafond et compteur à valider ; ouverture de session ; clôture avec écart calculé en direct et justification exigée ; saisie de mouvement avec imputation analytique ; journal des 80 derniers mouvements, validation et ventilation en un clic |
+| **Analytique** | Sections avec budget, charges, produits, marge et jauge de consommation ; création de section rattachée à un parent |
+
+Les refus des triggers (plafond, écart non justifié, mouvement figé) sont
+affichés tels quels : le message de la base est déjà rédigé pour l'utilisateur.
+Tout texte venu de la base passe par `textContent`, jamais par `innerHTML`.
+
 ### Analytique
 
 `sections_analytiques` : centres de coût, centres de profit, projets, programmes,
@@ -371,9 +386,11 @@ découvert refusé, écart justifié, lettrage, verrous.
 3. **Migrer les données** `localStorage` vers les tables.
 4. **Écriture des données** : l'application lit et écrit encore dans `localStorage`.
    Seule l'authentification passe par Supabase à ce stade.
-5. Edge Function proxy pour l'IA — la clé Anthropic ne doit jamais atteindre le client.
-6. Reprise des à-nouveaux via le journal `AN`.
-7. Table de correspondance ancien compte → nouveau compte pour retraiter
+5. **Transmission FNE à la DGI** : les colonnes existent, l'appel à l'API DGI
+   reste à brancher (documentation de l'API requise).
+6. Edge Function proxy pour l'IA — la clé Anthropic ne doit jamais atteindre le client.
+7. Reprise des à-nouveaux via le journal `AN`.
+8. Table de correspondance ancien compte → nouveau compte pour retraiter
    l'historique comptable saisi sous le mapping erroné.
 
 ## 11. État de livraison
