@@ -489,6 +489,34 @@ Vérifié en Chromium sur serveur HTTP :
 Note : une navigation porte toujours `credentials:'include'`. Exclure sur ce
 seul critère empêchait de servir la coquille hors ligne — corrigé.
 
+## 9 quinquies. Flux de production — couleur et reprise
+
+### Couleur
+
+| Canal | Ce qu'il porte |
+|---|---|
+| Fond et bordure de la tuile | l'**état** — fluide, tendu, sous tension, bloqué |
+| Icône d'état | la même teinte, en plein |
+| **Mot** d'état | encre du texte, jamais la teinte — un libellé jaune d'alerte sur fond clair ne se lit pas |
+| Arête gauche | la **phase** — Planifier, Produire, Livrer |
+| Tuyau entre deux stations | l'état de la station aval |
+| Anneau rouge | le goulot |
+
+Trois phases, pas neuf teintes : au-delà de trois, aucune série ne tient les
+seuils de distinction sous daltonisme quand toutes les paires sont vues
+ensemble. Les trois retenues passent — pire paire, écart 9,2 sous deutéranopie,
+24,0 en vision normale, mesuré par le validateur, pas à l'œil.
+
+La couleur ne porte jamais le sens seule : chaque état arrive avec son icône
+**et** son mot, et la vue tableau donne les mêmes chiffres sans couleur.
+
+### Reprise dans les modules de planification
+
+Le même modèle, en une ligne, en tête de chacun des cinq écrans : Budget de
+vente, Prévisions, PIC, PDP, MRP. L'étape ouverte se distingue par un fond
+plein et un trait plus épais, pas par une teinte de plus. Quand le goulot est
+ailleurs, une phrase dit lequel et pourquoi. Un clic sur une station y mène.
+
 ## 10. Reste à faire
 
 0. **Activer la protection des mots de passe compromis** : Dashboard →

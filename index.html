@@ -130452,13 +130452,41 @@ window.sfDeplierTout = function(){
 (function fluxProduction(){
 'use strict';
 
+/* Palette d'etat, fixe et jamais themee. La couleur ne porte jamais le
+   sens seule : chaque etat arrive avec son icone et son mot. Le fond et
+   la bordure sont des lavis de la meme teinte, assez pales pour que le
+   texte garde son contraste. 'vide' n'est pas un etat mais une absence :
+   il reste gris. */
 var ETAT = {
-  fluide:  {c:'#0ca30c', i:'fa-circle-check',            m:'Fluide'},
-  tendu:   {c:'#fab219', i:'fa-triangle-exclamation',    m:'Tendu'},
-  serre:   {c:'#ec835a', i:'fa-circle-exclamation',      m:'Sous tension'},
-  bloque:  {c:'#d03b3b', i:'fa-circle-xmark',            m:'Bloqué'},
-  vide:    {c:'#9CA3AF', i:'fa-circle-minus',            m:'Sans données'}
+  fluide:  {c:'#0ca30c', f:'rgba(12,163,12,.07)',  b:'rgba(12,163,12,.28)',  i:'fa-circle-check',         m:'Fluide'},
+  tendu:   {c:'#fab219', f:'rgba(250,178,25,.10)', b:'rgba(250,178,25,.38)', i:'fa-triangle-exclamation', m:'Tendu'},
+  serre:   {c:'#ec835a', f:'rgba(236,131,90,.09)', b:'rgba(236,131,90,.34)', i:'fa-circle-exclamation',   m:'Sous tension'},
+  bloque:  {c:'#d03b3b', f:'rgba(208,59,59,.07)',  b:'rgba(208,59,59,.32)',  i:'fa-circle-xmark',         m:'Bloqué'},
+  vide:    {c:'#9CA3AF', f:'transparent',          b:'var(--bd)',            i:'fa-circle-minus',         m:'Sans données'}
 };
+/* Trois phases, trois teintes — pas neuf. Au-dela de trois, aucune
+   serie de teintes ne tient les seuils de distinction sous daltonisme
+   quand toutes les paires sont vues ensemble. Ces trois-la les tiennent
+   (pire paire, ecart 9,2 sous deuteranopie, 24,0 en vision normale).
+   La teinte identifie la phase ; elle ne mesure rien et ne porte jamais
+   le sens seule : le nom de l'etape est toujours ecrit a cote. */
+var PHASE = {
+  planifier: {c:'#2a78d6', nom:'Planifier'},
+  produire:  {c:'#eb6834', nom:'Produire'},
+  livrer:    {c:'#1baf7a', nom:'Livrer'}
+};
+var PHASE_DE = {
+  budget_vente:'planifier', previsions:'planifier', pic:'planifier',
+  pdp:'planifier', mrp:'planifier',
+  __achats:'produire', ofs:'produire',
+  __qualite:'livrer', __depot:'livrer'
+};
+function teinte(cle){ return (PHASE[PHASE_DE[cle]] || {c:'var(--t3)'}).c; }
+/* Un lavis de la teinte : le chiffre garde son encre, donc son contraste. */
+function lavis(cle){
+  var m = {planifier:'rgba(42,120,214,.14)', produire:'rgba(235,104,52,.14)', livrer:'rgba(27,175,122,.16)'};
+  return m[PHASE_DE[cle]] || 'var(--bg)';
+}
 
 function n(v){ var x = parseFloat(v); return isFinite(x) ? x : 0; }
 function tab(k){ return Array.isArray(window.DB && DB[k]) ? DB[k] : []; }
@@ -130718,24 +130746,32 @@ function dessiner(hote, st, depuisServeur){
       var comparable = prec.mesure === s.mesure && s.mesure === 'piece' && prec.v > 0;
       var ep = comparable ? Math.max(3, Math.round((s.v / maxi) * 16)) : 3;
       var taux = comparable ? Math.round(s.v / prec.v * 100) : null;
+      /* Le tuyau prend la couleur de ce qui l'attend en aval : on voit ou
+         le flux se resserre avant meme de lire les chiffres. */
       h += '<div class="flx-lien" aria-hidden="true">'
-         +   '<div class="flx-lien-barre" style="height:' + ep + 'px;"></div>'
+         +   '<div class="flx-lien-barre" style="height:' + ep + 'px;background:'
+         +     (s.etat === 'vide' ? 'var(--bd2)' : ETAT[s.etat].c) + ';opacity:'
+         +     (s.etat === 'vide' ? '1' : '.55') + ';"></div>'
          +   (taux !== null ? '<div class="flx-lien-taux' + (taux < 60 ? ' bas' : '') + '">' + taux + ' %</div>' : '')
          + '</div>';
     }
 
     h += '<button class="flx-station' + (estGoulot ? ' goulot' : '') + '" role="listitem"'
        + ' data-onglet="' + s.cle + '"'
+       + ' style="background:' + e.f + ';border-color:' + e.b
+       +   ';border-left:3px solid ' + teinte(s.cle) + ';"'
        + ' title="' + s.detail.replace(/"/g,'&quot;') + '">'
        +   '<div class="flx-st-tete">'
-       +     '<span class="flx-st-num">' + s.n + '</span>'
+       +     '<span class="flx-st-num" style="background:' + lavis(s.cle) + ';">' + s.n + '</span>'
        +     '<i class="fa ' + s.ico + ' flx-st-ico"></i>'
        +   '</div>'
        +   '<div class="flx-st-nom">' + s.nom + '</div>'
        +   '<div class="flx-st-val">' + (s.court ? court(s.v) : mil(s.v)) + '</div>'
        +   '<div class="flx-st-unite">' + s.u + '</div>'
-       +   '<div class="flx-st-etat" style="color:' + e.c + ';">'
-       +     '<i class="fa ' + e.i + '"></i>' + e.m
+       /* Le mot garde l'encre du texte, l'icone porte la couleur : un
+          libelle en jaune d'alerte sur fond clair ne se lit pas. */
+       +   '<div class="flx-st-etat">'
+       +     '<i class="fa ' + e.i + '" style="color:' + e.c + ';"></i>' + e.m
        +   '</div>'
        + '</button>';
   });
@@ -130853,6 +130889,79 @@ function installer(){
   return true;
 }
 
+/* ── Bandeau de chaine, repris dans chaque module de planification ──
+   Le meme modele que la vue d'ensemble, en une ligne : l'utilisateur
+   retrouve sa place dans la chaine sans quitter son ecran, et voit d'un
+   coup d'oeil ce qui bloque en amont ou en aval de son poste. */
+var PLANIF = ['budget_vente','previsions','pic','pdp','mrp'];
+
+function bandeauHtml(courant, st, g){
+  var h = '<div class="flx-bd-leg">';
+  Object.keys(PHASE).forEach(function(k){
+    h += '<span class="flx-bd-leg-i"><i style="background:' + PHASE[k].c + ';"></i>' + PHASE[k].nom + '</span>';
+  });
+  h += '</div><div class="flx-bd" role="list" aria-label="Position dans la cha\u00eene de planification">';
+  st.forEach(function(s){
+    var e = ETAT[s.etat];
+    var ici = (s.cle === courant);
+    var estGoulot = g && g.station === s;
+    h += '<button class="flx-bd-st' + (ici ? ' ici' : '') + (estGoulot ? ' goulot' : '') + '"'
+       + ' role="listitem" data-onglet="' + s.cle + '"'
+       + ' style="background:' + e.f + ';border-color:' + e.b
+       +   ';border-left:3px solid ' + teinte(s.cle) + ';"'
+       + ' title="' + s.detail.replace(/"/g,'&quot;') + '"'
+       + (ici ? ' aria-current="step"' : '') + '>'
+       +   '<span class="flx-bd-num" style="background:' + lavis(s.cle) + ';">' + s.n + '</span>'
+       +   '<span class="flx-bd-txt">'
+       +     '<span class="flx-bd-nom">' + s.nom + '</span>'
+       +     '<span class="flx-bd-val">' + (s.court ? court(s.v) : mil(s.v)) + ' <em>' + s.u + '</em></span>'
+       /* Le mot reste visible : si l'icone ne se charge pas, la couleur
+          seule porterait le diagnostic. */
+       +     '<span class="flx-bd-etat">'
+       +       '<i class="fa ' + e.i + '" style="color:' + e.c + ';"></i>' + e.m + '</span>'
+       +   '</span>'
+       + '</button>';
+  });
+  h += '</div>';
+  if (g && g.station.cle !== courant) {
+    h += '<p class="flx-bd-note"><i class="fa fa-circle-exclamation" style="color:'
+       + ETAT[g.station.etat].c + ';"></i> <strong>' + g.station.nom + '</strong> limite la cha\u00eene. '
+       + g.motif + '</p>';
+  }
+  return h;
+}
+
+function poserBandeau(onglet){
+  if (PLANIF.indexOf(onglet) < 0) return;
+  var vue = document.getElementById('gpao-view-' + onglet);
+  if (!vue) return;
+  var id = 'flx-bd-' + onglet;
+  var hote = document.getElementById(id);
+  if (!hote) {
+    hote = document.createElement('div');
+    hote.id = id;
+    hote.className = 'flx-bd-hote';
+    vue.insertBefore(hote, vue.firstChild);
+  }
+  releverServeur().then(function(serveur){
+    var st = serveur || relever();
+    st.forEach(function(x, i){ x.etat = etat(x, i ? st[i-1] : null); });
+    hote.innerHTML = bandeauHtml(onglet, st, goulot(st));
+    hote.querySelectorAll('[data-onglet]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var o = b.getAttribute('data-onglet');
+        if (o.charAt(0) === '_') {
+          var dest = {'__achats':'achats','__qualite':'qualite','__depot':'articles'}[o];
+          if (dest && window.goTo) window.goTo(dest, null, b.textContent.trim());
+        } else if (window.switchGPAOTab) {
+          window.switchGPAOTab(o, document.getElementById('gpao-stab-' + o));
+        }
+      });
+    });
+  });
+}
+window.sfBandeauChaine = poserBandeau;
+
 var _switch = window.switchGPAOTab;
 window.switchGPAOTab = function(onglet, btn){
   if (onglet === 'flux') {
@@ -130869,7 +130978,9 @@ window.switchGPAOTab = function(onglet, btn){
   var p2 = document.getElementById('gpao-tab-flux');
   if (p2) p2.style.display = 'none';
   afficherBandes(true);
-  return (typeof _switch === 'function') ? _switch.apply(this, arguments) : undefined;
+  var r = (typeof _switch === 'function') ? _switch.apply(this, arguments) : undefined;
+  poserBandeau(onglet);
+  return r;
 };
 
 var _goTo = window.goTo;
@@ -130916,29 +131027,33 @@ setTimeout(installer, 2000);
   display:flex;align-items:stretch;flex-wrap:wrap;gap:0;
   background:var(--wh);border:1px solid var(--bd);border-radius:10px;padding:18px 16px;
 }
+/* Sans plafond, les tuiles de la derniere rangee s'etirent sur toute la
+   largeur et la chaine cesse de se lire comme une chaine. */
 .flx-station{
-  flex:1 1 128px;min-width:128px;
+  flex:1 1 128px;min-width:128px;max-width:214px;
   display:flex;flex-direction:column;align-items:flex-start;gap:2px;
   background:none;border:1px solid transparent;border-radius:10px;
   padding:12px 11px;cursor:pointer;text-align:left;
   font-family:var(--f);transition:background .13s,border-color .13s;
 }
-.flx-station:hover{background:#FAFBFC;border-color:var(--bd);}
+/* Le fond et la bordure viennent de l'etat, pose en style inline : le
+   survol et le goulot passent donc par l'ombre, que l'inline n'ecrase pas. */
+.flx-station:hover{box-shadow:0 0 0 1px var(--bd2);}
 .flx-station:focus-visible{outline:2px solid var(--P);outline-offset:1px;}
-.flx-station.goulot{background:rgba(208,59,59,.04);border-color:rgba(208,59,59,.3);}
+.flx-station.goulot{box-shadow:0 0 0 2px #d03b3b;}
 
 .flx-st-tete{display:flex;align-items:center;gap:7px;margin-bottom:5px;}
 .flx-st-num{
-  width:18px;height:18px;border-radius:5px;background:var(--bg);color:var(--t3);
+  width:18px;height:18px;border-radius:5px;background:var(--bg);color:var(--t1);
   font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-.flx-station.goulot .flx-st-num{background:#d03b3b;color:#fff;}
 .flx-st-ico{font-size:13px;color:var(--t3);}
 .flx-st-nom{font-size:12px;font-weight:600;color:var(--t2);line-height:1.35;}
 .flx-st-val{font-size:21px;font-weight:700;color:var(--t1);letter-spacing:-.5px;line-height:1.15;margin-top:3px;
   font-variant-numeric:tabular-nums;}
 .flx-st-unite{font-size:11px;color:var(--t3);}
-.flx-st-etat{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;margin-top:7px;}
+.flx-st-etat{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+  color:var(--t2);margin-top:7px;}
 
 /* Le lien : son épaisseur suit le volume, le chiffre dit le taux de passage */
 .flx-lien{
@@ -130958,11 +131073,53 @@ setTimeout(installer, 2000);
 .flx-tableau table{width:100%;margin-top:8px;background:var(--wh);
   border:1px solid var(--bd);border-radius:10px;overflow:hidden;}
 
+/* ── Bandeau de chaine dans les modules de planification ─────── */
+.flx-bd-hote{margin:0 0 16px;}
+.flx-bd-leg{display:flex;flex-wrap:wrap;gap:14px;padding:0 2px 7px;}
+.flx-bd-leg-i{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--t2);}
+.flx-bd-leg-i i{width:9px;height:9px;border-radius:3px;display:inline-block;}
+.flx-bd{
+  display:flex;flex-wrap:wrap;gap:6px;
+  background:var(--wh);border:1px solid var(--bd);border-radius:10px;padding:10px;
+}
+.flx-bd-st{
+  flex:1 1 124px;min-width:118px;
+  display:flex;align-items:flex-start;gap:7px;
+  border:1px solid var(--bd);border-radius:8px;padding:7px 9px;
+  font-family:var(--f);text-align:left;cursor:pointer;
+  transition:box-shadow .13s;
+}
+.flx-bd-st:hover{box-shadow:0 0 0 1px var(--bd2);}
+.flx-bd-st:focus-visible{outline:2px solid var(--P);outline-offset:1px;}
+/* L'etape ouverte se distingue par un trait plein, pas par sa seule teinte. */
+/* L'etape ouverte : trait plus epais et fond plein, pas une teinte de plus. */
+.flx-bd-st.ici{border-width:2px;background:var(--wh)!important;font-weight:600;}
+.flx-bd-st.ici .flx-bd-nom{color:var(--t1);}
+.flx-bd-st.goulot{box-shadow:0 0 0 2px #d03b3b;}
+.flx-bd-num{
+  width:17px;height:17px;border-radius:5px;color:var(--t1);flex-shrink:0;
+  font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
+}
+.flx-bd-txt{display:flex;flex-direction:column;min-width:0;flex:1 1 auto;}
+.flx-bd-nom{font-size:11px;font-weight:600;color:var(--t2);line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.flx-bd-val{font-size:13px;font-weight:700;color:var(--t1);font-variant-numeric:tabular-nums;line-height:1.3;}
+.flx-bd-val em{font-style:normal;font-size:10px;font-weight:600;color:var(--t3);}
+.flx-bd-etat{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;
+  color:var(--t2);margin-top:1px;}
+.flx-bd-etat i{font-size:9px;}
+.flx-bd-note{
+  display:flex;align-items:flex-start;gap:7px;margin:8px 2px 0;
+  font-size:12px;color:var(--t2);line-height:1.55;
+}
+.flx-bd-note strong{color:var(--t1);}
+
 @media(max-width:900px){
   .flx-lien{flex-basis:24px;}
   .flx-station{flex-basis:calc(50% - 24px);}
   .flx-tete{flex-wrap:wrap;}
   .flx-cta{margin-left:0;width:100%;}
+  .flx-bd-st{flex-basis:calc(50% - 6px);}
 }
 </style>
 <script>
