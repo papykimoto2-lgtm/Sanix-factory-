@@ -128993,13 +128993,41 @@ window.sfMotDePasseOublie = function(){
     });
 };
 
+/* ── Robustesse du mot de passe ───────────────────────────────
+   Contrôle strictement local : rien ne quitte le navigateur. Il complète,
+   sans la remplacer, la protection « Leaked password » de Supabase, qui
+   se règle côté console et couvre les fuites connues. */
+var MDP_COURANTS = [
+  'motdepasse','password','azerty','qwerty','123456','12345678','123456789',
+  'abidjan','sanix','opusfab','admin','administrateur','bienvenue','welcome',
+  'iloveyou','soleil','football','princesse','cotedivoire','ivoire','entreprise',
+  'janvier','soleil2024','passer','changeme','secret','test'
+];
+function mdpRefus(mdp, email){
+  var m = String(mdp || ''), b = m.toLowerCase();
+  if (m.length < 8) return '8 caractères minimum.';
+  if (!/[A-Z]/.test(m) || !/[0-9]/.test(m)) return 'Au moins une majuscule et un chiffre.';
+  /* Une suite de caractères voisins au clavier ne vaut pas mieux qu'un mot. */
+  if (/^(.)\1+$/.test(m)) return 'Un seul caractère répété ne protège rien.';
+  if (/(0123|1234|2345|3456|4567|5678|6789|abcd|qwer|azer)/.test(b))
+    return 'Évitez les suites de touches voisines.';
+  for (var i = 0; i < MDP_COURANTS.length; i++)
+    if (b.indexOf(MDP_COURANTS[i]) >= 0)
+      return 'Ce mot de passe contient un terme trop courant : « ' + MDP_COURANTS[i] + ' ».';
+  var local = String(email || '').split('@')[0].toLowerCase();
+  if (local.length >= 4 && b.indexOf(local) >= 0)
+    return 'Votre mot de passe ne doit pas reprendre votre adresse.';
+  return null;
+}
+window.sfMdpRefus = mdpRefus;
+
 /* ── Première inscription ── */
 window.sfCreerCompte = function(){
   var email = (($id('loginUser') || {}).value || '').trim().toLowerCase();
   var pass  = (($id('loginPass') || {}).value || '');
   if (!email || email.indexOf('@') < 0) { toast('Saisissez une adresse e-mail valide', '', 'err'); return; }
-  if (pass.length < 8) { toast('Mot de passe trop court', '8 caractères minimum.', 'err'); return; }
-  if (!/[A-Z]/.test(pass) || !/[0-9]/.test(pass)) { toast('Mot de passe trop simple', 'Au moins une majuscule et un chiffre.', 'err'); return; }
+  var refusCreation = mdpRefus(pass, email);
+  if (refusCreation) { toast('Mot de passe refusé', refusCreation, 'err'); return; }
   var nom = prompt('Votre nom de famille :');
   if (!nom) return;
   var prenom = prompt('Votre prénom :') || '';
@@ -129019,7 +129047,8 @@ window.sfCreerCompte = function(){
 function demanderNouveauMdp(){
   var p = prompt('Votre mot de passe doit être renouvelé.\nNouveau mot de passe (8 caractères, 1 majuscule, 1 chiffre) :');
   if (!p) return;
-  if (p.length < 8 || !/[A-Z]/.test(p) || !/[0-9]/.test(p)) { toast('Mot de passe refusé', 'Règles non respectées.', 'err'); return demanderNouveauMdp(); }
+  var refusRenouv = mdpRefus(p, (window.SESSION || {}).email);
+  if (refusRenouv) { toast('Mot de passe refusé', refusRenouv, 'err'); return demanderNouveauMdp(); }
   sb.auth.updateUser({ password: p }).then(function(r){
     if (r.error) { toast('Échec', messageClair(r.error.message), 'err'); return; }
     sb.from('profiles').update({ doit_changer_mdp: false }).eq('id', window.SESSION.userId);
@@ -129030,9 +129059,8 @@ window.changePassword = function(){
   var nouveau  = (($id('sec-pass-new') || {}).value || '');
   var confirme = (($id('sec-pass-confirm') || {}).value || '');
   if (nouveau !== confirme) { toast('Les mots de passe ne correspondent pas', '', 'err'); return; }
-  if (nouveau.length < 8 || !/[A-Z]/.test(nouveau) || !/[0-9]/.test(nouveau)) {
-    toast('Mot de passe trop simple', '8 caractères minimum, 1 majuscule, 1 chiffre.', 'err'); return;
-  }
+  var refusChg = mdpRefus(nouveau, (window.SESSION || {}).email);
+  if (refusChg) { toast('Mot de passe refusé', refusChg, 'err'); return; }
   sb.auth.updateUser({ password: nouveau }).then(function(r){
     if (r.error) { toast('Échec', messageClair(r.error.message), 'err'); return; }
     ['sec-pass-current','sec-pass-new','sec-pass-confirm'].forEach(function(i){ var e = $id(i); if (e) e.value = ''; });

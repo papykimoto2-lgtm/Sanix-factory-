@@ -44,6 +44,7 @@ Clé publiable : `sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d`
 | 18 | `vues_caisse_et_analytique` | `v_analytique_sections` (budget / charges / produits / écart) et `v_caisse_journal` |
 | 19 | `rls_moindre_privilege_ecriture` | 45 politiques `FOR ALL` scindées en INSERT / UPDATE / DELETE + index dupliqué supprimé |
 | 20 | `index_cles_etrangeres_metier` | 52 index sur les clés étrangères métier ; colonnes de traçabilité écartées |
+| 21 | `compte_nouveau_inactif_par_defaut` | Un compte créé de lui-même arrive **inactif** et sans rôle |
 
 ---
 
@@ -398,13 +399,50 @@ Les 45 politiques concernées sont scindées en `INSERT` / `UPDATE` / `DELETE`
 | Clés étrangères métier sans index | 52 | 0 |
 | Suppression de mouvement de caisse | impossible | impossible |
 
+## 9 ter. Inscription publique — neutralisée côté base
+
+`handle_new_user` rattachait tout nouveau compte à la **première société**
+trouvée, avec `actif = true` par défaut. Or la politique `prof_lecture` ne
+demande aucune permission : un inconnu inscrit de lui-même lisait l'annuaire
+du personnel — noms, adresses, matricules, postes.
+
+| Chemin | Avant | Après |
+|---|---|---|
+| Compte auto-créé | profil **actif** | profil **inactif** |
+| Rôles accordés | aucun | aucun |
+| `app.entreprise_id()` | renvoie la société | renvoie `null` (le profil doit être actif) |
+| `entreprises_visibles()` | 1 société | vide → aucune ligne lisible |
+| Amorçage | — | seul le 1er compte d'une société **sans administrateur actif** s'active et reçoit `admin` |
+
+Vérifié par insertion puis annulation : `actif = false`, `roles = 0`. La base
+reste à 1 compte, celui de l'administrateur.
+
+Un administrateur active ensuite le compte et lui attribue un rôle. Cela ne
+dispense pas de fermer l'inscription publique — c'est une deuxième barrière,
+pas un remplaçant.
+
+### Robustesse des mots de passe — côté application
+
+Contrôle **strictement local**, aux trois points d'entrée (création de compte,
+renouvellement imposé, changement volontaire) :
+
+| Règle | Exemple refusé |
+|---|---|
+| 8 caractères, 1 majuscule, 1 chiffre | `Xk9` |
+| Aucun terme trop courant | `Motdepasse1`, `Abidjan2024` |
+| Aucune suite de touches voisines | `Azerty123`, `Ab123456` |
+| Aucune répétition d'un seul caractère | `AAAAAAAA` |
+| Ne reprend pas l'adresse e-mail | `Kessie2024x` pour `kessie@…` |
+
+Rien ne quitte le navigateur. La vérification contre les fuites connues
+(HaveIBeenPwned) reste le rôle de Supabase : un interrupteur en console.
+
 ## 10. Reste à faire
 
 0. **Activer la protection des mots de passe compromis** : Dashboard →
    Authentication → Password Security → *Leaked password protection*. Supabase
    vérifie alors les mots de passe contre HaveIBeenPwned. Désactivé par défaut.
-1. **Créer le premier compte** : ouvrir l'application, saisir e-mail et mot de passe,
-   cliquer « Première connexion — créer mon compte ». Ce compte devient administrateur.
+1. ~~**Créer le premier compte**~~ — fait : `papykimoto2@gmail.com`, actif, rôle `admin`.
 2. **Fermer l'inscription publique** ensuite : Dashboard → Authentication →
    Sign In / Providers → désactiver *Allow new users to sign up*. Sinon n'importe qui
    peut créer un compte (sans rôle, donc sans accès — mais autant fermer la porte).
