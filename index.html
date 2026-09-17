@@ -130480,6 +130480,54 @@ function rendre(){
 window.renderFluxProduction = rendre;
 
 /* ── Insertion de l'onglet dans la GPAO ────────────────────── */
+/* Les trois bandes de phases SONT le sélecteur d'onglets : elles portent
+   les boutons .gpao-stab, mises en forme comme un flux. La vue Flux les
+   doublait donc visuellement. On les escamote pendant qu'elle est ouverte
+   — elle offre la même navigation en cliquant une station — et on les
+   rend dès qu'un autre onglet reprend la main. */
+function bandesNav(){
+  var lot = [];
+  var repere = document.getElementById('gpao-flux-step-label');
+  var entete = repere ? repere.parentElement : null;
+  if (entete) {
+    lot.push(entete);
+    var f = entete.nextElementSibling;
+    while (f) {
+      if (f.querySelector && f.querySelector('.gpao-stab')) lot.push(f);
+      else if (lot.length > 1) break;
+      f = f.nextElementSibling;
+    }
+  }
+  return lot;
+}
+/* Tous les panneaux d'onglet ne partagent pas la même classe. Plutôt que
+   d'en tenir la liste, on masque tout ce que la section contient sauf la
+   vue d'ensemble, en mémorisant l'affichage pour le rendre ensuite. */
+var _memo = null;
+function sectionGpao(){
+  var b = document.querySelector('.gpao-stab');
+  if (!b) return null;
+  var e = b;
+  while (e && !/\bsec\b/.test(e.className || '')) e = e.parentElement;
+  return e;
+}
+function afficherBandes(visible){
+  var sec = sectionGpao();
+  if (!sec) return;
+  if (!visible) {
+    if (_memo) return;
+    _memo = [];
+    [].slice.call(sec.children).forEach(function(n){
+      if (n.id === 'gpao-tab-flux') return;
+      _memo.push([n, n.style.display]);
+      n.style.display = 'none';
+    });
+  } else if (_memo) {
+    _memo.forEach(function(p){ p[0].style.display = p[1]; });
+    _memo = null;
+  }
+}
+
 function installer(){
   var barre = document.querySelector('.gpao-stab');
   if (!barre) return false;
@@ -130487,20 +130535,29 @@ function installer(){
   if (document.getElementById('gpao-stab-flux')) return true;
 
   var b = document.createElement('div');
-  b.className = 'gpao-stab tab';
+  b.className = 'gpao-stab tab sf-onglet-flux';
   b.id = 'gpao-stab-flux';
-  b.innerHTML = '<i class="fa fa-diagram-project"></i> Flux';
+  b.innerHTML = '<i class="fa fa-diagram-project"></i> Vue d\u2019ensemble';
+  b.title = 'La chaîne entière, du budget au dépôt produit fini';
   b.onclick = function(){ window.switchGPAOTab('flux', b); };
   barre.insertBefore(b, barre.firstChild);
 
-  var pane = document.getElementById('gpao-tab-budget_vente');
-  var conteneur = pane ? pane.parentNode : barre.parentNode;
+  /* Le panneau se rattache à la section elle-même, jamais à une bande :
+     les bandes s'escamotent, et il partirait avec elles. */
+  var section = barre.closest ? barre.closest('.sec') : null;
+  if (!section) { section = barre; while (section && !/\bsec\b/.test(section.className||'')) section = section.parentElement; }
+  if (!section) section = barre.parentNode;
+
   var d = document.createElement('div');
   d.id = 'gpao-tab-flux';
   d.className = 'gpao-tab';
   d.style.display = 'none';
   d.innerHTML = '<div id="gpao-flux-corps"></div>';
-  conteneur.insertBefore(d, conteneur.firstChild);
+  var repere = document.getElementById('gpao-flux-step-label');
+  var entete = repere ? repere.parentElement : null;
+  /* Juste avant l'en-tête du flux : la vue d'ensemble ouvre le module. */
+  if (entete && entete.parentElement === section) section.insertBefore(d, entete);
+  else section.insertBefore(d, section.firstChild);
   return true;
 }
 
@@ -130513,18 +130570,28 @@ window.switchGPAOTab = function(onglet, btn){
     document.querySelectorAll('.gpao-tab').forEach(function(p){ p.style.display = 'none'; });
     var p = document.getElementById('gpao-tab-flux');
     if (p) p.style.display = 'block';
+    afficherBandes(false);
     rendre();
     return;
   }
   var p2 = document.getElementById('gpao-tab-flux');
   if (p2) p2.style.display = 'none';
+  afficherBandes(true);
   return (typeof _switch === 'function') ? _switch.apply(this, arguments) : undefined;
 };
 
 var _goTo = window.goTo;
 window.goTo = function(id){
   var r = (typeof _goTo === 'function') ? _goTo.apply(this, arguments) : undefined;
-  if (id === 'gpao') setTimeout(function(){ if (installer()) rendre(); }, 120);
+  if (id === 'gpao') setTimeout(function(){
+    if (!installer()) return;
+    /* On n'impose le Flux qu'à l'ouverture du module, pas si l'appelant
+       visait déjà un onglet précis. */
+    var cible = document.querySelector('.gpao-stab.on');
+    if (!cible || cible.id === 'gpao-stab-flux' || cible.id === 'gpao-stab-budget_vente')
+      window.switchGPAOTab('flux');
+    else rendre();
+  }, 140);
   return r;
 };
 setTimeout(installer, 2000);
