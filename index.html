@@ -1270,8 +1270,8 @@ button,input,select,textarea{font-family:var(--f);}
 .tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;}
 .tabs::-webkit-scrollbar{display:none;}
 .tab{
-  padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;
-  cursor:pointer;white-space:nowrap;border:1.5px solid var(--bd);
+  padding:8px 15px;border-radius:8px;font-size:12px;font-weight:600;
+  cursor:pointer;white-space:nowrap;border:1px solid var(--bd);
   color:var(--t2);background:var(--wh);transition:.15s;flex-shrink:0;
 }
 .tab.on{background:var(--R);color:#fff;border-color:var(--R);}
@@ -130183,6 +130183,25 @@ window.sfDeplierTout = function(){
 }
 /* L'état de synchronisation se décale pour ne pas la recouvrir */
 #sf-etat-synchro{left:12px;}
+
+/* ── Onglets et badges : deux formes, deux rôles ─────────────
+   Un onglet se clique : il prend la forme d'un bouton, rayon 8 px.
+   Un badge ne se clique pas : il reste une pastille, c'est ce qui le
+   distingue d'une action au premier coup d'œil. */
+#app .tab,#app .view-toggle-btn,#app .seg-btn,
+#app .ai-chip,#app .pf2-chip,#app .pos-cat,#app .wa-tpl-tag,
+#app .chip[onclick],#app .pill[onclick],#app .filter-chip{
+  border-radius:8px!important;
+}
+#app .tab{border-width:1px!important;}
+#app .tabs{gap:6px;}
+
+/* Les pastilles d'état gardent leur forme */
+#app .badge,#app .tbadge,#app .rbadge,#app .tbl-badge,
+#app .rec-badge,#app .tag,#app .statut,#app .ni-badge,
+#app .chip:not([onclick]),#app .pill:not([onclick]){
+  border-radius:20px!important;
+}
 </style>
 </body>
 </html>
