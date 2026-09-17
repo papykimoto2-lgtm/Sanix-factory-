@@ -2650,6 +2650,13 @@ window.onerror = function(msg, src, line, col, err) {
         <div class="ni admin-only" onclick="goTo('gpao',this,'Ordonnancement');switchGPAOTab('ordonnancement',document.getElementById('gpao-stab-ordonnancement'));sbCloseOthers('gpao')"><div class="ni-ico" style="color:#dc2626;"><i class="fa fa-calendar-days"></i></div>Ordonnancement</div>
         <div class="ni admin-only" onclick="goTo('gpao',this,'Planning');switchGPAOTab('planning',document.getElementById('gpao-stab-planning'));sbCloseOthers('gpao')"><div class="ni-ico"><i class="fa fa-calendar-week"></i></div>Planning</div>
         <div class="ni admin-only" onclick="goTo('gmao',this,'GMAO — Maintenance');sbCloseOthers('gpao')"><div class="ni-ico" style="color:#0e7490;"><i class="fa fa-screwdriver-wrench"></i></div>GMAO<span class="ni-badge" id="bGMAO" style="background:#0e7490;"></span></div>
+        <!-- Perf. production — rattachee a la fabrication -->
+        <div class="ni admin-only"
+          onclick="goTo('gpao',this,'Performance');switchGPAOTab('performance',document.getElementById('gpao-stab-performance'));sbCloseOthers('finance')"
+          style="margin-top:6px;">
+          <div class="ni-ico" style="color:#7c3aed;"><i class="fa fa-chart-bar"></i></div>
+          <span style="color:#7c3aed;font-weight:700;">Perf. production</span>
+        </div>
         <div class="ni admin-only" onclick="goTo('ged',this,'GED — Documents');sbCloseOthers('gpao')"><div class="ni-ico" style="color:#b45309;"><i class="fa fa-folder-open"></i></div>GED — Documents<span class="ni-badge" id="bGED" style="background:#b45309;">0</span></div>
       </div>
     </div>
@@ -2741,8 +2748,8 @@ window.onerror = function(msg, src, line, col, err) {
           À facturer <span class="ni-badge" id="bAFacturerSb" style="background:#F47920;display:none;"></span>
         </div>
         <div class="ni admin-only" style="padding-left:28px;"
-          onclick="goTo('tresorerie',this,'Factures');switchFinanceModule('facturation','factures-liste');sbCloseOthers('finance')">
-          <div class="ni-ico"><i class="fa fa-file-invoice"></i></div>Factures
+          onclick="goTo('tresorerie',this,'Factures — comptabilité');switchFinanceModule('facturation','factures-liste');sbCloseOthers('finance')">
+          <div class="ni-ico"><i class="fa fa-file-invoice"></i></div>Factures (compta)
         </div>
         <div class="ni admin-only" style="padding-left:28px;"
           onclick="goTo('tresorerie',this,'DSO &amp; Recouvrement');switchFinanceModule('facturation','factures-dso');sbCloseOthers('finance')">
@@ -2787,19 +2794,11 @@ window.onerror = function(msg, src, line, col, err) {
           onclick="goTo('tresorerie',this,'Interopérabilité');switchFinanceModule('compta','interop');sbCloseOthers('finance')">
           <div class="ni-ico"><i class="fa fa-plug"></i></div>Interop.
         </div>
-        <div class="ni admin-only" style="padding-left:28px;"
-          onclick="goTo('tresorerie',this,'Immobilisations');switchFinanceModule('compta','immo');sbCloseOthers('finance')">
-          <div class="ni-ico" style="color:#7c3aed;"><i class="fa fa-building-columns"></i></div>
-          <span style="font-weight:800;color:#7c3aed;">Immobilisations</span>
-        </div>
+        <!-- Immobilisations : entree unique sous ERP Avance -->
 
-        <!-- ── Perf. production (conservé) ── -->
-        <div class="ni admin-only"
-          onclick="goTo('gpao',this,'Performance');switchGPAOTab('performance',document.getElementById('gpao-stab-performance'));sbCloseOthers('finance')"
-          style="margin-top:6px;">
-          <div class="ni-ico" style="color:#7c3aed;"><i class="fa fa-chart-bar"></i></div>
-          <span style="color:#7c3aed;font-weight:700;">Perf. production</span>
-        </div>
+
+        <!-- Perf. production : deplacee en Fabrication, ou elle appartient -->
+
       </div><!-- /sb-group-body sg-finance -->
     </div><!-- /sb-group sg-finance -->
 
@@ -2844,9 +2843,8 @@ window.onerror = function(msg, src, line, col, err) {
         <i class="fa fa-chevron-right sb-group-arrow"></i>
       </div>
       <div class="sb-group-body">
-        <div class="ni admin-only" onclick="goTo('gmao',this,'GMAO — Maintenance');sbCloseOthers('gma')">
-          <div class="ni-ico"><i class="fa fa-screwdriver-wrench"></i></div>GMAO
-        </div>
+        <!-- GMAO : entree unique sous Fabrication -->
+
       </div>
     </div>
 
