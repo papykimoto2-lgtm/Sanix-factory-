@@ -53956,6 +53956,10 @@ console.log('%cSANIX OpusFab Ultra — IA Top Management + Organigramme ✅','co
 
   function onScroll() {
     if (window.innerWidth > 768) return;
+    /* Le wrapper de goTo appelle onScroll a chaque changement de section,
+       y compris avant que initMobileScroll ait trouve le conteneur — ou
+       apres qu'il ait renonce faute de le trouver. */
+    if (!mc) return;
 
     var scrollTop = mc.scrollTop;
     var scrollH   = mc.scrollHeight - mc.clientHeight;
@@ -128767,7 +128771,9 @@ function toast(t, s, k){
 /* ── Écran bloquant : aucun repli silencieux vers une auth locale ── */
 function bloquer(titre, detail){
   var ov = document.createElement('div');
-  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0F172A;color:#fff;'
+  ov.id = 'sf-bloquant';
+  /* Dernier etage de l'echelle des superpositions, pas un nombre au hasard. */
+  ov.style.cssText = 'position:fixed;inset:0;z-index:var(--z-bloquant,900);background:#0F172A;color:#fff;'
     + 'display:flex;align-items:center;justify-content:center;padding:24px;'
     + "font-family:'Outfit',system-ui,sans-serif;";
   var box = document.createElement('div');
@@ -131749,5 +131755,67 @@ var minuteur = setInterval(function(){
 window.sfComptesDormants = function(){ return relever(); };
 })();
 </script>
+<style id="sf-couches">
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab — ÉCHELLE DES SUPERPOSITIONS
+
+   Quinze valeurs de z-index cohabitaient, de 300 à 99999, posées au fil
+   des modules. Conséquences observées : le bandeau de licence (9000)
+   passait devant toute modale (600) ; toast et modale partageaient 600,
+   donc l'ordre du document décidait lequel gagnait — un message d'erreur
+   pouvait disparaître derrière la fenêtre qui l'avait déclenché ; des
+   modales tardives à 10000 recouvraient jusqu'aux notifications.
+
+   Une seule échelle, sept étages, du fond vers la surface. Toute
+   nouvelle surface flottante prend une de ces variables, jamais un
+   nombre écrit à la main.
+═══════════════════════════════════════════════════════════════════ */
+:root{
+  --z-colle:    100;  /* en-têtes collants, barres d'outils            */
+  --z-panneau:  300;  /* panneaux latéraux, tiroirs                    */
+  --z-bandeau:  400;  /* bandeaux d'information : licence, hors ligne  */
+  --z-modale:   600;  /* voile et fenêtres modales                     */
+  --z-bulle:    700;  /* info-bulles d'aide                            */
+  --z-avis:     800;  /* notifications passagères                      */
+  --z-bloquant: 900;  /* écrans qui arrêtent tout : auth, mot de passe */
+}
+
+/* ── Panneaux ─────────────────────────────────────────────────── */
+.panel{ z-index:var(--z-panneau); }
+#aide-overlay{ z-index:var(--z-panneau)!important; }
+#aide-panel{ z-index:calc(var(--z-panneau) + 1)!important; }
+
+/* ── Bandeaux : sous les modales, jamais devant ───────────────── */
+.offline-banner{ z-index:var(--z-bandeau); }
+#lic-banner{ z-index:var(--z-bandeau)!important; }
+#sf-sync-badge{ z-index:var(--z-bandeau)!important; }
+
+/* ── Modales : toutes au même étage ───────────────────────────── */
+.modal,
+.pos-modal-bg,
+.wa-modal-bg,
+.wa-chat-bg,
+.appel-modal-bg,
+.sync-modal-overlay,
+.eq-modal-overlay,
+.welcome-overlay{ z-index:var(--z-modale); }
+
+#col-modal-ov,
+#sanix-apercu-modal,
+#modal-energie-releve,
+#modal-energie-compteur{ z-index:var(--z-modale)!important; }
+
+/* ── Aide contextuelle : au-dessus d'une modale qu'elle explique ─ */
+.help-tooltip{ z-index:var(--z-bulle); }
+
+/* ── Notifications : toujours lisibles, quelle que soit la pile ── */
+.toast{ z-index:var(--z-avis); }
+
+/* ── Écrans bloquants : rien ne passe devant ──────────────────── */
+#loginScreen,
+#sf-forcepass,
+#sf-bloquant,
+#_err_log{ z-index:var(--z-bloquant)!important; }
+</style>
 </body>
 </html>

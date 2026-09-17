@@ -553,6 +553,45 @@ Poser le secret : Dashboard → Edge Functions → `ia` → Secrets →
 l'application continue de fonctionner — l'assistant est un confort, jamais un
 passage obligé.
 
+## 9 septies. Superpositions — une seule échelle
+
+Quinze valeurs de `z-index` cohabitaient, de 300 à 99999, posées au fil des
+modules. Trois conséquences observées :
+
+| Symptôme | Cause |
+|---|---|
+| Le bandeau de licence passait devant les fenêtres | bandeau 9000, modale 600 |
+| Un message d'erreur disparaissait derrière la fenêtre qui l'avait déclenché | toast **et** modale à 600 : l'ordre du document tranchait |
+| Des fenêtres tardives recouvraient jusqu'aux notifications | modales ad hoc à 10000 |
+
+Sept étages, du fond vers la surface :
+
+| Variable | Valeur | Ce qui s'y pose |
+|---|---|---|
+| `--z-colle` | 100 | en-têtes collants, barres d'outils |
+| `--z-panneau` | 300 | panneaux latéraux, tiroirs |
+| `--z-bandeau` | 400 | licence, hors ligne, badge de synchro |
+| `--z-modale` | 600 | voile et fenêtres modales — les 23 |
+| `--z-bulle` | 700 | info-bulles d'aide |
+| `--z-avis` | 800 | notifications passagères |
+| `--z-bloquant` | 900 | connexion, mot de passe imposé, journal d'erreurs |
+
+Toute nouvelle surface flottante prend une de ces variables, jamais un nombre
+écrit à la main.
+
+**Vérifié par test de position**, pas à l'œil : au point du bandeau, l'élément
+de tête est désormais la modale ; au point du toast, c'est le toast. Aucun
+ancêtre de modale ne pose `transform`, `filter` ou `contain` — rien ne casse
+le `position:fixed` des 23 fenêtres.
+
+### Erreur remontée le 17/09
+
+`onScroll` lisait `mc.scrollTop` alors que `mc` pouvait être indéfini : le
+raccord posé sur `goTo` appelle `onScroll` à chaque changement de section, y
+compris avant que le conteneur ait été trouvé — ou après que l'initialisation
+y a renoncé. Visible en fenêtre étroite seulement, le garde de largeur
+masquant le reste du temps. Garde ajouté, vérifié à 420 px : aucune exception.
+
 ## 10. Reste à faire
 
 0. **Activer la protection des mots de passe compromis** : Dashboard →
