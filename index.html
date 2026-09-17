@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src * data: blob:; connect-src *; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src * data: blob:; connect-src 'self' https://mglosevjadbvwurdrlsz.supabase.co wss://mglosevjadbvwurdrlsz.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -14,6 +14,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <!-- ═══ AMÉLIORATIONS v2 — SANIX OpusFab Enhanced ═══ -->
+<!-- Authentification et acces aux donnees -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- ═══ LEAFLET — Carte interactive Circuit ═══ -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -2466,15 +2468,10 @@ window.onerror = function(msg, src, line, col, err) {
     window.DB = {};
   }
 
-  /* ── SESSION : fallback admin jusqu'au vrai login ── */
-  if (typeof window.SESSION === 'undefined' || window.SESSION === null) {
-    window.SESSION = {
-      role     : 'admin',
-      userId   : 'admin',
-      name     : 'Administrateur',
-      initials : 'AD'
-    };
-  }
+  /* ── SESSION : aucune session tant que le serveur n'a pas authentifié ──
+     Ce bloc attribuait auparavant le rôle administrateur par défaut : toute
+     fonction lue avant le login s'exécutait donc en administrateur. ── */
+  if (typeof window.SESSION === 'undefined') window.SESSION = null;
 
   /* ── Stubs canDo / requirePerm / auditLog ──
      Ces fonctions sont définies plus tard dans le PATCH v5.1.
@@ -16268,20 +16265,20 @@ var ROLE_SECTIONS = {
 
 // ── Utilisateurs (DB dynamique + utilisateurs système codés) ──
 var USERS = {
-  admin:   { pass:'admin123',   role:'admin',      name:'Administrateur',  initials:'AD', id:'admin',  email:'admin@ivopack.ci',  actif:true,  created:today(), modules:null },
-  com:     { pass:'marc123',    role:'commercial', name:'Marc Kader',      initials:'MK', id:'marc',   email:'marc@ivopack.ci',   actif:true,  created:today(), modules:null },
-  sophie:  { pass:'sophie123',  role:'commercial', name:'Sophie Diallo',   initials:'SD', id:'sophie', email:'sophie@ivopack.ci', actif:true,  created:today(), modules:null },
-  kofi:    { pass:'kofi123',    role:'commercial', name:'Kofi Mensah',     initials:'KM', id:'kofi',   email:'kofi@ivopack.ci',   actif:true,  created:today(), modules:null },
-  prod:    { pass:'prod123',    role:'chef_prod',     name:'Chef Production', initials:'CP', id:'prod',   email:'prod@ivopack.ci',    actif:true,  created:today(), modules:null },
-  cs_prod: { pass:'cs_prod',   role:'chef_service',  name:'Chef Serv. Production', initials:'CS', id:'cs_prod', email:'csprod@ivopack.ci',  actif:true,  created:today(), modules:null, service:'Production' },
-  cs_maint:{ pass:'cs_maint',  role:'chef_service',  name:'Chef Serv. Maintenance', initials:'CM', id:'cs_maint',email:'csmaint@ivopack.ci', actif:true,  created:today(), modules:null, service:'Maintenance' },
-  cs_rh:   { pass:'cs_rh',     role:'chef_service',  name:'Chef Serv. RH',          initials:'CR', id:'cs_rh',  email:'csrh@ivopack.ci',    actif:true,  created:today(), modules:null, service:'Ressources Humaines' },
-  cs_adm:  { pass:'cs_adm',    role:'chef_service',  name:'Chef Serv. Admin',       initials:'CA', id:'cs_adm', email:'csadm@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Administration' },
-  cs_com:  { pass:'cs_com',    role:'chef_service',  name:'Chef Serv. Commercial',  initials:'CC', id:'cs_com', email:'cscom@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Commercial' },
-  cs_log:  { pass:'cs_log',    role:'chef_service',  name:'Chef Serv. Logistique',  initials:'CL', id:'cs_log', email:'cslog@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Logistique' },
-  rh_user: { pass:'rh123',      role:'rh',         name:'Responsable RH',  initials:'RH', id:'rh',     email:'rh@ivopack.ci',     actif:true,  created:today(), modules:null },
-  compta:  { pass:'compta123',  role:'comptable',  name:'Comptable',       initials:'CT', id:'compta', email:'compta@ivopack.ci', actif:true,  created:today(), modules:null },
-  qualite: { pass:'qualite123', role:'qualite',    name:'Resp. Qualité',   initials:'QA', id:'qualite',email:'qualite@ivopack.ci',actif:true,  created:today(), modules:null },
+  admin:   { role:'admin',      name:'Administrateur',  initials:'AD', id:'admin',  email:'admin@ivopack.ci',  actif:true,  created:today(), modules:null },
+  com:     { role:'commercial', name:'Marc Kader',      initials:'MK', id:'marc',   email:'marc@ivopack.ci',   actif:true,  created:today(), modules:null },
+  sophie:  { role:'commercial', name:'Sophie Diallo',   initials:'SD', id:'sophie', email:'sophie@ivopack.ci', actif:true,  created:today(), modules:null },
+  kofi:    { role:'commercial', name:'Kofi Mensah',     initials:'KM', id:'kofi',   email:'kofi@ivopack.ci',   actif:true,  created:today(), modules:null },
+  prod:    { role:'chef_prod',     name:'Chef Production', initials:'CP', id:'prod',   email:'prod@ivopack.ci',    actif:true,  created:today(), modules:null },
+  cs_prod: { role:'chef_service',  name:'Chef Serv. Production', initials:'CS', id:'cs_prod', email:'csprod@ivopack.ci',  actif:true,  created:today(), modules:null, service:'Production' },
+  cs_maint:{ role:'chef_service',  name:'Chef Serv. Maintenance', initials:'CM', id:'cs_maint',email:'csmaint@ivopack.ci', actif:true,  created:today(), modules:null, service:'Maintenance' },
+  cs_rh:   { role:'chef_service',  name:'Chef Serv. RH',          initials:'CR', id:'cs_rh',  email:'csrh@ivopack.ci',    actif:true,  created:today(), modules:null, service:'Ressources Humaines' },
+  cs_adm:  { role:'chef_service',  name:'Chef Serv. Admin',       initials:'CA', id:'cs_adm', email:'csadm@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Administration' },
+  cs_com:  { role:'chef_service',  name:'Chef Serv. Commercial',  initials:'CC', id:'cs_com', email:'cscom@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Commercial' },
+  cs_log:  { role:'chef_service',  name:'Chef Serv. Logistique',  initials:'CL', id:'cs_log', email:'cslog@ivopack.ci',   actif:true,  created:today(), modules:null, service:'Logistique' },
+  rh_user: { role:'rh',         name:'Responsable RH',  initials:'RH', id:'rh',     email:'rh@ivopack.ci',     actif:true,  created:today(), modules:null },
+  compta:  { role:'comptable',  name:'Comptable',       initials:'CT', id:'compta', email:'compta@ivopack.ci', actif:true,  created:today(), modules:null },
+  qualite: { role:'qualite',    name:'Resp. Qualité',   initials:'QA', id:'qualite',email:'qualite@ivopack.ci',actif:true,  created:today(), modules:null },
 };
 
 // Charger les utilisateurs personnalisés depuis la DB
@@ -17869,7 +17866,7 @@ window.renderConnexionsLog=function(){
 };
 
 // ── Hook doLogin pour enregistrer la connexion — défini APRÈS window.doLogin ──
-var SESSION = { role:'admin', userId:'marc', name:'Marc Kader', initials:'MK' };
+var SESSION = null; /* aucune session avant authentification serveur */
 
 var selectedRole = 'admin';
 window.selectRole = function(r){
@@ -109829,7 +109826,7 @@ setTimeout(function(){
 
   /* ── 1. Garantir window.SESSION ── */
   if (typeof window.SESSION === 'undefined' || !window.SESSION) {
-    window.SESSION = { role:'admin', userId:'admin', name:'Administrateur', initials:'AD' };
+    window.SESSION = null; /* aucune session avant authentification serveur */
   }
 
   /* ── 2. Wrapper canDo ── */
@@ -129123,6 +129120,301 @@ try{
 console.log('%c[SF v5.7 SEC] ✅ Patch sécurité actif : SHA-256+sel, anti-bruteforce, anti-XSS, garde d\'accès, secrets purgés','color:#059669;font-weight:900;');
 })();
 
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   SANIX OpusFab ERP 2026 — AUTHENTIFICATION SUPABASE
+   Remplace l'authentification navigateur par une authentification
+   serveur. L'identité vient d'un JWT signé, le rôle de la base.
+   Les droits réels sont appliqués par RLS côté PostgreSQL : le client
+   ne fait que masquer ce que le serveur refuserait de toute façon.
+═══════════════════════════════════════════════════════════════════ */
+(function sfAuth(){
+'use strict';
+
+var CFG = {
+  url:          'https://mglosevjadbvwurdrlsz.supabase.co',
+  cle:          'sb_publishable_5M7FKSrYIqvoSt9Jww5HbQ_gkZ6JC1d',
+  entrepriseId: 'd5884279-1d5a-4b84-80dd-df3a99758253'
+};
+/* Constante de compilation. Volontairement hors localStorage : un mode
+   dégradé activable depuis le navigateur annulerait l'authentification. */
+var MODE = 'supabase';
+
+window.SF_SUPABASE = CFG;
+window.SF_AUTH_MODE = MODE;
+window.SF_PERMS = new Set();
+
+var $id = function(i){ return document.getElementById(i); };
+function toast(t, s, k){
+  if (typeof window.showToast === 'function') window.showToast(t, s || '', k || 'info');
+  else console.log('[auth]', t, s || '');
+}
+
+/* ── Écran bloquant : aucun repli silencieux vers une auth locale ── */
+function bloquer(titre, detail){
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#0F172A;color:#fff;'
+    + 'display:flex;align-items:center;justify-content:center;padding:24px;'
+    + "font-family:'Outfit',system-ui,sans-serif;";
+  var box = document.createElement('div');
+  box.style.cssText = 'max-width:460px;text-align:center;';
+  var h = document.createElement('div');
+  h.style.cssText = 'font-size:40px;margin-bottom:14px;'; h.textContent = '🔌';
+  var t = document.createElement('div');
+  t.style.cssText = 'font-size:19px;font-weight:800;margin-bottom:10px;'; t.textContent = titre;
+  var d = document.createElement('div');
+  d.style.cssText = 'font-size:13px;line-height:1.7;color:rgba(255,255,255,.65);'; d.textContent = detail;
+  box.appendChild(h); box.appendChild(t); box.appendChild(d);
+  ov.appendChild(box); document.body.appendChild(ov);
+}
+
+/* Purge des identités de démonstration avant toute autre chose : même sans
+   mot de passe, la liste des comptes n’a pas à être lisible avant connexion. */
+window.SESSION = null;
+try { Object.keys(window.USERS || {}).forEach(function(k){ delete window.USERS[k]; }); } catch(e){}
+
+if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+  bloquer('Service d’authentification indisponible',
+          'La bibliothèque Supabase n’a pas pu être chargée. Vérifiez votre connexion, '
+        + 'puis rechargez la page. Aucune connexion locale n’est possible : les identifiants '
+        + 'ne sont plus stockés dans le navigateur.');
+  return;
+}
+
+var sb = window.supabase.createClient(CFG.url, CFG.cle, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: 'sf_auth_v1' }
+});
+window.sb = sb;
+
+function initiales(p, n){
+  return ((p || '').charAt(0) + (n || '').charAt(0)).toUpperCase() || '?';
+}
+function messageClair(m){
+  m = String(m || '');
+  if (/Invalid login credentials/i.test(m))  return 'Adresse e-mail ou mot de passe incorrect.';
+  if (/Email not confirmed/i.test(m))        return 'Adresse non confirmée. Ouvrez le lien reçu par e-mail.';
+  if (/rate limit|too many/i.test(m))        return 'Trop de tentatives. Patientez quelques minutes.';
+  if (/already registered/i.test(m))         return 'Un compte existe déjà pour cette adresse.';
+  if (/Password should be/i.test(m))         return 'Mot de passe trop court : 8 caractères minimum.';
+  if (/Failed to fetch|NetworkError/i.test(m)) return 'Serveur injoignable. Vérifiez votre connexion.';
+  return m;
+}
+function occupe(actif, texte){
+  var b = document.querySelector('.login-btn');
+  if (!b) return;
+  b.disabled = !!actif;
+  b.style.opacity = actif ? '.6' : '';
+  b.innerHTML = actif
+    ? '<i class="fa fa-circle-notch fa-spin"></i>' + (texte || 'Connexion…')
+    : '<i class="fa fa-right-to-bracket"></i>Se connecter';
+}
+
+/* ── Annuaire : alimente USERS sans aucun mot de passe ── */
+function chargerAnnuaire(){
+  return sb.from('v_annuaire').select('*').then(function(r){
+    if (r.error || !r.data) return;
+    window.USERS = window.USERS || {};
+    r.data.forEach(function(u){
+      var cle = (u.email || '').split('@')[0] || u.matricule || u.id;
+      var fiche = {
+        id: u.id, login: cle, role: u.role_app,
+        name: ((u.prenom || '') + ' ' + u.nom).trim(),
+        initials: initiales(u.prenom, u.nom),
+        email: u.email, poste: u.poste, service: u.service,
+        actif: u.actif, modules: null
+      };
+      window.USERS[cle] = fiche;
+      window.USERS[u.id] = fiche;
+    });
+  });
+}
+
+/* ── Ouverture de session après authentification ── */
+function ouvrirSession(){
+  return sb.from('v_ma_session').select('*').maybeSingle().then(function(r){
+    if (r.error) { toast('Profil illisible', messageClair(r.error.message), 'err'); return sb.auth.signOut(); }
+    var p = r.data;
+    if (!p) {
+      toast('Profil absent', 'Votre compte existe mais n’est rattaché à aucune société. Contactez l’administrateur.', 'err');
+      return sb.auth.signOut();
+    }
+    if (!p.actif) {
+      toast('⛔ Compte désactivé', 'Contactez l’administrateur.', 'err');
+      return sb.auth.signOut();
+    }
+    window.SF_PERMS  = new Set(p.permissions || []);
+    window.SF_PROFIL = p;
+    window.SESSION = {
+      role: p.role_app, userId: p.id,
+      name: ((p.prenom || '') + ' ' + p.nom).trim(),
+      initials: initiales(p.prenom, p.nom),
+      email: p.email, entrepriseId: p.entreprise_id,
+      roles: p.roles || [], _serverAuth: true
+    };
+    if (!(p.roles || []).length) {
+      toast('Aucun rôle attribué', 'Un administrateur doit vous accorder un accès.', 'warn');
+    }
+    return chargerAnnuaire().then(function(){
+      window.SESSION._userObj = (window.USERS || {})[p.id] || { id: p.id, role: p.role_app, actif: true, modules: null };
+      window.selectedRole = null;              /* neutralise la reprise du sélecteur commercial */
+      var panneau = $id('login-roles-panel'); if (panneau) panneau.style.display = 'none';
+      if (typeof window._finishLogin === 'function') window._finishLogin();
+      if (p.doit_changer_mdp) setTimeout(demanderNouveauMdp, 800);
+    });
+  });
+}
+
+/* ── Connexion ── */
+window.doLogin = function(){
+  var email = (($id('loginUser') || {}).value || '').trim().toLowerCase();
+  var pass  = (($id('loginPass') || {}).value || '');
+  if (!email || !pass) { toast('Saisissez votre adresse e-mail et votre mot de passe', '', 'err'); return; }
+  if (email.indexOf('@') < 0) { toast('Identifiant attendu : votre adresse e-mail', '', 'err'); return; }
+  occupe(true);
+  sb.auth.signInWithPassword({ email: email, password: pass }).then(function(r){
+    if (r.error) { occupe(false); toast('Connexion refusée', messageClair(r.error.message), 'err'); return; }
+    var champ = $id('loginPass'); if (champ) champ.value = '';
+    return ouvrirSession().then(function(){ occupe(false); });
+  }).catch(function(e){ occupe(false); toast('Erreur', messageClair(e.message), 'err'); });
+};
+
+/* ── Déconnexion ── */
+window.doLogout = function(){
+  sb.auth.signOut().catch(function(){}).then(function(){
+    window.SESSION = null;
+    window.SF_PERMS = new Set();
+    window.SF_PROFIL = null;
+    try { Object.keys(window.USERS || {}).forEach(function(k){ delete window.USERS[k]; }); } catch(e){}
+    var a = $id('app'); if (a) a.style.display = 'none';
+    var l = $id('loginScreen'); if (l) l.style.display = 'flex';
+    if (typeof window.closePanel === 'function') try { window.closePanel(); } catch(e){}
+  });
+};
+
+/* ── Mot de passe oublié ── */
+window.sfMotDePasseOublie = function(){
+  var email = (($id('loginUser') || {}).value || '').trim().toLowerCase();
+  if (!email || email.indexOf('@') < 0) {
+    toast('Saisissez d’abord votre adresse e-mail', 'Le lien de réinitialisation y sera envoyé.', 'err');
+    return;
+  }
+  sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname })
+    .then(function(r){
+      if (r.error) { toast('Envoi impossible', messageClair(r.error.message), 'err'); return; }
+      toast('✉️ Lien envoyé', 'Consultez ' + email + ' et suivez le lien reçu.', 'ok');
+    });
+};
+
+/* ── Première inscription ── */
+window.sfCreerCompte = function(){
+  var email = (($id('loginUser') || {}).value || '').trim().toLowerCase();
+  var pass  = (($id('loginPass') || {}).value || '');
+  if (!email || email.indexOf('@') < 0) { toast('Saisissez une adresse e-mail valide', '', 'err'); return; }
+  if (pass.length < 8) { toast('Mot de passe trop court', '8 caractères minimum.', 'err'); return; }
+  if (!/[A-Z]/.test(pass) || !/[0-9]/.test(pass)) { toast('Mot de passe trop simple', 'Au moins une majuscule et un chiffre.', 'err'); return; }
+  var nom = prompt('Votre nom de famille :');
+  if (!nom) return;
+  var prenom = prompt('Votre prénom :') || '';
+  occupe(true, 'Création…');
+  sb.auth.signUp({
+    email: email, password: pass,
+    options: { data: { entreprise_id: CFG.entrepriseId, nom: nom, prenom: prenom }, emailRedirectTo: location.origin + location.pathname }
+  }).then(function(r){
+    occupe(false);
+    if (r.error) { toast('Création refusée', messageClair(r.error.message), 'err'); return; }
+    if (r.data && r.data.session) { return ouvrirSession(); }
+    toast('✉️ Compte créé', 'Confirmez votre adresse via le lien reçu par e-mail, puis connectez-vous.', 'ok');
+  }).catch(function(e){ occupe(false); toast('Erreur', messageClair(e.message), 'err'); });
+};
+
+/* ── Changement de mot de passe ── */
+function demanderNouveauMdp(){
+  var p = prompt('Votre mot de passe doit être renouvelé.\nNouveau mot de passe (8 caractères, 1 majuscule, 1 chiffre) :');
+  if (!p) return;
+  if (p.length < 8 || !/[A-Z]/.test(p) || !/[0-9]/.test(p)) { toast('Mot de passe refusé', 'Règles non respectées.', 'err'); return demanderNouveauMdp(); }
+  sb.auth.updateUser({ password: p }).then(function(r){
+    if (r.error) { toast('Échec', messageClair(r.error.message), 'err'); return; }
+    sb.from('profiles').update({ doit_changer_mdp: false }).eq('id', window.SESSION.userId);
+    toast('✅ Mot de passe mis à jour', '', 'ok');
+  });
+}
+window.changePassword = function(){
+  var nouveau  = (($id('sec-pass-new') || {}).value || '');
+  var confirme = (($id('sec-pass-confirm') || {}).value || '');
+  if (nouveau !== confirme) { toast('Les mots de passe ne correspondent pas', '', 'err'); return; }
+  if (nouveau.length < 8 || !/[A-Z]/.test(nouveau) || !/[0-9]/.test(nouveau)) {
+    toast('Mot de passe trop simple', '8 caractères minimum, 1 majuscule, 1 chiffre.', 'err'); return;
+  }
+  sb.auth.updateUser({ password: nouveau }).then(function(r){
+    if (r.error) { toast('Échec', messageClair(r.error.message), 'err'); return; }
+    ['sec-pass-current','sec-pass-new','sec-pass-confirm'].forEach(function(i){ var e = $id(i); if (e) e.value = ''; });
+    toast('✅ Mot de passe mis à jour', 'Effet immédiat sur tous vos appareils.', 'ok');
+  });
+};
+
+/* ── Permissions : source unique, la base ── */
+window.sfPeut = function(p){ return window.SF_PERMS.has(p) || (window.SESSION && window.SESSION.role === 'admin'); };
+
+/* ── Adaptation de l'écran de connexion ── */
+function adapterEcran(){
+  var u = $id('loginUser');
+  if (u) {
+    u.type = 'email'; u.placeholder = 'prenom.nom@entreprise.ci';
+    u.setAttribute('autocomplete', 'username');
+    var lab = u.parentNode && u.parentNode.querySelector('label');
+    if (lab) lab.textContent = 'Adresse e-mail';
+  }
+  var p = $id('loginPass');
+  if (p) p.setAttribute('autocomplete', 'current-password');
+
+  var panneau = $id('login-roles-panel');
+  if (panneau && !$id('sf-liens-auth')) {
+    panneau.innerHTML = '';
+    panneau.id = 'sf-liens-auth';
+    panneau.style.cssText = 'margin-top:14px;display:flex;flex-direction:column;gap:9px;align-items:center;';
+    var style = 'background:none;border:none;cursor:pointer;font:inherit;font-size:11px;'
+              + 'color:rgba(255,255,255,.55);text-decoration:underline;text-underline-offset:3px;padding:2px;';
+    var oubli = document.createElement('button');
+    oubli.type = 'button'; oubli.style.cssText = style;
+    oubli.textContent = 'Mot de passe oublié ?';
+    oubli.onclick = window.sfMotDePasseOublie;
+    var creer = document.createElement('button');
+    creer.type = 'button'; creer.style.cssText = style;
+    creer.textContent = 'Première connexion — créer mon compte';
+    creer.onclick = window.sfCreerCompte;
+    var note = document.createElement('div');
+    note.style.cssText = 'font-size:10px;color:rgba(255,255,255,.28);text-align:center;line-height:1.6;max-width:260px;';
+    note.textContent = 'Authentification serveur chiffrée. Vos identifiants ne sont jamais stockés dans ce navigateur.';
+    panneau.appendChild(oubli); panneau.appendChild(creer); panneau.appendChild(note);
+  }
+  var hint = $id('login-admin-hint'); if (hint) hint.remove();
+}
+window.initLoginHint = adapterEcran;
+window.loginPreviewRole = function(){};
+
+/* ── Reprise de session et lien de réinitialisation ── */
+function demarrer(){
+  adapterEcran();
+  sb.auth.getSession().then(function(r){
+    var s = r && r.data && r.data.session;
+    if (s) { ouvrirSession(); }
+  });
+  sb.auth.onAuthStateChange(function(evenement){
+    if (evenement === 'PASSWORD_RECOVERY') setTimeout(demanderNouveauMdp, 300);
+    if (evenement === 'SIGNED_OUT' && window.SESSION) {
+      window.SESSION = null;
+      var a = $id('app'); if (a) a.style.display = 'none';
+      var l = $id('loginScreen'); if (l) l.style.display = 'flex';
+    }
+  });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer);
+else demarrer();
+
+console.log('%c[SANIX OpusFab] Authentification Supabase active — identité serveur, droits appliqués par RLS',
+            'color:#059669;font-weight:900;');
+})();
 </script>
 </body>
 </html>

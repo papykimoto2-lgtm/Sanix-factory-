@@ -193,12 +193,50 @@ insert into public.parametres_paie (entreprise_id, date_effet) values ('<entrepr
 
 ---
 
-## 7. Reste à faire
+## 7. Authentification — fait
 
-1. Brancher le frontend sur Supabase Auth — supprimer `USERS`, `SESSION` et le
-   contrôle d'accès JavaScript du fichier HTML (faille S1 de l'audit).
-2. Migrer les données `localStorage` existantes vers les tables.
-3. Edge Function proxy pour l'IA — la clé Anthropic ne doit jamais atteindre le client.
-4. Exercices antérieurs : reprise des à-nouveaux via le journal `AN`.
-5. Table de correspondance ancien compte → nouveau compte pour retraiter
-   l'historique comptable déjà saisi sous le mapping erroné.
+Le contrôle d'accès navigateur est supprimé. L'identité vient d'un JWT signé.
+
+| Avant | Après |
+|---|---|
+| 14 mots de passe en clair dans le source | aucun — `grep "pass:'"` → 0 |
+| `SESSION = {role:'admin'}` par défaut | `SESSION = null` avant authentification |
+| deux gardes recréant une session admin | supprimées |
+| hash SHA-256 à 1 tour en localStorage | bcrypt côté serveur (GoTrue) |
+| verrou anti-bruteforce annulé par F5 | limitation serveur par IP et par compte |
+| `connect-src *` | `'self'` + le projet Supabase |
+| aucune récupération de mot de passe | lien par e-mail |
+
+Le premier inscrit devient administrateur (trigger `promouvoir_premier_utilisateur`).
+Les suivants n'ont aucun rôle tant qu'un administrateur ne leur en accorde un.
+
+**Aucun repli local.** Si la bibliothèque Supabase ne charge pas, l'application
+affiche un écran de blocage plutôt que de retomber sur une authentification
+navigateur — un repli silencieux aurait annulé tout le reste.
+
+### Vues de session
+- `v_ma_session` — profil, société, rôle applicatif, rôles et permissions en un appel
+- `v_annuaire` — noms, postes et rôles des collègues, sans donnée sensible
+
+## 8. Reste à faire
+
+1. **Créer le premier compte** : ouvrir l'application, saisir e-mail et mot de passe,
+   cliquer « Première connexion — créer mon compte ». Ce compte devient administrateur.
+2. **Fermer l'inscription publique** ensuite : Dashboard → Authentication →
+   Sign In / Providers → désactiver *Allow new users to sign up*. Sinon n'importe qui
+   peut créer un compte (sans rôle, donc sans accès — mais autant fermer la porte).
+3. **Migrer les données** `localStorage` vers les tables.
+4. **Écriture des données** : l'application lit et écrit encore dans `localStorage`.
+   Seule l'authentification passe par Supabase à ce stade.
+5. Edge Function proxy pour l'IA — la clé Anthropic ne doit jamais atteindre le client.
+6. Reprise des à-nouveaux via le journal `AN`.
+7. Table de correspondance ancien compte → nouveau compte pour retraiter
+   l'historique comptable saisi sous le mapping erroné.
+
+## 9. Société amorcée
+
+`SANIX OpusFab` · code `SANIX` · id `d5884279-1d5a-4b84-80dd-df3a99758253`
+270 comptes · 9 journaux · exercice 2026 · paramètres de paie 2026 · dépôt principal
+
+Complétez RCCM, compte contribuable et NIF dans `entreprises` avant la première
+facture : ces mentions sont obligatoires sur une facture en Côte d'Ivoire.
